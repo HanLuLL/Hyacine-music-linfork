@@ -32,6 +32,7 @@
       }
     },
     "web": { "favicon": "./assets/favicon.png" },
+    "newArchEnabled": false,
     "experiments": { "typedRoutes": true }
   }
 }
