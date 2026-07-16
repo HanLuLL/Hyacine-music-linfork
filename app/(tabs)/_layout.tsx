@@ -3,6 +3,7 @@ import { Tabs, usePathname, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Animated, PanResponder, Platform, Pressable, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
+import { TabSwipeSurface } from "@/components/navigation/TabSwipeSurface";
 import { useTheme } from "@/theme";
 
 const tabs = [
@@ -97,45 +98,32 @@ function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWid
 export default function TabsLayout(): React.JSX.Element {
   const { t } = useI18n();
   const { preferences, tokens } = useTheme();
-  const pathname = usePathname();
-  const router = useRouter();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
-  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : pathname.includes("/profile") ? 3 : 0;
-  const activeIndexRef = useRef(activeIndex);
-  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
-  const pagePan = useRef(PanResponder.create({
-    onMoveShouldSetPanResponderCapture: (_, gesture) => Math.abs(gesture.dx) > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
-    onPanResponderRelease: (_, gesture) => {
-      if (Math.abs(gesture.dx) < 52 && Math.abs(gesture.vx) < 0.42) return;
-      const step = gesture.dx < 0 ? 1 : -1;
-      const next = Math.max(0, Math.min(tabs.length - 1, activeIndexRef.current + step));
-      if (next !== activeIndexRef.current) router.replace(tabs[next].route);
-    },
-  })).current;
-  return <View className="flex-1" {...pagePan.panHandlers}><Tabs screenOptions={{
+  return <TabSwipeSurface><View className="flex-1"><Tabs screenOptions={{
     headerShown: false,
     animation: "fade",
     sceneStyle: { backgroundColor: tokens.background },
     tabBarStyle: {
       display: isLiquid ? "none" : "flex",
       position: isMiuix ? "absolute" : "relative",
-      left: isMiuix ? 16 : 0,
-      right: isMiuix ? 16 : 0,
-      bottom: isMiuix ? 12 : 0,
-      height: isMiuix ? 66 : 62,
-      paddingTop: 7,
-      paddingBottom: 7,
-      borderRadius: isMiuix ? 24 : 0,
-      backgroundColor: tokens.surfaceStrong,
-      borderColor: tokens.surfaceBorder,
-      borderTopWidth: 1,
+      left: isMiuix ? 12 : 0,
+      right: isMiuix ? 12 : 0,
+      bottom: isMiuix ? 18 : 0,
+      height: isMiuix ? 74 : 62,
+      paddingTop: isMiuix ? 9 : 7,
+      paddingBottom: isMiuix ? 9 : 7,
+      borderRadius: isMiuix ? 30 : 0,
+      backgroundColor: isMiuix ? (tokens.isLight ? "#fdfdff" : "#202124") : tokens.surfaceStrong,
+      borderColor: isMiuix ? `${tokens.accent}35` : tokens.surfaceBorder,
+      borderTopWidth: isMiuix ? 0 : 1,
       borderWidth: isMiuix ? 1 : 0,
-      elevation: isMiuix ? 3 : 0,
-      shadowColor: "#000000",
-      shadowOpacity: isMiuix ? 0.08 : 0,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 7 },
+      elevation: isMiuix ? 14 : 0,
+      shadowColor: isMiuix ? "#111827" : "#000000",
+      shadowOpacity: isMiuix ? 0.2 : 0,
+      shadowRadius: isMiuix ? 20 : 10,
+      shadowOffset: { width: 0, height: isMiuix ? 10 : 7 },
+      overflow: isMiuix ? "hidden" : "visible",
     },
     tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
     tabBarActiveTintColor: tokens.accent,
@@ -145,5 +133,5 @@ export default function TabsLayout(): React.JSX.Element {
     <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
     <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
     <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
-  </Tabs>{isLiquid ? <LiquidTabBar /> : null}</View>;
+  </Tabs>{isLiquid ? <LiquidTabBar /> : null}</View></TabSwipeSurface>;
 }
