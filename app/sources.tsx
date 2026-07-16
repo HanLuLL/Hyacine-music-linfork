@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import QRCode from "qrcode";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Animated, PanResponder, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAccount } from "@/account";
 import { ThemedCard } from "@/components/ui/ThemedCard";
@@ -25,6 +25,8 @@ export default function SourcesScreen(): React.JSX.Element {
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const [source, setSource] = useState<Source>("netease");
+  const sourceMotion = useRef(new Animated.Value(0)).current;
+  const sourceRef = useRef<Source>("netease");
   const [qr, setQr] = useState("");
   const [key, setKey] = useState("");
   const [cookie, setCookie] = useState("");
@@ -89,10 +91,32 @@ export default function SourcesScreen(): React.JSX.Element {
     }
   };
 
+  const selectSource = (next: Source): void => {
+    if (next === sourceRef.current) return;
+    const direction = next === "bilibili" ? 1 : -1;
+    sourceMotion.setValue(direction);
+    sourceRef.current = next;
+    setSource(next);
+    setNote("");
+    Animated.spring(sourceMotion, { toValue: 0, useNativeDriver: true, stiffness: 230, damping: 23, mass: 0.8 }).start();
+  };
+
+  const sourcePan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 10 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+    onPanResponderRelease: (_, gesture) => {
+      if (Math.abs(gesture.dx) < 48 && Math.abs(gesture.vx) < 0.38) return;
+      selectSource(gesture.dx < 0 ? "bilibili" : "netease");
+    },
+  })).current;
+
   const tabStyle = (item: Source) => ({
     backgroundColor: source === item ? (isLiquid ? "#ffffffa8" : tokens.surfaceStrong) : "transparent",
     borderRadius: 18,
   });
+  const sourceContentStyle = {
+    opacity: sourceMotion.interpolate({ inputRange: [-1, 0, 1], outputRange: [0.3, 1, 0.3] }),
+    transform: [{ translateX: sourceMotion.interpolate({ inputRange: [-1, 0, 1], outputRange: [-46, 0, 46] }) }],
+  };
 
   return <ThemedScreen>
     <SafeAreaView className="flex-1" edges={["top", "bottom"]}>
@@ -111,28 +135,30 @@ export default function SourcesScreen(): React.JSX.Element {
 
         <ThemedCard className="mt-8 p-1.5" style={{ borderRadius: 23 }}>
           <View className="flex-row">
-            {(["netease", "bilibili"] as Source[]).map((item) => <Pressable key={item} className="h-12 flex-1 items-center justify-center" style={tabStyle(item)} onPress={() => { setSource(item); setNote(""); }}>
+            {(["netease", "bilibili"] as Source[]).map((item) => <Pressable key={item} className="h-12 flex-1 items-center justify-center" style={tabStyle(item)} onPress={() => selectSource(item)}>
               <Text style={{ color: source === item ? tokens.text : tokens.mutedText, fontSize: 15, fontWeight: "800" }}>{item === "netease" ? t("neteaseCloud") : t("bilibili")}</Text>
             </Pressable>)}
           </View>
         </ThemedCard>
 
-        {source === "netease" ? <View className="flex-1 items-center justify-center pb-12">
-          <View className="items-center">
-            <ThemedCard className="h-[294px] w-[294px] items-center justify-center p-2" style={{ borderRadius: 42 }}>
-              {qr ? <Image className="h-[278px] w-[278px] rounded-[34px]" source={{ uri: qr }} contentFit="contain" /> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
-                <Text style={{ color: tokens.mutedText, fontSize: 15, fontWeight: "700" }}>{t("secureSessionWaiting")}</Text>
-              </LinearGradient>}
+        <Animated.View className="flex-1" style={sourceContentStyle} {...sourcePan.panHandlers}>
+          {source === "netease" ? <View className="flex-1 items-center justify-center pb-12">
+            <View className="items-center">
+              <ThemedCard className="h-[294px] w-[294px] items-center justify-center p-2" style={{ borderRadius: 42 }}>
+                {qr ? <Image className="h-[278px] w-[278px] rounded-[34px]" source={{ uri: qr }} contentFit="contain" /> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
+                  <Text style={{ color: tokens.mutedText, fontSize: 15, fontWeight: "700" }}>{t("secureSessionWaiting")}</Text>
+                </LinearGradient>}
+              </ThemedCard>
+              <Text className="mt-6" style={{ color: tokens.text, fontSize: 19, fontWeight: "800" }}>{qr ? t("scanInNetease") : t("connectNetease")}</Text>
+              <Text className="mt-2 text-center text-sm leading-5" style={{ color: tokens.mutedText }}>{qr ? t("qrCompletesAutomatically") : t("qrSessionOnly")}</Text>
+            </View>
+          </View> : <View className="flex-1 pt-8">
+            <ThemedCard className="p-0" style={{ borderRadius: 28 }}>
+              <View className="px-5 pb-3 pt-5"><Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("importCookie")}</Text><Text className="mt-1 text-sm leading-5" style={{ color: tokens.mutedText }}>{t("cookieRequirements")}</Text></View>
+              <TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" autoCorrect={false} multiline placeholder={t("cookiePlaceholder")} placeholderTextColor={tokens.mutedText} textAlignVertical="top" style={{ minHeight: 210, color: tokens.text, backgroundColor: isLiquid ? "#ffffff30" : tokens.backgroundSecondary, borderTopWidth: 1, borderColor: tokens.surfaceBorder, padding: 20, fontSize: 14, lineHeight: 22 }} />
             </ThemedCard>
-            <Text className="mt-6" style={{ color: tokens.text, fontSize: 19, fontWeight: "800" }}>{qr ? t("scanInNetease") : t("connectNetease")}</Text>
-            <Text className="mt-2 text-center text-sm leading-5" style={{ color: tokens.mutedText }}>{qr ? t("qrCompletesAutomatically") : t("qrSessionOnly")}</Text>
-          </View>
-        </View> : <View className="flex-1 pt-8">
-          <ThemedCard className="p-0" style={{ borderRadius: 28 }}>
-            <View className="px-5 pb-3 pt-5"><Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("importCookie")}</Text><Text className="mt-1 text-sm leading-5" style={{ color: tokens.mutedText }}>{t("cookieRequirements")}</Text></View>
-            <TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" autoCorrect={false} multiline placeholder={t("cookiePlaceholder")} placeholderTextColor={tokens.mutedText} textAlignVertical="top" style={{ minHeight: 210, color: tokens.text, backgroundColor: isLiquid ? "#ffffff30" : tokens.backgroundSecondary, borderTopWidth: 1, borderColor: tokens.surfaceBorder, padding: 20, fontSize: 14, lineHeight: 22 }} />
-          </ThemedCard>
-        </View>}
+          </View>}
+        </Animated.View>
 
         <View className="mb-2">
           <Pressable disabled={loading || (source === "bilibili" && !cookie.trim())} className="h-14 items-center justify-center overflow-hidden rounded-[28px]" style={{ opacity: loading || (source === "bilibili" && !cookie.trim()) ? 0.48 : 1 }} onPress={() => void (source === "netease" ? createQr() : saveBilibili())}>

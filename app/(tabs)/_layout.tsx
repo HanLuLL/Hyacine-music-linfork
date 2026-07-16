@@ -97,11 +97,25 @@ function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWid
 export default function TabsLayout(): React.JSX.Element {
   const { t } = useI18n();
   const { preferences, tokens } = useTheme();
+  const pathname = usePathname();
+  const router = useRouter();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
-
-  return <View className="flex-1"><Tabs screenOptions={{
+  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : pathname.includes("/profile") ? 3 : 0;
+  const activeIndexRef = useRef(activeIndex);
+  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+  const pagePan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponderCapture: (_, gesture) => Math.abs(gesture.dx) > 14 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.25,
+    onPanResponderRelease: (_, gesture) => {
+      if (Math.abs(gesture.dx) < 52 && Math.abs(gesture.vx) < 0.42) return;
+      const step = gesture.dx < 0 ? 1 : -1;
+      const next = Math.max(0, Math.min(tabs.length - 1, activeIndexRef.current + step));
+      if (next !== activeIndexRef.current) router.replace(tabs[next].route);
+    },
+  })).current;
+  return <View className="flex-1" {...pagePan.panHandlers}><Tabs screenOptions={{
     headerShown: false,
+    animation: "fade",
     sceneStyle: { backgroundColor: tokens.background },
     tabBarStyle: {
       display: isLiquid ? "none" : "flex",

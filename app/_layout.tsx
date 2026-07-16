@@ -30,5 +30,5 @@ function AppNavigator(): React.JSX.Element {
 }
 
 export default function RootLayout(): React.JSX.Element {
-  return <ThemeProvider><I18nProvider><AccountProvider><StatusBar style="light" /><AppNavigator /></AccountProvider></I18nProvider></ThemeProvider>;
+  return <ThemeProvider><I18nProvider><AccountProvider><StatusBar style="dark" /><AppNavigator /></AccountProvider></I18nProvider></ThemeProvider>;
 }
