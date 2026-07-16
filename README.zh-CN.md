@@ -1,8 +1,8 @@
-# Hyacine.music Mobile
+# 风堇音乐
 
 [English](README.md) · [日本語](README.ja-JP.md)
 
-Hyacine.music 是连接独立 NestJS 音乐后端的 React Native / Expo 移动端音乐播放器。
+风堇音乐是连接独立 NestJS 音乐后端的 React Native / Expo 移动端音乐播放器。
 
 ## 已实现功能
 

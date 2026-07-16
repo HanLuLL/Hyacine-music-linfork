@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Hyacine.music",
-    "description": "中文：支持后台播放、播放队列、媒体控制、三语界面与可定制视觉主题的音乐播放器。English: A music player with background playback, queue management, media controls, three interface languages, and customizable visual themes. 日本語：バックグラウンド再生、再生キュー、メディアコントロール、3 言語 UI、カスタマイズ可能なビジュアルテーマに対応した音楽プレーヤーです。",
+    "name": "风堇音乐",
+    "description": "中文：风堇音乐，支持后台播放、播放队列、媒体控制、三语界面与可定制视觉主题的音乐播放器。English: Fengjin Music is a music player with background playback, queue management, media controls, three interface languages, and customizable visual themes. 日本語：風菫音楽は、バックグラウンド再生、再生キュー、メディアコントロール、3 言語 UI、カスタマイズ可能なビジュアルテーマに対応した音楽プレーヤーです。",
     "slug": "hyacine-mobile",
     "scheme": "hyacine",
     "version": "1.0.0",
@@ -26,7 +26,7 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow Hyacine.music to access audio files for your library."
+          "photosPermission": "Allow Fengjin Music to access audio files for your library."
         }
       ]
     ],
@@ -37,7 +37,7 @@
         "UIBackgroundModes": [
           "audio"
         ],
-        "NSAppleMusicUsageDescription": "Allow Hyacine.music to access your media library."
+        "NSAppleMusicUsageDescription": "Allow Fengjin Music to access your media library."
       }
     },
     "android": {
