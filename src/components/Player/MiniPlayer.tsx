@@ -14,7 +14,7 @@ export function MiniPlayer(): React.JSX.Element | null {
   const { t } = useI18n();
   const { tokens } = useTheme();
   if (!track) return null;
-  return <LiquidControlSurface className="mx-4 mb-2 flex-row items-center rounded-[26px] px-3 py-2" style={{ borderRadius: 26 }}>
+  return <LiquidControlSurface className="absolute bottom-[100px] left-4 right-4 z-20 flex-row items-center rounded-[26px] px-3 py-2" style={{ borderRadius: 26 }}>
     <Pressable className="min-w-0 flex-1 flex-row items-center gap-3" onPress={() => router.push(`/player/${track.id}`)}>
       {track.artwork ? <Image className="h-11 w-11 rounded-2xl" source={{ uri: track.artwork }} /> : <View className="h-11 w-11 rounded-2xl" style={{ backgroundColor: tokens.accent }} />}
       <View className="min-w-0 flex-1"><Text className="truncate text-sm font-semibold" style={{ color: tokens.text }}>{track.title}</Text><Text className="truncate text-xs" style={{ color: tokens.mutedText }}>{t("miniPlayer")} · {track.artist}</Text></View>
