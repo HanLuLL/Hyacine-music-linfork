@@ -29,6 +29,9 @@ const dictionaries = {
     readingList: "Reading & list", fontSize: "Font size", density: "List density",
     fontSmall: "Small", fontMedium: "Medium", fontLarge: "Large", densityCompact: "Compact", densityComfortable: "Comfortable",
     preferencesStored: "Preferences are stored securely on this device",
+    onboardingStep: "FIRST RUN /", onboardingWelcomeBody: "Put your music, identity, and server connection in one player.", onboardingProfileTitle: "Create your profile", onboardingProfileBody: "Your name and avatar appear in your profile.", onboardingBackendTitle: "Connect your server", onboardingBackendBody: "Add a Hyacine server address before entering your library.", onboardingNamePlaceholder: "Name", onboardingAvatarPlaceholder: "Avatar image URL", onboardingBackendHint: "Use a complete address beginning with http:// or https://.", continue: "Continue", finish: "Finish", saving: "Saving",
+    sourcesTitle: "Music sources", sourcesBody: "Connect one source before you enter Hyacine.", neteaseCloud: "Netease Cloud", bilibili: "Bilibili", credentialsLocal: "Credentials stay encrypted on this device.", creatingNeteaseSession: "Creating a Netease login session...", scanNeteaseCode: "Scan this code in the Netease Cloud Music app.", qrUnavailable: "Could not get a QR code. Configure NETEASE_API_BASE and use a backend address reachable from this device.", qrExpired: "This QR code expired. Get a new one.", checkingCookie: "Checking Cookie format...", cookieValidationFailed: "Validation failed. On a phone, use your computer's LAN IP instead of 127.0.0.1.", secureSessionWaiting: "Secure session waiting", scanInNetease: "Scan in Netease Cloud Music", connectNetease: "Connect Netease Cloud Music", qrCompletesAutomatically: "It completes automatically after confirmation", qrSessionOnly: "The QR code is only valid for this session", importCookie: "Import login Cookie", cookieRequirements: "SESSDATA and bili_jct are required.", cookiePlaceholder: "Paste Bilibili Cookie", working: "Working...", refreshQr: "Refresh QR code", getQr: "Get QR code", verifyAndSave: "Verify and save",
+
   },
   "zh-CN": {
     home: "首页", search: "搜索", library: "音乐库", profile: "我的",
@@ -53,6 +56,8 @@ const dictionaries = {
     readingList: "阅读与列表", fontSize: "字体大小", density: "列表显示密度",
     fontSmall: "小", fontMedium: "中", fontLarge: "大", densityCompact: "紧凑", densityComfortable: "舒适",
     preferencesStored: "偏好已安全保存在本机",
+    onboardingStep: "首次启动 /", onboardingWelcomeBody: "把音乐、个人资料和服务器连接放进同一个播放器。", onboardingProfileTitle: "创建个人资料", onboardingProfileBody: "你的昵称和头像会显示在个人中心。", onboardingBackendTitle: "连接服务器", onboardingBackendBody: "进入音乐库前，请添加 Hyacine 服务器地址。", onboardingNamePlaceholder: "昵称", onboardingAvatarPlaceholder: "头像图片 URL", onboardingBackendHint: "请输入以 http:// 或 https:// 开头的完整地址。", continue: "继续", finish: "完成", saving: "正在保存",
+    sourcesTitle: "音乐源", sourcesBody: "进入 Hyacine 前，请先连接一个音乐源。", neteaseCloud: "网易云音乐", bilibili: "哔哩哔哩", credentialsLocal: "凭据仅加密保存在本设备。", creatingNeteaseSession: "正在创建网易云登录会话...", scanNeteaseCode: "请在网易云音乐 App 中扫描此二维码。", qrUnavailable: "无法获取二维码。请配置 NETEASE_API_BASE，并使用设备可以访问的后端地址。", qrExpired: "二维码已过期，请重新获取。", checkingCookie: "正在检查 Cookie 格式...", cookieValidationFailed: "校验失败。手机请填写电脑的局域网 IP，不要填写 127.0.0.1。", secureSessionWaiting: "正在等待安全会话", scanInNetease: "请在网易云音乐中扫码", connectNetease: "连接网易云音乐", qrCompletesAutomatically: "确认登录后将自动完成", qrSessionOnly: "二维码仅在本次会话内有效", importCookie: "导入登录 Cookie", cookieRequirements: "需要 SESSDATA 和 bili_jct。", cookiePlaceholder: "粘贴 Bilibili Cookie", working: "正在处理...", refreshQr: "刷新二维码", getQr: "获取二维码", verifyAndSave: "验证并保存",
   },
   ja: {
     home: "ホーム", search: "検索", library: "ライブラリ", profile: "プロフィール",
@@ -77,6 +82,8 @@ const dictionaries = {
     readingList: "表示とリスト", fontSize: "文字サイズ", density: "リスト密度",
     fontSmall: "小", fontMedium: "中", fontLarge: "大", densityCompact: "コンパクト", densityComfortable: "ゆったり",
     preferencesStored: "設定はこの端末に安全に保存されています",
+    onboardingStep: "初回起動 /", onboardingWelcomeBody: "音楽、プロフィール、サーバー接続をひとつのプレーヤーにまとめます。", onboardingProfileTitle: "プロフィールを作成", onboardingProfileBody: "名前とアバターはプロフィールに表示されます。", onboardingBackendTitle: "サーバーに接続", onboardingBackendBody: "ライブラリに入る前に Hyacine サーバーのアドレスを追加してください。", onboardingNamePlaceholder: "名前", onboardingAvatarPlaceholder: "アバター画像 URL", onboardingBackendHint: "http:// または https:// で始まる完全なアドレスを入力してください。", continue: "続ける", finish: "完了", saving: "保存中",
+    sourcesTitle: "音楽ソース", sourcesBody: "Hyacine に入る前に、ひとつの音楽ソースを接続してください。", neteaseCloud: "NetEase Cloud Music", bilibili: "Bilibili", credentialsLocal: "認証情報はこの端末に暗号化して保存されます。", creatingNeteaseSession: "NetEase のログインセッションを作成しています...", scanNeteaseCode: "NetEase Cloud Music アプリでこのコードをスキャンしてください。", qrUnavailable: "QR コードを取得できません。NETEASE_API_BASE を設定し、この端末から到達できるバックエンドアドレスを使用してください。", qrExpired: "この QR コードは期限切れです。新しいコードを取得してください。", checkingCookie: "Cookie 形式を確認しています...", cookieValidationFailed: "検証に失敗しました。スマートフォンでは 127.0.0.1 ではなく、PC の LAN IP を使用してください。", secureSessionWaiting: "安全なセッションを待機中", scanInNetease: "NetEase Cloud Music でスキャン", connectNetease: "NetEase Cloud Music を接続", qrCompletesAutomatically: "確認後に自動で完了します", qrSessionOnly: "QR コードはこのセッションでのみ有効です", importCookie: "ログイン Cookie をインポート", cookieRequirements: "SESSDATA と bili_jct が必要です。", cookiePlaceholder: "Bilibili Cookie を貼り付け", working: "処理中...", refreshQr: "QR コードを更新", getQr: "QR コードを取得", verifyAndSave: "検証して保存",
   },
 } as const;
 
