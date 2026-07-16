@@ -5,6 +5,17 @@
 Hyacine.music is the React Native / Expo mobile client for a separately deployed
 NestJS music backend.
 
+## Implemented Features
+- Playback foundation with queue management, media controls, background playback, a mini player, and a full-screen player.
+- Interface localization for Simplified Chinese, English, and Japanese, with the language preference persisted locally.
+- Four UI styles: Default, Frosted, Liquid, and MIUI; four visual presets: Midnight, Black, Daylight, and Aurora.
+- Three player layouts: Vinyl, Immersive, and Minimal.
+- Locally persisted theme settings for style, preset, layout, font scale, list density, and a custom six-digit HEX accent color.
+- Frosted and Liquid use different material treatments: Frosted is a stable translucent surface, while Liquid adds animated refraction highlights and a dynamic color field.
+
+### Glass Rendering Notes
+On iOS, Frosted uses the official `expo-blur` `BlurView` for background blur. Android real-time blur behavior depends on the Expo native implementation, OS version, and device capability. The Android-compatible presentation uses translucent tinting and, for Liquid, animated refraction and gloss; it does not claim identical native real-time blur on every Android device.
+
 ## Technology
 
 - Expo SDK 57, React Native 0.86, TypeScript
