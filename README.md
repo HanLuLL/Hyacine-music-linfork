@@ -26,4 +26,4 @@ The backend, deployment instructions, and music-source integration details live 
 
 ## License
 
-Private project. All rights reserved.
+See [LICENSE](LICENSE).

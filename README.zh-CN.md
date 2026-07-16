@@ -26,4 +26,4 @@ pnpm start
 
 ## 许可证
 
-私有项目，保留所有权利。
+参见 [LICENSE](LICENSE)。
