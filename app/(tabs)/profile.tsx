@@ -1,5 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
+import { useAccount } from "@/account";
 import { languages, type Language, useI18n } from "@/i18n";
 import { ThemedCard } from "@/components/ui/ThemedCard";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
@@ -13,6 +15,7 @@ const languageLabels: Record<Language, string> = {
 
 export default function ProfileScreen(): React.JSX.Element {
   const { language, setLanguage, t } = useI18n();
+  const { profile } = useAccount();
   const { tokens } = useTheme();
 
   return (
@@ -29,17 +32,18 @@ export default function ProfileScreen(): React.JSX.Element {
             <Text style={{ color: tokens.text, fontSize: 17 }}>⚙</Text>
           </Pressable>
         </View>
-        <ThemedCard className="mt-5 p-4">
-          <View className="flex-row items-center">
-            <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.accent}24` }}>
-              <Text className="text-base font-bold" style={{ color: tokens.accent }}>H</Text>
+        <Pressable onPress={() => router.push("/onboarding")}>
+          <ThemedCard className="mt-5 p-4">
+            <View className="flex-row items-center">
+              <Image className="h-12 w-12 rounded-full" source={{ uri: profile?.avatarUrl }} style={{ backgroundColor: `${tokens.accent}24` }} />
+              <View className="ml-3 flex-1">
+                <Text className="font-bold" style={{ color: tokens.text }}>{profile?.displayName}</Text>
+                <Text className="mt-1 text-xs leading-4" numberOfLines={1} style={{ color: tokens.mutedText }}>{profile?.backendUrl}</Text>
+              </View>
+              <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </View>
-            <View className="ml-3 flex-1">
-              <Text className="font-bold" style={{ color: tokens.text }}>{t("notSignedIn")}</Text>
-              <Text className="mt-1 text-xs leading-4" style={{ color: tokens.mutedText }}>{t("profileHint")}</Text>
-            </View>
-          </View>
-        </ThemedCard>
+          </ThemedCard>
+        </Pressable>
 
         <Text className="mt-9 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("language").toUpperCase()}</Text>
         <ThemedCard className="mt-3 p-0">
