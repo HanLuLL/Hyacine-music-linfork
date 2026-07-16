@@ -9,6 +9,8 @@ import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
 
+const brandIcon = require("../assets/icon.png");
+
 type PageKey = "welcome" | "profile" | "backend";
 interface Page { key: PageKey; }
 const pages: Page[] = [{ key: "welcome" }, { key: "profile" }, { key: "backend" }];
@@ -28,7 +30,7 @@ export default function OnboardingScreen(): React.JSX.Element {
   const { tokens } = useTheme();
   const { width } = useWindowDimensions();
   const copy = useMemo(() => ({
-    welcome: { title: "Hyacine.music", body: t("onboardingWelcomeBody") },
+    welcome: { title: "风堇音乐", body: t("onboardingWelcomeBody") },
     profile: { title: t("onboardingProfileTitle"), body: t("onboardingProfileBody") },
     backend: { title: t("onboardingBackendTitle"), body: t("onboardingBackendBody") },
   }), [t]);
@@ -56,7 +58,7 @@ export default function OnboardingScreen(): React.JSX.Element {
     try {
       const response = await fetch(`${normalizedBackend}/api/v1/health`);
       if (!response.ok) throw new Error();
-      await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: normalizedBackend, musicSource: profile?.musicSource ?? null });
+      await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: normalizedBackend, musicSource: profile?.musicSource ?? null, onboardingCompleted: true });
       router.replace("/sources");
     } catch {
       setBackendError("无法连接服务器。手机请填写可访问的局域网 IP 或域名，不要填写 127.0.0.1。");
@@ -77,7 +79,7 @@ export default function OnboardingScreen(): React.JSX.Element {
     return <View style={{ width }}><Animated.View className="px-7 pt-24" style={{ opacity, transform: [{ translateX: contentX }] }}>
       <Animated.View style={{ transform: [{ translateY: titleY }] }}>
         <Text style={{ color: tokens.mutedText, fontSize: 12, fontWeight: "800", letterSpacing: 1.4 }}>{t("onboardingStep")} {String(index + 1).padStart(2, "0")}</Text>
-        {item.key === "welcome" ? <Animated.View className="mt-7 h-28 w-28 items-center justify-center" style={{ transform: [{ scale }, { rotate: visualRotate }] }}><LiquidControlSurface className="h-full w-full items-center justify-center rounded-[36px]" style={{ borderRadius: 36 }}><Text style={{ color: tokens.text, fontSize: 42, fontWeight: "900" }}>H</Text></LiquidControlSurface></Animated.View> : null}
+        {item.key === "welcome" ? <Animated.View className="mt-7 h-28 w-28 overflow-hidden rounded-[36px]" style={{ transform: [{ scale }, { rotate: visualRotate }], shadowColor: "#20211e", shadowOpacity: 0.15, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 }}><Image className="h-full w-full" source={brandIcon} contentFit="cover" /></Animated.View> : null}
         <Text className={item.key === "welcome" ? "mt-10" : "mt-7"} style={{ color: tokens.text, fontSize: item.key === "welcome" ? 35 : 31, fontWeight: "800" }}>{currentCopy.title}</Text>
         <Text className="mt-4 text-base leading-7" style={{ color: tokens.mutedText }}>{currentCopy.body}</Text>
       </Animated.View>

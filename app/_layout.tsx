@@ -14,7 +14,7 @@ function AppNavigator(): React.JSX.Element {
 
   if (!hydrated) return <AppLoadingScreen />;
 
-  if (!profile) return <Stack screenOptions={{ headerShown: false, animation: "fade" }}><Stack.Screen name="onboarding" /></Stack>;
+  if (!profile || !profile.onboardingCompleted) return <Stack screenOptions={{ headerShown: false, animation: "fade" }}><Stack.Screen name="onboarding" /></Stack>;
   if (!profile.musicSource) return <Stack screenOptions={{ headerShown: false, animation: "fade" }}><Stack.Screen name="sources" /></Stack>;
 
   return <>
