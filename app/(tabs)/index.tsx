@@ -19,10 +19,18 @@ export default function HomeScreen(): React.JSX.Element {
         <LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>H</Text></LiquidControlSurface>
       </View>
 
-      <View className="mt-11 overflow-hidden" style={{ borderRadius: 28, backgroundColor: `${tokens.accent}1c` }}>
-        <Image className="absolute inset-0 h-full w-full opacity-25" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" />
-        <View className="min-h-60 justify-end p-6"><Text className="text-xs font-bold tracking-[2px]" style={{ color: tokens.accent }}>{t("featured")}</Text><Text className="mt-4 text-3xl font-bold" style={{ color: tokens.text }}>{DEMO_TRACK.title}</Text><Text className="mt-1 text-base" style={{ color: tokens.mutedText }}>{DEMO_TRACK.artist}</Text></View>
-        <LiquidControlSurface className="absolute bottom-4 left-5 h-11 flex-row items-center justify-center rounded-full px-5" style={{ borderRadius: 22 }}><Pressable onPress={() => void playTrack(DEMO_TRACK)}><Text style={{ color: tokens.text, fontWeight: "800" }}>▶  {t("playDemo")}</Text></Pressable></LiquidControlSurface>
+      <View className="relative mt-11 h-[338px] overflow-hidden" style={{ backgroundColor: `${tokens.accent}12`, borderRadius: 28 }}>
+        <View className="absolute right-[-20px] top-2 h-[230px] w-[218px]">
+          <Image className="absolute h-[178px] w-[142px] rounded-[22px]" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" style={{ left: 53, top: 7, opacity: 0.34, transform: [{ rotate: "13deg" }] }} />
+          <Image className="absolute h-[190px] w-[152px] rounded-[24px]" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" style={{ left: 23, top: 13, opacity: 0.64, transform: [{ rotate: "6deg" }] }} />
+          <View className="absolute h-[202px] w-[162px] overflow-hidden rounded-[26px]" style={{ left: 0, top: 18, shadowColor: "#17212d", shadowOpacity: 0.24, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 7, transform: [{ rotate: "-3deg" }] }}><Image className="h-full w-full" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" /></View>
+        </View>
+        <View className="absolute left-6 right-6 bottom-6">
+          <Text className="text-xs font-bold tracking-[2px]" style={{ color: tokens.accent }}>{t("featured")}</Text>
+          <Text className="mt-3 pr-28 text-3xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{DEMO_TRACK.title}</Text>
+          <Text className="mt-1 pr-24 text-base" numberOfLines={1} style={{ color: tokens.mutedText }}>{DEMO_TRACK.artist}</Text>
+          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><Pressable className="h-full flex-row items-center justify-center" onPress={() => void playTrack(DEMO_TRACK)}><Text style={{ color: tokens.text, fontWeight: "800" }}>▶  {t("playDemo")}</Text></Pressable></LiquidControlSurface>
+        </View>
       </View>
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("recentlyPlayed")}</Text><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>01</Text></View>
