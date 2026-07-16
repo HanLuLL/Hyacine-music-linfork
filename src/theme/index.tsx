@@ -174,7 +174,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       if (raw) {
         try {
           const stored = JSON.parse(raw) as Partial<ThemePreferences> & { uiStyle?: unknown };
-          setPreferences({ ...DEFAULT_PREFERENCES, ...stored, uiStyle: migrateUiStyle(stored.uiStyle) });
+          setPreferences({ ...DEFAULT_PREFERENCES, ...stored, customAccent: stored.customAccent?.trim().toUpperCase() ?? null, uiStyle: migrateUiStyle(stored.uiStyle) });
         } catch {
           // Invalid local preferences are safely ignored.
         }
@@ -207,7 +207,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       setPlayerLayout: (playerLayout) => update({ playerLayout }),
       setFontScale: (fontScale) => update({ fontScale }),
       setListDensity: (listDensity) => update({ listDensity }),
-      setCustomAccent: (customAccent) => update({ customAccent }),
+      setCustomAccent: (customAccent) => update({ customAccent: customAccent?.trim().toUpperCase() ?? null }),
       setMagicColorEnabled: (magicColorEnabled) => update({ magicColorEnabled }),
     }),
     [hydrated, preferences, tokens],
