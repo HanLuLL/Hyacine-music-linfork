@@ -77,8 +77,8 @@ function LiquidTabBar(): React.JSX.Element {
     <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
       {tabWidth ? <LensPosition position={position} tabWidth={tabWidth} /> : null}
       <View pointerEvents="box-none" className="flex-1 flex-row">
-        {tabs.map((tab, index) => { const active = index === activeIndex; return <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
-          <View className="h-[60px] items-center justify-center"><Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: active ? 24 : 20, fontWeight: "800" }}>{tab.symbol}</Text><Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: active ? 11 : 10, fontWeight: "800" }}>{t(tab.key)}</Text></View>
+        {tabs.map((tab, index) => { const active = index === activeIndex; const focus = position.interpolate({ inputRange: [index - 1, index, index + 1], outputRange: [0, 1, 0], extrapolate: "clamp" }); const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1.12] }); const opacity = focus.interpolate({ inputRange: [0, 1], outputRange: [0.48, 1] }); return <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
+          <Animated.View className="h-[60px] items-center justify-center" style={{ opacity, transform: [{ scale }] }}><Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 21, fontWeight: "800" }}>{tab.symbol}</Text><Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 10, fontWeight: "800" }}>{t(tab.key)}</Text></Animated.View>
         </Pressable>; })}
       </View>
     </View>
