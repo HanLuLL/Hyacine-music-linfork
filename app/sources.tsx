@@ -1,0 +1,22 @@
+import { useEffect, useState } from "react";
+import { Image } from "expo-image";
+import QRCode from "qrcode";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { router } from "expo-router";
+import { useAccount } from "@/account";
+import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { useTheme } from "@/theme";
+
+type Source = "netease" | "bilibili";
+export default function SourcesScreen(): React.JSX.Element {
+  const { profile, saveSourceCredential } = useAccount();
+  const { tokens } = useTheme();
+  const [source, setSource] = useState<Source>("netease");
+  const [qr, setQr] = useState(""); const [key, setKey] = useState("");
+  const [cookie, setCookie] = useState(""); const [note, setNote] = useState("");
+  const base = profile?.backendUrl ? `${profile.backendUrl}/api/v1` : "";
+  const createQr = async (): Promise<void> => { try { setNote("正在获取二维码..."); const data = await fetch(`${base}/music-sources/netease/qr`).then((r) => r.json() as Promise<{ key?: string; qrUrl?: string; message?: string }>); if (!data.key || !data.qrUrl) throw new Error(data.message); setKey(data.key); setQr(await QRCode.toDataURL(data.qrUrl, { margin: 1, width: 260 })); setNote("请使用网易云音乐扫描二维码"); } catch { setNote("后端未配置网易云二维码服务"); } };
+  useEffect(() => { if (!key) return; const timer = setInterval(() => { void fetch(`${base}/music-sources/netease/qr/${key}`).then((r) => r.json() as Promise<{ status?: string; cookie?: string }>).then((data) => { if (data.status === "confirmed" && data.cookie) { clearInterval(timer); void saveSourceCredential("netease", data.cookie).then(() => router.replace("/(tabs)")); } if (data.status === "expired") { clearInterval(timer); setNote("二维码已过期，请重新获取"); } }).catch(() => undefined); }, 1800); return () => clearInterval(timer); }, [base, key, saveSourceCredential]);
+  const saveBilibili = async (): Promise<void> => { try { const data = await fetch(`${base}/music-sources/bilibili/validate-cookie`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cookie }) }).then((r) => r.json() as Promise<{ valid?: boolean }>); if (!data.valid) { setNote("Cookie 必须包含 SESSDATA 和 bili_jct"); return; } await saveSourceCredential("bilibili", cookie); router.replace("/(tabs)"); } catch { setNote("无法连接后端校验 Cookie"); } };
+  return <ThemedScreen><View className="flex-1 px-7 pt-20"><Text style={{ color: tokens.text, fontSize: 30, fontWeight: "900" }}>添加音乐源</Text><Text className="mt-3 text-base leading-7" style={{ color: tokens.mutedText }}>至少连接一个音乐源后才能开始使用。</Text><View className="mt-10 flex-row rounded-full p-1" style={{ backgroundColor: `${tokens.text}12` }}>{(["netease", "bilibili"] as Source[]).map((item) => <Pressable key={item} className="h-11 flex-1 items-center justify-center" style={{ borderRadius: 22, backgroundColor: source === item ? tokens.surfaceStrong : "transparent" }} onPress={() => setSource(item)}><Text style={{ color: source === item ? tokens.text : tokens.mutedText, fontWeight: "800" }}>{item === "netease" ? "网易云扫码" : "Bilibili Cookie"}</Text></Pressable>)}</View>{source === "netease" ? <View className="mt-10 items-center">{qr ? <Image className="h-[260px] w-[260px] rounded-3xl" source={{ uri: qr }} /> : <View className="h-[260px] w-[260px] items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.text}0c` }}><Text style={{ color: tokens.mutedText }}>二维码将在这里显示</Text></View>}<Pressable className="mt-7 min-h-12 items-center justify-center px-7" style={{ borderRadius: 24, backgroundColor: tokens.accent }} onPress={() => void createQr()}><Text style={{ color: "#111111", fontWeight: "900" }}>{qr ? "重新获取" : "获取二维码"}</Text></Pressable></View> : <View className="mt-10"><TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" multiline placeholder="粘贴 Bilibili Cookie" placeholderTextColor={tokens.mutedText} style={{ minHeight: 150, color: tokens.text, borderRadius: 20, borderWidth: 1, borderColor: tokens.surfaceBorder, backgroundColor: tokens.surface, padding: 16, textAlignVertical: "top" }} /><Pressable className="mt-6 min-h-12 items-center justify-center" style={{ borderRadius: 24, backgroundColor: cookie.trim() ? tokens.accent : `${tokens.text}20` }} onPress={() => void saveBilibili()}><Text style={{ color: cookie.trim() ? "#111111" : tokens.mutedText, fontWeight: "900" }}>保存 Cookie</Text></Pressable></View>}<Text className="mt-6 text-center text-xs leading-5" style={{ color: tokens.mutedText }}>{note || "凭据仅加密保存在本设备，不上传或写入服务器数据库。"}</Text></View></ThemedScreen>;
+}

@@ -36,8 +36,8 @@ export default function OnboardingScreen(): React.JSX.Element {
   const finish = async (): Promise<void> => {
     if (!complete || saving) return;
     setSaving(true);
-    await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: backend });
-    router.replace("/(tabs)");
+    await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: backend, musicSource: profile?.musicSource ?? null });
+    router.replace("/sources");
   };
   const render = ({ item }: ListRenderItemInfo<Page>): React.JSX.Element => <View className="px-7 pt-24" style={{ width }}>
     {item.key === "welcome" ? <>

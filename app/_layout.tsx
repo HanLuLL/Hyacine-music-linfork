@@ -14,11 +14,13 @@ function AppNavigator(): React.JSX.Element {
   if (!hydrated) return <View className="flex-1 items-center justify-center" style={{ backgroundColor: tokens.background }}><ActivityIndicator color={tokens.accent} /></View>;
 
   if (!profile) return <Stack screenOptions={{ headerShown: false, animation: "fade" }}><Stack.Screen name="onboarding" /></Stack>;
+  if (!profile.musicSource) return <Stack screenOptions={{ headerShown: false, animation: "fade" }}><Stack.Screen name="sources" /></Stack>;
 
   return <>
     <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="onboarding" options={{ presentation: "card" }} />
+      <Stack.Screen name="sources" options={{ presentation: "card" }} />
       <Stack.Screen name="settings" options={{ presentation: "card" }} />
       <Stack.Screen name="player/[id]" options={{ presentation: "card" }} />
     </Stack>
