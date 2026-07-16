@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Hyacine.music",
+    "description": "中文：Hyacine.music 是支持后台播放、播放队列与媒体控制的音乐播放器。日本語：Hyacine.music は、バックグラウンド再生・再生キュー・メディアコントロールに対応した音楽プレーヤーです。",
     "slug": "hyacine-mobile",
     "scheme": "hyacine",
     "version": "1.0.0",

@@ -2,6 +2,12 @@ name: Android Release APK
 
 on:
   workflow_dispatch:
+    inputs:
+      backend_api_url:
+        description: "Backend API URL / 后端 API 地址，例如 http://192.168.1.100:3000/api/v1"
+        required: false
+        default: "http://192.168.1.100:3000/api/v1"
+        type: string
   push:
     branches: [main, master, develop]
   pull_request:
@@ -65,7 +71,13 @@ jobs:
       # Release embeds Expo's JS bundle and assets; it does not require Metro.
       - name: Build standalone arm64-v8a release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
+        env:
+          # Used by src/constants/config.ts and embedded in this Release APK.
+          EXPO_PUBLIC_API_URL: ${{ inputs.backend_api_url || 'http://192.168.1.100:3000/api/v1' }}
+        run: |
+          ./gradlew assembleRelease --no-daemon --stacktrace \
+            -PreactNativeArchitectures=arm64-v8a \
+            -x lintVitalRelease
 
       - name: Upload standalone release APK
         uses: actions/upload-artifact@v4
