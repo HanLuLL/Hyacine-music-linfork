@@ -52,6 +52,8 @@ const DEFAULT_PREFERENCES: ThemePreferences = {
   magicColorEnabled: false,
 };
 
+export const presetAccents: Record<ThemePreset, string> = { midnight: "#a855f7", black: "#00d4ff", daylight: "#4e7a64", aurora: "#34d399" };
+
 const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">> = {
   midnight: {
     background: "#0f0c29",
@@ -201,7 +203,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       tokens,
       hydrated,
       setUiStyle: (uiStyle) => update({ uiStyle }),
-      setPreset: (preset) => update({ preset }),
+      setPreset: (preset) => update({ preset, customAccent: null }),
       setPlayerLayout: (playerLayout) => update({ playerLayout }),
       setFontScale: (fontScale) => update({ fontScale }),
       setListDensity: (listDensity) => update({ listDensity }),
