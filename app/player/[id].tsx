@@ -5,6 +5,7 @@ import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
 import { usePlayerStore } from "@/store/playerStore";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { useTheme } from "@/theme";
 
 function formatDuration(value: number): string {
@@ -140,9 +141,11 @@ export default function FullPlayerScreen(): React.JSX.Element {
                 </View>
               ) : null}
             </View>
-            <View className="mt-10 rounded-3xl border p-5" style={{ backgroundColor: tokens.surfaceStrong, borderColor: tokens.surfaceBorder, borderRadius: tokens.cardRadius }}>
-              <Text numberOfLines={1} style={{ color: tokens.text, fontSize: 25, fontWeight: "800" }}>{track.title}</Text>
-              <Text className="mt-2 text-base" numberOfLines={1} style={{ color: tokens.mutedText }}>{track.artist}</Text>
+            <View className="mt-10">
+              <View className="flex-row items-center justify-between">
+                <View className="min-w-0 flex-1 pr-4"><Text numberOfLines={1} style={{ color: tokens.text, fontSize: 25, fontWeight: "800" }}>{track.title}</Text><Text className="mt-2 text-base" numberOfLines={1} style={{ color: tokens.mutedText }}>{track.artist}</Text></View>
+                <LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Text style={{ color: tokens.text, fontSize: 20 }}>♡</Text></LiquidControlSurface>
+              </View>
               {progressBar}
               {controls}
             </View>
