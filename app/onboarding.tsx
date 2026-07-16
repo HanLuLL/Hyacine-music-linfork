@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, FlatList, Pressable, Text, TextInput, useWindowDimensions, View, type ListRenderItemInfo } from "react-native";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -20,6 +21,7 @@ export default function OnboardingScreen(): React.JSX.Element {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   const [backend, setBackend] = useState("");
+  const [backendError, setBackendError] = useState("");
   const [saving, setSaving] = useState(false);
   const { profile, saveProfile } = useAccount();
   const { t } = useI18n();
@@ -38,13 +40,29 @@ export default function OnboardingScreen(): React.JSX.Element {
     setBackend(profile.backendUrl);
   }, [profile]);
 
-  const complete = Boolean(name.trim() && avatar.trim() && urlPattern.test(backend.trim()));
+  const complete = Boolean(name.trim() && urlPattern.test(backend.trim()));
   const next = (): void => listRef.current?.scrollToOffset({ offset: Math.min(page + 1, pages.length - 1) * width, animated: true });
+  const chooseAvatar = async (): Promise<void> => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (!result.canceled) setAvatar(result.assets[0]?.uri ?? "");
+  };
   const finish = async (): Promise<void> => {
     if (!complete || saving) return;
     setSaving(true);
-    await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: backend, musicSource: profile?.musicSource ?? null });
-    router.replace("/sources");
+    setBackendError("");
+    const normalizedBackend = backend.trim().replace(/\/$/, "");
+    try {
+      const response = await fetch(`${normalizedBackend}/api/v1/health`);
+      if (!response.ok) throw new Error();
+      await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: normalizedBackend, musicSource: profile?.musicSource ?? null });
+      router.replace("/sources");
+    } catch {
+      setBackendError("无法连接服务器。手机请填写可访问的局域网 IP 或域名，不要填写 127.0.0.1。");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const render = ({ item, index }: ListRenderItemInfo<Page>): React.JSX.Element => {
@@ -65,13 +83,13 @@ export default function OnboardingScreen(): React.JSX.Element {
       </Animated.View>
       <Animated.View style={{ transform: [{ translateY: detailY }] }}>
         {item.key === "profile" ? <>
-          <View className="mt-11 h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}2a` }}>{avatar ? <Image className="h-full w-full" source={{ uri: avatar }} /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{name.trim().slice(0, 1).toUpperCase() || "H"}</Text>}</View>
+          <Pressable className="mt-11 h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}2a` }} onPress={() => void chooseAvatar()}>{avatar ? <Image className="h-full w-full" source={{ uri: avatar }} /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{name.trim().slice(0, 1).toUpperCase() || "H"}</Text>}</Pressable>
           <LiquidControlSurface className="mt-8 h-14 rounded-[18px] px-5" style={{ borderRadius: 18 }}><TextInput value={name} onChangeText={setName} placeholder={t("onboardingNamePlaceholder")} placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
-          <LiquidControlSurface className="mt-3 h-14 rounded-[18px] px-5" style={{ borderRadius: 18 }}><TextInput value={avatar} onChangeText={setAvatar} autoCapitalize="none" placeholder={t("onboardingAvatarPlaceholder")} placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
+          <Pressable className="mt-3 h-14 items-center justify-center rounded-[18px] border" style={{ borderColor: tokens.surfaceBorder, backgroundColor: tokens.surface }} onPress={() => void chooseAvatar()}><Text style={{ color: tokens.text, fontSize: 15, fontWeight: "800" }}>{avatar ? "更换本地头像" : "从相册选择头像"}</Text></Pressable>
         </> : null}
         {item.key === "backend" ? <>
-          <LiquidControlSurface className="mt-12 h-14 rounded-[18px] px-5" style={{ borderRadius: 18, borderColor: backend && !urlPattern.test(backend) ? "#ef4444" : undefined }}><TextInput value={backend} onChangeText={setBackend} autoCapitalize="none" keyboardType="url" placeholder="https://music.example.com" placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
-          <Text className="mt-3 text-xs leading-5" style={{ color: tokens.mutedText }}>{t("onboardingBackendHint")}</Text>
+          <LiquidControlSurface className="mt-12 h-14 rounded-[18px] px-5" style={{ borderRadius: 18, borderColor: backendError || (backend && !urlPattern.test(backend)) ? "#ef4444" : undefined }}><TextInput value={backend} onChangeText={(value) => { setBackend(value); setBackendError(""); }} autoCapitalize="none" keyboardType="url" placeholder="https://music.example.com" placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
+          <Text className="mt-3 text-xs leading-5" style={{ color: backendError ? "#ef4444" : tokens.mutedText }}>{backendError || t("onboardingBackendHint")}</Text>
         </> : null}
       </Animated.View>
     </Animated.View></View>;

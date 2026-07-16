@@ -9,8 +9,8 @@ const credentialKey = (source: MusicSource): string => `hyacine.music-source.${s
 const AccountContext = createContext<AccountContextValue | null>(null);
 
 function readProfile(value: Partial<AccountProfile>): AccountProfile | null {
-  if (!value.displayName?.trim() || !value.avatarUrl?.trim() || !value.backendUrl?.trim()) return null;
-  return { displayName: value.displayName, avatarUrl: value.avatarUrl, backendUrl: value.backendUrl, musicSource: value.musicSource ?? null };
+  if (!value.displayName?.trim() || !value.backendUrl?.trim()) return null;
+  return { displayName: value.displayName, avatarUrl: value.avatarUrl?.trim() ?? "", backendUrl: value.backendUrl, musicSource: value.musicSource ?? null };
 }
 
 export function AccountProvider({ children }: PropsWithChildren): React.JSX.Element {
