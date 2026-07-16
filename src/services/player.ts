@@ -4,13 +4,22 @@ import TrackPlayer, {
   State,
 } from "react-native-track-player";
 import { usePlayerStore } from "@/store/playerStore";
+import playbackService from "@/services/playbackService";
 import type { Track } from "@/types/music";
 
 let initialized = false;
+let serviceRegistered = false;
+
+function registerPlaybackService(): void {
+  if (serviceRegistered) return;
+  TrackPlayer.registerPlaybackService(() => playbackService);
+  serviceRegistered = true;
+}
 
 export async function initializePlayer(): Promise<void> {
   if (initialized) return;
 
+  registerPlaybackService();
   await TrackPlayer.setupPlayer();
   await TrackPlayer.updateOptions({
     capabilities: [

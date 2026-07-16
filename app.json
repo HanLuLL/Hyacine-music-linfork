@@ -11,20 +11,41 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      ["expo-notifications", { "icon": "./assets/icon.png", "color": "#d7f56a" }],
-      ["expo-media-library", { "photosPermission": "Allow Hyacine.music to access audio files for your library." }]
+      ["expo-splash-screen", {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#11120e"
+      }],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#d7f56a"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Hyacine.music to access audio files for your library."
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hyacine.music",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"],
+        "UIBackgroundModes": [
+          "audio"
+        ],
         "NSAppleMusicUsageDescription": "Allow Hyacine.music to access your media library."
       }
     },
     "android": {
       "package": "com.hyacine.music",
-      "permissions": ["android.permission.POST_NOTIFICATIONS", "android.permission.READ_MEDIA_AUDIO"],
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.READ_MEDIA_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#11120e",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -32,8 +53,12 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
     },
-    "web": { "favicon": "./assets/favicon.png" },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "newArchEnabled": false,
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

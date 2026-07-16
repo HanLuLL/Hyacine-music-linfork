@@ -1,7 +1,4 @@
-import { useEffect } from "react";
-import { useProgress } from "react-native-track-player";
-import { initializePlayer, playTrack, togglePlayback } from "@/services/player";
-import { usePlayerStore } from "@/store/playerStore";
+import { useCallback } from "react";
 import type { Track } from "@/types/music";
 
 interface UseAudioResult {
@@ -9,17 +6,20 @@ interface UseAudioResult {
   togglePlayback: () => Promise<void>;
 }
 
+/**
+ * Keep the native Track Player module out of the initial render path.
+ * It is loaded only after the user explicitly starts or toggles playback.
+ */
 export function useAudio(): UseAudioResult {
-  const { position, duration } = useProgress(250);
-  const setProgress = usePlayerStore((state) => state.setProgress);
-
-  useEffect(() => {
-    void initializePlayer();
+  const playTrack = useCallback(async (track: Track) => {
+    const player = await import("@/services/player");
+    await player.playTrack(track);
   }, []);
 
-  useEffect(() => {
-    setProgress(position, duration);
-  }, [duration, position, setProgress]);
+  const togglePlayback = useCallback(async () => {
+    const player = await import("@/services/player");
+    await player.togglePlayback();
+  }, []);
 
   return { playTrack, togglePlayback };
 }
