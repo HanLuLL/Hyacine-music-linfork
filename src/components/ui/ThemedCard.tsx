@@ -88,50 +88,36 @@ function LiquidRefraction(): React.JSX.Element {
 
 export function ThemedCard({ children, className = "", style, ...props }: ThemedCardProps): React.JSX.Element {
   const { preferences, tokens } = useTheme();
-  const isMiui = preferences.uiStyle === "miui";
-  const isFrosted = preferences.uiStyle === "frosted";
+  const isMiuix = preferences.uiStyle === "miuix";
   const isLiquid = preferences.uiStyle === "liquid";
-
-  const materialTint = tokens.isLight
-    ? isLiquid
-      ? "#ffffff42"
-      : "#ffffff2e"
-    : isLiquid
-      ? "#0f172a3d"
-      : "#0b102038";
+  const materialTint = tokens.isLight ? "#ffffff30" : "#08101f38";
 
   return (
     <View
       className={`overflow-hidden border p-5 ${className}`}
       style={[
         {
-          backgroundColor: isMiui || (!isFrosted && !isLiquid) ? tokens.surface : "transparent",
+          backgroundColor: isLiquid ? "transparent" : tokens.surface,
           borderColor: isLiquid ? "#ffffffa8" : tokens.surfaceBorder,
           borderRadius: tokens.cardRadius,
-          shadowColor: isLiquid ? "#60a5fa" : "#000000",
-          shadowOpacity: isLiquid ? 0.3 : isMiui ? 0.08 : 0,
-          shadowRadius: isLiquid ? 26 : isMiui ? 8 : 0,
-          shadowOffset: { width: 0, height: isLiquid ? 14 : 3 },
-          elevation: isLiquid ? 8 : isMiui ? 2 : 0,
+          shadowColor: isLiquid ? "#182848" : "#000000",
+          shadowOpacity: isLiquid ? 0.18 : isMiuix ? 0.07 : 0,
+          shadowRadius: isLiquid ? 20 : isMiuix ? 10 : 0,
+          shadowOffset: { width: 0, height: isLiquid ? 10 : 4 },
+          elevation: isLiquid ? 6 : isMiuix ? 2 : 0,
         },
         style,
       ]}
       {...props}
     >
-      {isFrosted || isLiquid ? (
+      {isLiquid ? (
         <BlurView
           pointerEvents="none"
           className="absolute inset-0"
-          intensity={Platform.OS === "ios" ? (isFrosted ? 90 : 55) : 18}
+          intensity={Platform.OS === "ios" ? 72 : 32}
           tint={tokens.isLight ? "light" : "dark"}
           style={{ backgroundColor: materialTint }}
         />
-      ) : null}
-      {isFrosted ? (
-        <>
-          <View pointerEvents="none" className="absolute inset-0" style={{ backgroundColor: tokens.isLight ? "#ffffff14" : "#ffffff08" }} />
-          <View pointerEvents="none" className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "#ffffff8f" }} />
-        </>
       ) : null}
       {isLiquid ? <LiquidRefraction /> : null}
       {children}

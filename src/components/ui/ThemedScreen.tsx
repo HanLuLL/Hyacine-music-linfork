@@ -1,7 +1,5 @@
 import { View, type ViewProps } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
-import { useEffect } from "react";
 import { useTheme } from "@/theme";
 
 interface ThemedScreenProps extends ViewProps {
@@ -9,51 +7,43 @@ interface ThemedScreenProps extends ViewProps {
   className?: string;
 }
 
-function LiquidField({ color, reverse = false }: { color: string; reverse?: boolean }): React.JSX.Element {
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    progress.value = withRepeat(
-      withTiming(1, { duration: reverse ? 13000 : 9800, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-  }, [progress, reverse]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.24 + progress.value * 0.28,
-    transform: [
-      { translateX: (progress.value - 0.5) * (reverse ? -150 : 160) },
-      { translateY: (progress.value - 0.5) * (reverse ? -90 : 110) },
-      { scale: 0.88 + progress.value * 0.24 },
-    ],
-  }));
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      className={reverse ? "absolute -bottom-40 -left-40 h-[31rem] w-[31rem] rounded-full" : "absolute -right-40 -top-40 h-[30rem] w-[30rem] rounded-full"}
-      style={[{ backgroundColor: color }, animatedStyle]}
-    />
-  );
-}
-
 export function ThemedScreen({ children, className = "", style, ...props }: ThemedScreenProps): React.JSX.Element {
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
-  const isFrosted = preferences.uiStyle === "frosted";
+  const isMiuix = preferences.uiStyle === "miuix";
 
   return (
     <View className={`flex-1 overflow-hidden ${className}`} style={[{ backgroundColor: tokens.background }, style]} {...props}>
-      {isFrosted ? (
-        <LinearGradient pointerEvents="none" className="absolute inset-0" colors={[tokens.background, tokens.backgroundSecondary, tokens.background]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-      ) : null}
       {isLiquid ? (
         <>
-          <LiquidField color={tokens.accent} />
-          <LiquidField color={tokens.backgroundSecondary} reverse />
-          <LinearGradient pointerEvents="none" className="absolute inset-0" colors={["#ffffff00", "#ffffff12", "#ffffff00"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+          <LinearGradient
+            pointerEvents="none"
+            className="absolute inset-0"
+            colors={tokens.isLight
+              ? ["#cfe5ff", "#f5f8ff", "#d9ecff", "#f8f4ff"]
+              : [tokens.background, "#162745", "#151a33", tokens.backgroundSecondary]}
+            locations={[0, 0.34, 0.68, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            className="absolute inset-0"
+            colors={[`${tokens.accent}38`, "#ffffff00", "#8bd5ff24", "#ffffff10"]}
+            locations={[0, 0.36, 0.72, 1]}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          />
         </>
+      ) : null}
+      {isMiuix ? (
+        <LinearGradient
+          pointerEvents="none"
+          className="absolute inset-0"
+          colors={tokens.isLight ? ["#f7f7f8", "#f1f2f4"] : [tokens.background, tokens.backgroundSecondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
       ) : null}
       {children}
     </View>

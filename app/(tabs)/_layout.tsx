@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { BlurView } from "expo-blur";
 import { Text, type ColorValue } from "react-native";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
@@ -9,7 +10,9 @@ function TabIcon({ symbol, color }: { symbol: string; color: ColorValue }): Reac
 
 export default function TabsLayout(): React.JSX.Element {
   const { t } = useI18n();
-  const { tokens } = useTheme();
+  const { preferences, tokens } = useTheme();
+  const isLiquid = preferences.uiStyle === "liquid";
+  const isMiuix = preferences.uiStyle === "miuix";
 
   return (
     <Tabs
@@ -17,24 +20,27 @@ export default function TabsLayout(): React.JSX.Element {
         headerShown: false,
         sceneStyle: { backgroundColor: tokens.background },
         tabBarStyle: {
-          position: "absolute",
-          left: 16,
-          right: 16,
-          bottom: 14,
-          height: 60,
-          paddingTop: 6,
-          paddingBottom: 6,
-          borderRadius: 30,
-          backgroundColor: tokens.surfaceStrong,
+          position: isLiquid || isMiuix ? "absolute" : "relative",
+          left: isLiquid || isMiuix ? 16 : 0,
+          right: isLiquid || isMiuix ? 16 : 0,
+          bottom: isLiquid || isMiuix ? 14 : 0,
+          height: isLiquid ? 64 : isMiuix ? 66 : 62,
+          paddingTop: 7,
+          paddingBottom: 7,
+          borderRadius: isLiquid ? 32 : isMiuix ? 24 : 0,
+          backgroundColor: isLiquid ? `${tokens.surfaceStrong}d8` : tokens.surfaceStrong,
           borderColor: tokens.surfaceBorder,
           borderTopWidth: 1,
-          borderWidth: 1,
-          elevation: 4,
-          shadowColor: "#000000",
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 5 },
+          borderWidth: isLiquid || isMiuix ? 1 : 0,
+          elevation: isLiquid ? 8 : isMiuix ? 3 : 0,
+          shadowColor: isLiquid ? "#182848" : "#000000",
+          shadowOpacity: isLiquid ? 0.2 : isMiuix ? 0.08 : 0,
+          shadowRadius: isLiquid ? 20 : 10,
+          shadowOffset: { width: 0, height: 7 },
         },
+        tabBarBackground: isLiquid
+          ? () => <BlurView intensity={68} tint={tokens.isLight ? "light" : "dark"} style={{ flex: 1 }} />
+          : undefined,
         tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
         tabBarActiveTintColor: tokens.accent,
         tabBarInactiveTintColor: tokens.mutedText,

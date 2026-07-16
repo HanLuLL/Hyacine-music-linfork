@@ -19,7 +19,7 @@ export function MiniPlayer(): React.JSX.Element | null {
     <View
       className="border-t px-4 py-3"
       style={{
-        backgroundColor: preferences.uiStyle === "miui" ? tokens.surfaceStrong : `${tokens.surfaceStrong}f2`,
+        backgroundColor: preferences.uiStyle === "miuix" ? tokens.surfaceStrong : `${tokens.surfaceStrong}f2`,
         borderColor: tokens.surfaceBorder,
         shadowColor: "#000000",
         shadowOpacity: 0.15,

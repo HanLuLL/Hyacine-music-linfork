@@ -64,7 +64,7 @@ export default function SettingsScreen(): React.JSX.Element {
   };
 
   const styleLabels: Record<UiStyle, string> = {
-    default: t("styleDefault"), frosted: t("styleFrosted"), liquid: t("styleLiquid"), miui: t("styleMiui"),
+    native: t("styleNative"), liquid: t("styleLiquid"), miuix: t("styleMiuix"),
   };
   const presetLabels: Record<ThemePreset, string> = {
     midnight: t("presetMidnight"), black: t("presetBlack"), daylight: t("presetDaylight"), aurora: t("presetAurora"),

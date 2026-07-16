@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
-export const uiStyles = ["default", "frosted", "liquid", "miui"] as const;
+export const uiStyles = ["native", "liquid", "miuix"] as const;
 export type UiStyle = (typeof uiStyles)[number];
 
 export const themePresets = ["midnight", "black", "daylight", "aurora"] as const;
@@ -43,7 +43,7 @@ export interface ThemeTokens {
 }
 
 const DEFAULT_PREFERENCES: ThemePreferences = {
-  uiStyle: "default",
+  uiStyle: "native",
   preset: "daylight",
   playerLayout: "minimal",
   fontScale: "medium",
@@ -106,37 +106,25 @@ const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillR
 function withStyle(base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">, style: UiStyle, accent: string): ThemeTokens {
   const common = { ...base, accent };
 
-  if (style === "miui") {
+  if (style === "miuix") {
     return {
       ...common,
       surface: base.isLight ? "#ffffff" : "#262626",
       surfaceStrong: base.isLight ? "#ffffff" : "#202020",
-      surfaceBorder: base.isLight ? "#d9dde5" : "#3f3f46",
-      cardRadius: 28,
+      surfaceBorder: base.isLight ? "#e7e7e9" : "#38383c",
+      cardRadius: 22,
       pillRadius: 999,
       cardOpacity: 1,
-    };
-  }
-
-  if (style === "frosted") {
-    return {
-      ...common,
-      surface: base.isLight ? "#ffffff55" : "#ffffff0d",
-      surfaceStrong: base.isLight ? "#ffffff8c" : "#11182788",
-      surfaceBorder: base.isLight ? "#ffffffcc" : "#ffffff66",
-      cardRadius: 24,
-      pillRadius: 999,
-      cardOpacity: 0.05,
     };
   }
 
   if (style === "liquid") {
     return {
       ...common,
-      surface: base.isLight ? "#ffffff66" : "#ffffff12",
-      surfaceStrong: base.isLight ? "#ffffffa6" : "#17213a99",
-      surfaceBorder: base.isLight ? "#ffffffee" : "#ffffff88",
-      cardRadius: 28,
+      surface: base.isLight ? "#ffffff45" : "#ffffff14",
+      surfaceStrong: base.isLight ? "#ffffff70" : "#17203378",
+      surfaceBorder: base.isLight ? "#ffffffd6" : "#ffffff70",
+      cardRadius: 24,
       pillRadius: 999,
       cardOpacity: 0.08,
     };
@@ -147,7 +135,7 @@ function withStyle(base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOp
     surface: base.isLight ? "#ffffff" : "#ffffff26",
     surfaceStrong: base.isLight ? "#ffffff" : "#1b1836",
     surfaceBorder: base.isLight ? "#deded8" : "#ffffff33",
-    cardRadius: 8,
+    cardRadius: 12,
     pillRadius: 999,
     cardOpacity: 0,
   };
@@ -169,6 +157,12 @@ interface ThemeContextValue {
 const STORAGE_KEY = "hyacine.theme-preferences";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function migrateUiStyle(value: unknown): UiStyle {
+  if (value === "liquid") return "liquid";
+  if (value === "miui" || value === "miuix") return "miuix";
+  return "native";
+}
+
 export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Element {
   const [preferences, setPreferences] = useState<ThemePreferences>(DEFAULT_PREFERENCES);
   const [hydrated, setHydrated] = useState(false);
@@ -177,8 +171,8 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
     void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => {
       if (raw) {
         try {
-          const stored = JSON.parse(raw) as Partial<ThemePreferences>;
-          setPreferences({ ...DEFAULT_PREFERENCES, ...stored });
+          const stored = JSON.parse(raw) as Partial<ThemePreferences> & { uiStyle?: unknown };
+          setPreferences({ ...DEFAULT_PREFERENCES, ...stored, uiStyle: migrateUiStyle(stored.uiStyle) });
         } catch {
           // Invalid local preferences are safely ignored.
         }
