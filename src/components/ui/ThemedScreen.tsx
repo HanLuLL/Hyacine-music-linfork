@@ -9,26 +9,30 @@ interface ThemedScreenProps extends ViewProps {
   className?: string;
 }
 
-function LiquidGlow({ color, position }: { color: string; position: "top" | "bottom" }): React.JSX.Element {
+function LiquidField({ color, reverse = false }: { color: string; reverse?: boolean }): React.JSX.Element {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: position === "top" ? 9000 : 12000, easing: Easing.inOut(Easing.sin) }), -1, true);
-  }, [position, progress]);
+    progress.value = withRepeat(
+      withTiming(1, { duration: reverse ? 13000 : 9800, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
+    );
+  }, [progress, reverse]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: 0.18 + progress.value * 0.22,
+    opacity: 0.24 + progress.value * 0.28,
     transform: [
-      { translateX: (progress.value - 0.5) * (position === "top" ? 70 : -55) },
-      { translateY: (progress.value - 0.5) * 38 },
-      { scale: 0.92 + progress.value * 0.16 },
+      { translateX: (progress.value - 0.5) * (reverse ? -150 : 160) },
+      { translateY: (progress.value - 0.5) * (reverse ? -90 : 110) },
+      { scale: 0.88 + progress.value * 0.24 },
     ],
   }));
 
   return (
     <Animated.View
       pointerEvents="none"
-      className={position === "top" ? "absolute -right-28 -top-28 h-80 w-80 rounded-full" : "absolute -bottom-40 -left-32 h-96 w-96 rounded-full"}
+      className={reverse ? "absolute -bottom-40 -left-40 h-[31rem] w-[31rem] rounded-full" : "absolute -right-40 -top-40 h-[30rem] w-[30rem] rounded-full"}
       style={[{ backgroundColor: color }, animatedStyle]}
     />
   );
@@ -47,8 +51,15 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
       <LinearGradient pointerEvents="none" className="absolute inset-0" colors={backgroundColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
       {isLiquid ? (
         <>
-          <LiquidGlow color={tokens.accent} position="top" />
-          <LiquidGlow color={tokens.backgroundSecondary} position="bottom" />
+          <LiquidField color={tokens.accent} />
+          <LiquidField color={tokens.backgroundSecondary} reverse />
+          <LinearGradient
+            pointerEvents="none"
+            className="absolute inset-0"
+            colors={["#ffffff00", "#ffffff12", "#ffffff00"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
         </>
       ) : !isMiui ? (
         <>
