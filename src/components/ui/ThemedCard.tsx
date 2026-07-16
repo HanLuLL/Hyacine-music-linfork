@@ -90,31 +90,32 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
   const { preferences, tokens } = useTheme();
   const isMiuix = preferences.uiStyle === "miuix";
   const isLiquid = preferences.uiStyle === "liquid";
-  const materialTint = tokens.isLight ? "#ffffff30" : "#08101f38";
+  const materialTint = tokens.isLight ? "#ffffff2b" : "#08101f30";
+  const supportsBackdropBlur = Platform.OS === "ios";
 
   return (
     <View
       className={`overflow-hidden border p-5 ${className}`}
       style={[
         {
-          backgroundColor: isLiquid ? "transparent" : tokens.surface,
-          borderColor: isLiquid ? "#ffffffa8" : tokens.surfaceBorder,
+          backgroundColor: isLiquid ? (supportsBackdropBlur ? "transparent" : materialTint) : tokens.surface,
+          borderColor: isLiquid ? "#ffffff8c" : tokens.surfaceBorder,
           borderRadius: tokens.cardRadius,
-          shadowColor: isLiquid ? "#182848" : "#000000",
-          shadowOpacity: isLiquid ? 0.18 : isMiuix ? 0.07 : 0,
-          shadowRadius: isLiquid ? 20 : isMiuix ? 10 : 0,
-          shadowOffset: { width: 0, height: isLiquid ? 10 : 4 },
-          elevation: isLiquid ? 6 : isMiuix ? 2 : 0,
+          shadowColor: isLiquid ? "#31415f" : "#000000",
+          shadowOpacity: isLiquid ? 0.1 : isMiuix ? 0.07 : 0,
+          shadowRadius: isLiquid ? 14 : isMiuix ? 10 : 0,
+          shadowOffset: { width: 0, height: isLiquid ? 7 : 4 },
+          elevation: isLiquid ? 3 : isMiuix ? 2 : 0,
         },
         style,
       ]}
       {...props}
     >
-      {isLiquid ? (
+      {isLiquid && supportsBackdropBlur ? (
         <BlurView
           pointerEvents="none"
           className="absolute inset-0"
-          intensity={Platform.OS === "ios" ? 72 : 32}
+          intensity={72}
           tint={tokens.isLight ? "light" : "dark"}
           style={{ backgroundColor: materialTint }}
         />

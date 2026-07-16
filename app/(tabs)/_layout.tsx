@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { BlurView } from "expo-blur";
-import { Text, type ColorValue } from "react-native";
+import { Platform, Text, type ColorValue } from "react-native";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
 
@@ -28,7 +28,7 @@ export default function TabsLayout(): React.JSX.Element {
           paddingTop: 7,
           paddingBottom: 7,
           borderRadius: isLiquid ? 32 : isMiuix ? 24 : 0,
-          backgroundColor: isLiquid ? `${tokens.surfaceStrong}d8` : tokens.surfaceStrong,
+          backgroundColor: isLiquid ? (Platform.OS === "ios" ? `${tokens.surfaceStrong}b8` : "#ffffff32") : tokens.surfaceStrong,
           borderColor: tokens.surfaceBorder,
           borderTopWidth: 1,
           borderWidth: isLiquid || isMiuix ? 1 : 0,
@@ -38,7 +38,7 @@ export default function TabsLayout(): React.JSX.Element {
           shadowRadius: isLiquid ? 20 : 10,
           shadowOffset: { width: 0, height: 7 },
         },
-        tabBarBackground: isLiquid
+        tabBarBackground: isLiquid && Platform.OS === "ios"
           ? () => <BlurView intensity={68} tint={tokens.isLight ? "light" : "dark"} style={{ flex: 1 }} />
           : undefined,
         tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
