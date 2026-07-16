@@ -1,5 +1,7 @@
 # Hyacine.music Mobile
 
+[简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md)
+
 Hyacine.music is the React Native / Expo mobile client for a separately deployed
 NestJS music backend.
 
@@ -55,18 +57,31 @@ Generate and run an Android Development Build locally:
 pnpm android
 ```
 
-## Android Debug APK with GitHub Actions
+## Android Release APK with GitHub Actions
 
-Every push to `master`, `main`, or `develop` triggers **Android Debug APK**.
+Every push to `master`, `main`, or `develop` triggers **Android Release APK**.
 The workflow performs:
 
-1. dependency installation and TypeScript validation;
-2. Expo Android prebuild;
-3. Gradle `assembleDebug`;
-4. Artifact upload.
+1. pnpm dependency installation with cache;
+2. Gradle dependency and build-output caching;
+3. TypeScript validation;
+4. Expo Android prebuild;
+5. ARM64 (`arm64-v8a`) `assembleRelease`;
+6. embedded JavaScript bundle and assets, so Metro `8081` is not required;
+7. Artifact upload.
 
-Open the repository's **Actions** page, choose the successful workflow run, and
-download the `hyacine-music-debug-apk` artifact. Its ZIP contains `app-debug.apk`.
+Open the repository's **Actions** page, choose a successful run, and download
+the `hyacine-music-release-apk-arm64` artifact. Its ZIP contains
+`app-release.apk`.
+
+For a manually started workflow, enter the backend API URL in **Backend API URL**,
+for example:
+
+```text
+http://192.168.1.100:3000/api/v1
+```
+
+The value is embedded as `EXPO_PUBLIC_API_URL` in that Release APK.
 
 ## Track Player compatibility patch
 

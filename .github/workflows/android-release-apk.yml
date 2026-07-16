@@ -66,8 +66,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
 
+      # Caches Gradle dependencies, wrapper files and build-cache task outputs.
+      - name: Set up Gradle build cache
+        uses: gradle/actions/setup-gradle@v4
       # Release embeds Expo's JS bundle and assets; it does not require Metro.
       - name: Build standalone arm64-v8a release APK
         working-directory: android
@@ -76,6 +78,7 @@ jobs:
           EXPO_PUBLIC_API_URL: ${{ inputs.backend_api_url || 'http://192.168.1.100:3000/api/v1' }}
         run: |
           ./gradlew assembleRelease --no-daemon --stacktrace \
+            -Dorg.gradle.caching=true \
             -PreactNativeArchitectures=arm64-v8a \
             -x lintVitalRelease
 
