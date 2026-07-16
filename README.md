@@ -1,8 +1,8 @@
-# 风堇音乐
+# Hyacine.music Mobile
 
 [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md)
 
-Fengjin Music is the React Native / Expo mobile client for a separately deployed
+Hyacine.music is the React Native / Expo mobile client for a separately deployed
 NestJS music backend.
 
 ## Implemented Features
