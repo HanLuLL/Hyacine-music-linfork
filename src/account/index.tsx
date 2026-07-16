@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type PropsWith
 
 export type MusicSource = "netease" | "bilibili";
 export interface AccountProfile { displayName: string; avatarUrl: string; backendUrl: string; musicSource: MusicSource | null; }
-interface AccountContextValue { profile: AccountProfile | null; hydrated: boolean; saveProfile: (profile: AccountProfile) => Promise<void>; saveSourceCredential: (source: MusicSource, credential: string) => Promise<void>; }
+interface AccountContextValue { profile: AccountProfile | null; hydrated: boolean; saveProfile: (profile: AccountProfile) => Promise<void>; saveSourceCredential: (source: MusicSource, credential: string) => Promise<void>; getSourceCredential: (source: MusicSource) => Promise<string | null>; }
 const STORAGE_KEY = "hyacine.account-profile";
 const credentialKey = (source: MusicSource): string => `hyacine.music-source.${source}`;
 const AccountContext = createContext<AccountContextValue | null>(null);
@@ -20,6 +20,7 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
   const value = useMemo<AccountContextValue>(() => ({ profile, hydrated,
     saveProfile: async (next) => { const normalized = { displayName: next.displayName.trim(), avatarUrl: next.avatarUrl.trim(), backendUrl: next.backendUrl.trim().replace(/\/$/, ""), musicSource: next.musicSource }; await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized)); setProfile(normalized); },
     saveSourceCredential: async (source, credential) => { await SecureStore.setItemAsync(credentialKey(source), credential); const next = profile ? { ...profile, musicSource: source } : null; if (next) { await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next)); setProfile(next); } },
+    getSourceCredential: (source) => SecureStore.getItemAsync(credentialKey(source)),
   }), [hydrated, profile]);
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
