@@ -1,11 +1,56 @@
-import { Tabs } from "expo-router";
+import { useEffect, useRef } from "react";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
-import { Platform, Text, type ColorValue } from "react-native";
+import { Animated, Platform, Pressable, Text, useWindowDimensions, View, type ColorValue } from "react-native";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
 
+const tabs = [
+  { route: "/(tabs)", symbol: "⌂", key: "home" },
+  { route: "/(tabs)/search", symbol: "⌕", key: "search" },
+  { route: "/(tabs)/library", symbol: "♫", key: "library" },
+  { route: "/(tabs)/profile", symbol: "◉", key: "profile" },
+] as const;
+
 function TabIcon({ symbol, color }: { symbol: string; color: ColorValue }): React.JSX.Element {
   return <Text style={{ color, fontSize: 19, fontWeight: "700" }}>{symbol}</Text>;
+}
+
+function LiquidTabBar(): React.JSX.Element {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { t } = useI18n();
+  const { tokens } = useTheme();
+  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : pathname.includes("/profile") ? 3 : 0;
+  const position = useRef(new Animated.Value(activeIndex)).current;
+  const { width } = useWindowDimensions();
+  const tabWidth = (width - 44) / tabs.length;
+
+  useEffect(() => {
+    Animated.spring(position, { toValue: activeIndex, useNativeDriver: true, stiffness: 240, damping: 24, mass: 0.72 }).start();
+  }, [activeIndex, position]);
+
+  return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
+    <View className="absolute inset-0 overflow-hidden rounded-[38px] border" style={{ backgroundColor: Platform.OS === "ios" ? "#ffffff30" : "#ffffff40", borderColor: "#ffffffc0", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 9 }}>
+      {Platform.OS === "ios" ? <BlurView intensity={70} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
+      <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "#ffffffdc" }} />
+    </View>
+    <LensPosition position={position} tabWidth={tabWidth} />
+    <View className="flex-1 flex-row px-1.5 py-1.5">
+      {tabs.map((tab, index) => { const active = index === activeIndex; return <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => router.replace(tab.route)}>
+        <View className="h-[60px] items-center justify-center"><Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: active ? 24 : 20, fontWeight: "800" }}>{tab.symbol}</Text><Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: active ? 11 : 10, fontWeight: "800" }}>{t(tab.key)}</Text></View>
+      </Pressable>; })}
+    </View>
+  </View>;
+}
+
+function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWidth: number }): React.JSX.Element {
+  const { tokens } = useTheme();
+  const translateX = position.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, tabWidth, tabWidth * 2, tabWidth * 3] });
+  return <Animated.View pointerEvents="none" className="absolute bottom-2 top-2 overflow-hidden rounded-[30px] border" style={{ width: tabWidth, backgroundColor: Platform.OS === "ios" ? "#ffffff5c" : "#ffffff74", borderColor: "#ffffffdc", shadowColor: tokens.isLight ? "#ffffff" : "#93c5fd", shadowOpacity: 0.65, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, transform: [{ translateX }] }}>
+    {Platform.OS === "ios" ? <BlurView intensity={44} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
+    <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "#ffffffef" }} />
+  </Animated.View>;
 }
 
 export default function TabsLayout(): React.JSX.Element {
@@ -14,42 +59,36 @@ export default function TabsLayout(): React.JSX.Element {
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
 
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: tokens.background },
-        tabBarStyle: {
-          position: isLiquid || isMiuix ? "absolute" : "relative",
-          left: isLiquid || isMiuix ? 16 : 0,
-          right: isLiquid || isMiuix ? 16 : 0,
-          bottom: isLiquid || isMiuix ? 12 : 0,
-          height: isLiquid ? 62 : isMiuix ? 66 : 62,
-          paddingTop: 7,
-          paddingBottom: 7,
-          borderRadius: isLiquid ? 32 : isMiuix ? 24 : 0,
-          backgroundColor: isLiquid ? (Platform.OS === "ios" ? `${tokens.surfaceStrong}b8` : "#ffffff32") : tokens.surfaceStrong,
-          borderColor: tokens.surfaceBorder,
-          borderTopWidth: 1,
-          borderWidth: isLiquid || isMiuix ? 1 : 0,
-          elevation: isLiquid ? 8 : isMiuix ? 3 : 0,
-          shadowColor: isLiquid ? "#182848" : "#000000",
-          shadowOpacity: isLiquid ? 0.2 : isMiuix ? 0.08 : 0,
-          shadowRadius: isLiquid ? 20 : 10,
-          shadowOffset: { width: 0, height: 7 },
-        },
-        tabBarBackground: isLiquid && Platform.OS === "ios"
-          ? () => <BlurView intensity={68} tint={tokens.isLight ? "light" : "dark"} style={{ flex: 1 }} />
-          : undefined,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
-        tabBarActiveTintColor: tokens.accent,
-        tabBarInactiveTintColor: tokens.mutedText,
-      }}
-    >
-      <Tabs.Screen name="index" options={{ title: t("home"), tabBarIcon: ({ color }) => <TabIcon symbol="⌂" color={color} /> }} />
-      <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
-      <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
-    </Tabs>
-  );
+  return <View className="flex-1"><Tabs screenOptions={{
+    headerShown: false,
+    sceneStyle: { backgroundColor: tokens.background },
+    tabBarStyle: {
+      display: isLiquid ? "none" : "flex",
+      position: isMiuix ? "absolute" : "relative",
+      left: isMiuix ? 16 : 0,
+      right: isMiuix ? 16 : 0,
+      bottom: isMiuix ? 12 : 0,
+      height: isMiuix ? 66 : 62,
+      paddingTop: 7,
+      paddingBottom: 7,
+      borderRadius: isMiuix ? 24 : 0,
+      backgroundColor: tokens.surfaceStrong,
+      borderColor: tokens.surfaceBorder,
+      borderTopWidth: 1,
+      borderWidth: isMiuix ? 1 : 0,
+      elevation: isMiuix ? 3 : 0,
+      shadowColor: "#000000",
+      shadowOpacity: isMiuix ? 0.08 : 0,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 7 },
+    },
+    tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
+    tabBarActiveTintColor: tokens.accent,
+    tabBarInactiveTintColor: tokens.mutedText,
+  }}>
+    <Tabs.Screen name="index" options={{ title: t("home"), tabBarIcon: ({ color }) => <TabIcon symbol="⌂" color={color} /> }} />
+    <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
+    <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
+    <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
+  </Tabs>{isLiquid ? <LiquidTabBar /> : null}</View>;
 }
