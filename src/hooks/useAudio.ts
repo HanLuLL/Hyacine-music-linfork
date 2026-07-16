@@ -4,6 +4,7 @@ import type { Track } from "@/types/music";
 interface UseAudioResult {
   playTrack: (track: Track) => Promise<void>;
   togglePlayback: () => Promise<void>;
+  seekBy: (seconds: number) => Promise<void>;
 }
 
 /**
@@ -21,5 +22,10 @@ export function useAudio(): UseAudioResult {
     await player.togglePlayback();
   }, []);
 
-  return { playTrack, togglePlayback };
+  const seekBy = useCallback(async (seconds: number) => {
+    const player = await import("@/services/player");
+    await player.seekBy(seconds);
+  }, []);
+
+  return { playTrack, togglePlayback, seekBy };
 }

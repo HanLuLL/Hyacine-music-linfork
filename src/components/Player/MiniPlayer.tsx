@@ -3,16 +3,18 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
+import { useI18n } from "@/i18n";
 
 export function MiniPlayer(): React.JSX.Element | null {
   const track = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const { togglePlayback } = useAudio();
+  const { t } = useI18n();
 
   if (!track) return null;
 
   return (
-    <View className="border-t border-zinc-800 bg-zinc-950 px-4 py-3">
+    <View className="border-t border-lime-300/10 bg-[#10110f] px-4 py-3">
       <View className="flex-row items-center gap-3">
         <Pressable
           className="min-w-0 flex-1 flex-row items-center gap-3"
@@ -25,11 +27,11 @@ export function MiniPlayer(): React.JSX.Element | null {
           )}
           <View className="min-w-0 flex-1">
             <Text className="truncate text-sm font-semibold text-white">{track.title}</Text>
-            <Text className="truncate text-xs text-zinc-400">{track.artist}</Text>
+            <Text className="truncate text-xs text-zinc-500">{t("miniPlayer")} · {track.artist}</Text>
           </View>
         </Pressable>
         <Pressable
-          accessibilityLabel={isPlaying ? "Pause" : "Play"}
+          accessibilityLabel={isPlaying ? t("pause") : t("play")}
           className="h-10 w-10 items-center justify-center rounded-full bg-lime-300"
           onPress={() => void togglePlayback()}
         >

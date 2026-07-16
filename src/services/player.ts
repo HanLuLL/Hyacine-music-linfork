@@ -63,3 +63,8 @@ export async function togglePlayback(): Promise<void> {
   await TrackPlayer.play();
   usePlayerStore.getState().setPlaying(true);
 }
+
+export async function seekBy(seconds: number): Promise<void> {
+  await initializePlayer();
+  await TrackPlayer.seekBy(seconds);
+}
