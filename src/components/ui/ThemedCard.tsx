@@ -105,24 +105,24 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
       className={`overflow-hidden border p-5 ${className}`}
       style={[
         {
-          backgroundColor: isMiui ? tokens.surface : "transparent",
+          backgroundColor: isMiui || (!isFrosted && !isLiquid) ? tokens.surface : "transparent",
           borderColor: isLiquid ? "#ffffffa8" : tokens.surfaceBorder,
           borderRadius: tokens.cardRadius,
           shadowColor: isLiquid ? "#60a5fa" : "#000000",
-          shadowOpacity: isMiui ? 0.2 : isLiquid ? 0.3 : 0.16,
-          shadowRadius: isMiui ? 16 : isLiquid ? 26 : 14,
-          shadowOffset: { width: 0, height: isLiquid ? 14 : 8 },
-          elevation: isMiui ? 8 : isLiquid ? 8 : 3,
+          shadowOpacity: isLiquid ? 0.3 : isMiui ? 0.08 : 0,
+          shadowRadius: isLiquid ? 26 : isMiui ? 8 : 0,
+          shadowOffset: { width: 0, height: isLiquid ? 14 : 3 },
+          elevation: isLiquid ? 8 : isMiui ? 2 : 0,
         },
         style,
       ]}
       {...props}
     >
-      {!isMiui ? (
+      {isFrosted || isLiquid ? (
         <BlurView
           pointerEvents="none"
           className="absolute inset-0"
-          intensity={Platform.OS === "ios" ? (isFrosted ? 90 : isLiquid ? 55 : 28) : 18}
+          intensity={Platform.OS === "ios" ? (isFrosted ? 90 : 55) : 18}
           tint={tokens.isLight ? "light" : "dark"}
           style={{ backgroundColor: materialTint }}
         />

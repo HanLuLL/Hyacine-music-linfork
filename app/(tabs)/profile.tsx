@@ -17,24 +17,28 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <ThemedScreen>
-      <ScrollView contentContainerClassName="px-5 pb-10 pt-16">
-        <View className="flex-row items-center justify-between">
-          <Text style={{ color: tokens.text, fontSize: 30, fontWeight: "800" }}>{t("profileTitle")}</Text>
+      <ScrollView contentContainerClassName="px-5 pb-28 pt-14">
+        <View className="flex-row items-center justify-between border-b pb-4" style={{ borderColor: tokens.surfaceBorder }}>
+          <Text style={{ color: tokens.text, fontSize: 24, fontWeight: "800" }}>{t("profileTitle")}</Text>
           <Pressable
             accessibilityLabel="Settings"
-            className="h-11 w-11 items-center justify-center"
-            style={{ borderRadius: tokens.pillRadius, backgroundColor: tokens.surface, borderColor: tokens.surfaceBorder, borderWidth: 1 }}
+            className="h-9 w-9 items-center justify-center"
+            style={{ borderRadius: 18, backgroundColor: tokens.surface, borderColor: tokens.surfaceBorder, borderWidth: 1 }}
             onPress={() => router.push("/settings")}
           >
-            <Text style={{ color: tokens.accent, fontSize: 20 }}>⚙</Text>
+            <Text style={{ color: tokens.text, fontSize: 17 }}>⚙</Text>
           </Pressable>
         </View>
-        <ThemedCard className="mt-8">
-          <View className="h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent }}>
-            <Text className="text-lg font-bold text-black">H</Text>
+        <ThemedCard className="mt-5 p-4">
+          <View className="flex-row items-center">
+            <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.accent}24` }}>
+              <Text className="text-base font-bold" style={{ color: tokens.accent }}>H</Text>
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="font-bold" style={{ color: tokens.text }}>{t("notSignedIn")}</Text>
+              <Text className="mt-1 text-xs leading-4" style={{ color: tokens.mutedText }}>{t("profileHint")}</Text>
+            </View>
           </View>
-          <Text className="mt-5 text-xl font-bold" style={{ color: tokens.text }}>{t("notSignedIn")}</Text>
-          <Text className="mt-2 text-sm leading-6" style={{ color: tokens.mutedText }}>{t("profileHint")}</Text>
         </ThemedCard>
 
         <Text className="mt-9 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("language").toUpperCase()}</Text>

@@ -77,24 +77,24 @@ export default function SettingsScreen(): React.JSX.Element {
 
   return (
     <ThemedScreen>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="px-5 pb-12 pt-16">
-        <View className="flex-row items-center justify-between">
-          <Pressable accessibilityRole="button" accessibilityLabel={t("backToHome")} className="min-h-11 min-w-11 items-center justify-center" onPress={() => router.back()}>
-            <Text style={{ color: tokens.accent, fontSize: 26 }}>‹</Text>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerClassName="px-5 pb-12 pt-14">
+        <View className="flex-row items-center justify-between border-b pb-4" style={{ borderColor: tokens.surfaceBorder }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t("backToHome")} className="h-9 w-9 items-center justify-center" style={{ borderRadius: 18, borderColor: tokens.surfaceBorder, borderWidth: 1, backgroundColor: tokens.surface }} onPress={() => router.back()}>
+            <Text style={{ color: tokens.text, fontSize: 22 }}>‹</Text>
           </Pressable>
-          <Text style={{ color: tokens.text, fontSize: 24, fontWeight: "800" }}>{t("settingsTitle")}</Text>
-          <View className="w-11" />
+          <Text style={{ color: tokens.text, fontSize: 20, fontWeight: "800" }}>{t("settingsTitle")}</Text>
+          <View className="w-9" />
         </View>
 
-        <Text className="mt-8 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("appearanceSection")}</Text>
-        <ThemedCard className="mt-3">
-          <Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("uiStyle")}</Text>
-          <Text className="mt-2 text-sm leading-5" style={{ color: tokens.mutedText }}>{t("uiStyleHint")}</Text>
+        <Text className="mt-6 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("appearanceSection")}</Text>
+        <ThemedCard className="mt-3 p-4">
+          <Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{t("uiStyle")}</Text>
+          <Text className="mt-1 text-xs leading-4" style={{ color: tokens.mutedText }}>{t("uiStyleHint")}</Text>
           <OptionRow options={uiStyles} selected={preferences.uiStyle} labels={styleLabels} onSelect={(value) => void setUiStyle(value)} />
         </ThemedCard>
 
-        <ThemedCard className="mt-4">
-          <Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("themeColor")}</Text>
+        <ThemedCard className="mt-3 p-4">
+          <Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{t("themeColor")}</Text>
           <View className="mt-4 flex-row justify-between">
             {themePresets.map((preset) => {
               const active = preferences.preset === preset && !preferences.customAccent;
@@ -145,16 +145,16 @@ export default function SettingsScreen(): React.JSX.Element {
           </View>
         </ThemedCard>
 
-        <Text className="mt-8 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("playerSection")}</Text>
-        <ThemedCard className="mt-3">
-          <Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("playerLayout")}</Text>
+        <Text className="mt-6 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>{t("playerSection")}</Text>
+        <ThemedCard className="mt-3 p-4">
+          <Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{t("playerLayout")}</Text>
           <OptionRow options={playerLayouts} selected={preferences.playerLayout} labels={layoutLabels} onSelect={(value) => void setPlayerLayout(value)} />
         </ThemedCard>
-        <ThemedCard className="mt-4">
-          <Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("readingList")}</Text>
-          <Text className="mt-5 text-sm font-bold" style={{ color: tokens.text }}>{t("fontSize")}</Text>
+        <ThemedCard className="mt-3 p-4">
+          <Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{t("readingList")}</Text>
+          <Text className="mt-4 text-sm font-bold" style={{ color: tokens.text }}>{t("fontSize")}</Text>
           <OptionRow options={fontScales} selected={preferences.fontScale} labels={fontLabels} onSelect={(value) => void setFontScale(value)} />
-          <Text className="mt-6 text-sm font-bold" style={{ color: tokens.text }}>{t("density")}</Text>
+          <Text className="mt-5 text-sm font-bold" style={{ color: tokens.text }}>{t("density")}</Text>
           <OptionRow options={listDensities} selected={preferences.listDensity} labels={densityLabels} onSelect={(value) => void setListDensity(value)} />
         </ThemedCard>
         <Text className="mt-7 text-center text-xs" style={{ color: tokens.mutedText }}>Hyacine.music · {t("preferencesStored")}</Text>

@@ -40,31 +40,19 @@ function LiquidField({ color, reverse = false }: { color: string; reverse?: bool
 
 export function ThemedScreen({ children, className = "", style, ...props }: ThemedScreenProps): React.JSX.Element {
   const { preferences, tokens } = useTheme();
-  const isMiui = preferences.uiStyle === "miui";
   const isLiquid = preferences.uiStyle === "liquid";
-  const backgroundColors = isMiui
-    ? ([tokens.background, tokens.background] as const)
-    : ([tokens.background, tokens.backgroundSecondary, tokens.background] as const);
+  const isFrosted = preferences.uiStyle === "frosted";
 
   return (
     <View className={`flex-1 overflow-hidden ${className}`} style={[{ backgroundColor: tokens.background }, style]} {...props}>
-      <LinearGradient pointerEvents="none" className="absolute inset-0" colors={backgroundColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      {isFrosted ? (
+        <LinearGradient pointerEvents="none" className="absolute inset-0" colors={[tokens.background, tokens.backgroundSecondary, tokens.background]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      ) : null}
       {isLiquid ? (
         <>
           <LiquidField color={tokens.accent} />
           <LiquidField color={tokens.backgroundSecondary} reverse />
-          <LinearGradient
-            pointerEvents="none"
-            className="absolute inset-0"
-            colors={["#ffffff00", "#ffffff12", "#ffffff00"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-        </>
-      ) : !isMiui ? (
-        <>
-          <View pointerEvents="none" className="absolute -right-24 -top-24 h-72 w-72 rounded-full" style={{ backgroundColor: `${tokens.accent}20` }} />
-          <View pointerEvents="none" className="absolute -bottom-36 -left-28 h-80 w-80 rounded-full" style={{ backgroundColor: `${tokens.backgroundSecondary}aa` }} />
+          <LinearGradient pointerEvents="none" className="absolute inset-0" colors={["#ffffff00", "#ffffff12", "#ffffff00"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         </>
       ) : null}
       {children}

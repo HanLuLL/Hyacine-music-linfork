@@ -44,8 +44,8 @@ export interface ThemeTokens {
 
 const DEFAULT_PREFERENCES: ThemePreferences = {
   uiStyle: "default",
-  preset: "midnight",
-  playerLayout: "vinyl",
+  preset: "daylight",
+  playerLayout: "minimal",
   fontScale: "medium",
   listDensity: "comfortable",
   customAccent: null,
@@ -78,15 +78,15 @@ const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillR
     isLight: false,
   },
   daylight: {
-    background: "#f8fafc",
-    backgroundSecondary: "#e2e8f0",
-    surface: "#ffffffd9",
+    background: "#f7f7f5",
+    backgroundSecondary: "#eeeeea",
+    surface: "#ffffff",
     surfaceStrong: "#ffffff",
-    surfaceBorder: "#cbd5e1",
-    primary: "#f8fafc",
-    accent: "#f472b6",
-    text: "#172033",
-    mutedText: "#64748b",
+    surfaceBorder: "#deded8",
+    primary: "#f7f7f5",
+    accent: "#4e7a64",
+    text: "#20211e",
+    mutedText: "#777871",
     isLight: true,
   },
   aurora: {
@@ -144,12 +144,12 @@ function withStyle(base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOp
 
   return {
     ...common,
-    surface: base.isLight ? "#ffffffc9" : "#ffffff26",
+    surface: base.isLight ? "#ffffff" : "#ffffff26",
     surfaceStrong: base.isLight ? "#ffffff" : "#1b1836",
-    surfaceBorder: base.isLight ? "#ffffff" : "#ffffff33",
-    cardRadius: 18,
-    pillRadius: 18,
-    cardOpacity: 0.15,
+    surfaceBorder: base.isLight ? "#deded8" : "#ffffff33",
+    cardRadius: 8,
+    pillRadius: 999,
+    cardOpacity: 0,
   };
 }
 

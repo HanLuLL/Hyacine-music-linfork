@@ -9,7 +9,7 @@ function TabIcon({ symbol, color }: { symbol: string; color: ColorValue }): Reac
 
 export default function TabsLayout(): React.JSX.Element {
   const { t } = useI18n();
-  const { preferences, tokens } = useTheme();
+  const { tokens } = useTheme();
 
   return (
     <Tabs
@@ -17,15 +17,25 @@ export default function TabsLayout(): React.JSX.Element {
         headerShown: false,
         sceneStyle: { backgroundColor: tokens.background },
         tabBarStyle: {
-          height: 76,
-          paddingTop: 8,
-          paddingBottom: 10,
-          backgroundColor: preferences.uiStyle === "miui" ? tokens.surfaceStrong : `${tokens.surfaceStrong}ee`,
-          borderTopColor: tokens.surfaceBorder,
+          position: "absolute",
+          left: 16,
+          right: 16,
+          bottom: 14,
+          height: 60,
+          paddingTop: 6,
+          paddingBottom: 6,
+          borderRadius: 30,
+          backgroundColor: tokens.surfaceStrong,
+          borderColor: tokens.surfaceBorder,
           borderTopWidth: 1,
-          elevation: preferences.uiStyle === "miui" ? 10 : 0,
+          borderWidth: 1,
+          elevation: 4,
+          shadowColor: "#000000",
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 5 },
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
         tabBarActiveTintColor: tokens.accent,
         tabBarInactiveTintColor: tokens.mutedText,
       }}
