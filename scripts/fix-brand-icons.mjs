@@ -187,7 +187,7 @@ function resize(src, size) {
   return out;
 }
 
-function withBackground(src, bg = [246, 247, 245, 255]) {
+function withBackground(src, bg = [255, 255, 255, 255]) {
   const out = Buffer.alloc(src.w * src.h * 4);
   for (let i = 0; i < src.w * src.h; i++) {
     const si = i * 4;
@@ -205,13 +205,19 @@ const bounds = contentBounds(src);
 const cropped = cropToSquare(src, bounds);
 const size = 1024;
 const transparent = resize(cropped, size);
-const opaque = withBackground({ w: size, h: size, pixels: transparent }, [245, 246, 244, 255]);
+const opaque = withBackground({ w: size, h: size, pixels: transparent }, [255, 255, 255, 255]);
 
 writePng("assets/brand-icon.png", size, size, transparent);
 writePng("assets/android-icon-foreground.png", size, size, transparent);
 writePng("assets/icon.png", size, size, opaque);
 writePng("assets/favicon.png", size, size, opaque);
 writePng("assets/splash-icon.png", size, size, opaque);
+const bg = Buffer.alloc(size * size * 4);
+for (let i = 0; i < size * size; i++) {
+  const o = i * 4;
+  bg[o] = 255; bg[o + 1] = 255; bg[o + 2] = 255; bg[o + 3] = 255;
+}
+writePng("assets/android-icon-background.png", size, size, bg);
 
 const verify = readPng("assets/icon.png");
 const i = ((size / 2) * size + size / 2) * 4;
