@@ -4,12 +4,11 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
-import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
 
-const brandIcon = require("../assets/icon.png");
+const brandIcon = require("../assets/brand-icon.png");
 
 type PageKey = "welcome" | "profile" | "backend";
 interface Page { key: PageKey; }
@@ -79,18 +78,18 @@ export default function OnboardingScreen(): React.JSX.Element {
     return <View style={{ width }}><Animated.View className="px-7 pt-24" style={{ opacity, transform: [{ translateX: contentX }] }}>
       <Animated.View style={{ transform: [{ translateY: titleY }] }}>
         <Text style={{ color: tokens.mutedText, fontSize: 12, fontWeight: "800", letterSpacing: 1.4 }}>{t("onboardingStep")} {String(index + 1).padStart(2, "0")}</Text>
-        {item.key === "welcome" ? <Animated.View className="mt-7 h-28 w-28 overflow-hidden rounded-[36px]" style={{ transform: [{ scale }, { rotate: visualRotate }], shadowColor: "#20211e", shadowOpacity: 0.15, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 }}><Image className="h-full w-full" source={brandIcon} contentFit="cover" /></Animated.View> : null}
+        {item.key === "welcome" ? <Animated.View className="mt-8 h-20 w-20 overflow-hidden rounded-[22px]" style={{ transform: [{ scale }, { rotate: visualRotate }], backgroundColor: "transparent" }}><Image className="h-full w-full" source={brandIcon} contentFit="contain" style={{ backgroundColor: "transparent" }} /></Animated.View> : null}
         <Text className={item.key === "welcome" ? "mt-10" : "mt-7"} style={{ color: tokens.text, fontSize: item.key === "welcome" ? 35 : 31, fontWeight: "800" }}>{currentCopy.title}</Text>
         <Text className="mt-4 text-base leading-7" style={{ color: tokens.mutedText }}>{currentCopy.body}</Text>
       </Animated.View>
       <Animated.View style={{ transform: [{ translateY: detailY }] }}>
         {item.key === "profile" ? <>
-          <Pressable className="mt-11 h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}2a` }} onPress={() => void chooseAvatar()}>{avatar ? <Image className="h-full w-full" source={{ uri: avatar }} /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{name.trim().slice(0, 1).toUpperCase() || "H"}</Text>}</Pressable>
-          <LiquidControlSurface className="mt-8 h-14 rounded-[18px] px-5" style={{ borderRadius: 18 }}><TextInput value={name} onChangeText={setName} placeholder={t("onboardingNamePlaceholder")} placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
-          <Pressable className="mt-3 h-14 items-center justify-center rounded-[18px] border" style={{ borderColor: tokens.surfaceBorder, backgroundColor: tokens.surface }} onPress={() => void chooseAvatar()}><Text style={{ color: tokens.text, fontSize: 15, fontWeight: "800" }}>{avatar ? "更换本地头像" : "从相册选择头像"}</Text></Pressable>
+          <Pressable className="mt-10 h-16 w-16 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}2a` }} onPress={() => void chooseAvatar()}>{avatar ? <Image className="h-full w-full" source={{ uri: avatar }} /> : <Text className="pt-4 text-center" style={{ color: tokens.accent, fontSize: 20, fontWeight: "900" }}>{name.trim().slice(0, 1).toUpperCase() || "H"}</Text>}</Pressable>
+          <View className="mt-8 h-12 justify-center rounded-2xl px-4" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}><TextInput value={name} onChangeText={setName} placeholder={t("onboardingNamePlaceholder")} placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16, paddingVertical: 0 }} /></View>
+          <Pressable className="mt-3 h-12 items-center justify-center rounded-2xl" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => void chooseAvatar()}><Text style={{ color: tokens.text, fontSize: 14, fontWeight: "700" }}>{avatar ? "更换本地头像" : "从相册选择头像"}</Text></Pressable>
         </> : null}
         {item.key === "backend" ? <>
-          <LiquidControlSurface className="mt-12 h-14 rounded-[18px] px-5" style={{ borderRadius: 18, borderColor: backendError || (backend && !urlPattern.test(backend)) ? "#ef4444" : undefined }}><TextInput value={backend} onChangeText={(value) => { setBackend(value); setBackendError(""); }} autoCapitalize="none" keyboardType="url" placeholder="https://music.example.com" placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16 }} /></LiquidControlSurface>
+          <View className="mt-12 h-12 justify-center rounded-2xl px-4" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: backendError || (backend && !urlPattern.test(backend)) ? "#ef4444" : tokens.surfaceBorder }}><TextInput value={backend} onChangeText={(value) => { setBackend(value); setBackendError(""); }} autoCapitalize="none" keyboardType="url" placeholder="https://music.example.com" placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16, paddingVertical: 0 }} /></View>
           <Text className="mt-3 text-xs leading-5" style={{ color: backendError ? "#ef4444" : tokens.mutedText }}>{backendError || t("onboardingBackendHint")}</Text>
         </> : null}
       </Animated.View>
@@ -99,6 +98,6 @@ export default function OnboardingScreen(): React.JSX.Element {
 
   return <ThemedScreen>
     <Animated.FlatList ref={listRef} data={pages} renderItem={render} horizontal pagingEnabled bounces={false} showsHorizontalScrollIndicator={false} keyExtractor={(item) => item.key} onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })} scrollEventThrottle={16} onMomentumScrollEnd={(event) => setPage(Math.round(event.nativeEvent.contentOffset.x / width))} />
-    <View className="absolute bottom-12 left-7 right-7 flex-row items-center justify-between"><View className="h-2 flex-row gap-2">{pages.map((item, index) => { const scaleX = scrollX.interpolate({ inputRange: [(index - 1) * width, index * width, (index + 1) * width], outputRange: [1, 3.25, 1], extrapolate: "clamp" }); return <Animated.View key={item.key} className="h-2 w-2 rounded-full" style={{ backgroundColor: tokens.accent, transform: [{ scaleX }] }} />; })}</View><LiquidControlSurface className="h-12 rounded-full px-6" style={{ borderRadius: 24, opacity: page === 2 && !complete ? 0.5 : 1 }}><Pressable disabled={page === 2 && !complete} className="h-full items-center justify-center" onPress={page === 2 ? () => void finish() : next}><Text style={{ color: tokens.text, fontWeight: "900" }}>{page === 2 ? (saving ? t("saving") : t("finish")) : t("continue")}</Text></Pressable></LiquidControlSurface></View>
+    <View className="absolute bottom-12 left-7 right-7 flex-row items-center justify-between"><View className="h-2 flex-row gap-2">{pages.map((item, index) => { const scaleX = scrollX.interpolate({ inputRange: [(index - 1) * width, index * width, (index + 1) * width], outputRange: [1, 3.25, 1], extrapolate: "clamp" }); return <Animated.View key={item.key} className="h-2 w-2 rounded-full" style={{ backgroundColor: tokens.accent, transform: [{ scaleX }] }} />; })}</View><Pressable disabled={page === 2 && !complete} className="h-11 items-center justify-center rounded-full px-6" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder, opacity: page === 2 && !complete ? 0.5 : 1 }} onPress={page === 2 ? () => void finish() : next}><Text style={{ color: tokens.text, fontWeight: "800", fontSize: 14 }}>{page === 2 ? (saving ? t("saving") : t("finish")) : t("continue")}</Text></Pressable></View>
   </ThemedScreen>;
 }
