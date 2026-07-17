@@ -10,14 +10,11 @@ import { ThemedCard } from "@/components/ui/ThemedCard";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
 
 type Source = "netease" | "bilibili";
 interface QrPayload { key?: string; qrUrl?: string; message?: string; }
 interface PollPayload { status?: "pending" | "confirmed" | "expired"; cookie?: string; }
-
-function apiBase(url: string | undefined): string {
-  return (url ?? "").trim().replace(/\/+$/, "").replace(/\/api\/v1$/, "") + "/api/v1";
-}
 
 export default function SourcesScreen(): React.JSX.Element {
   const { profile, saveSourceCredential } = useAccount();

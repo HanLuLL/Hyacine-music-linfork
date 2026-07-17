@@ -7,6 +7,7 @@ import { useAccount } from "@/account";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { normalizeBackendUrl } from "@/utils/apiBase";
 
 const brandIcon = require("../assets/brand-icon.png");
 
@@ -53,14 +54,16 @@ export default function OnboardingScreen(): React.JSX.Element {
     if (!complete || saving) return;
     setSaving(true);
     setBackendError("");
-    const normalizedBackend = backend.trim().replace(/\/+$/, "").replace(/\/api\/v1$/i, "");
+    const normalizedBackend = normalizeBackendUrl(backend);
+    const healthUrl = `${normalizedBackend}/api/v1/health`;
     try {
-      const response = await fetch(`${normalizedBackend}/api/v1/health`);
-      if (!response.ok) throw new Error();
+      const response = await fetch(healthUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       await saveProfile({ displayName: name, avatarUrl: avatar, backendUrl: normalizedBackend, musicSource: profile?.musicSource ?? null, onboardingCompleted: true });
       router.replace("/sources");
-    } catch {
-      setBackendError("无法连接服务器。手机请填写可访问的局域网 IP 或域名，不要填写 127.0.0.1。");
+    } catch (error) {
+      const detail = error instanceof Error && error.message ? `（${error.message}）` : "";
+      setBackendError(`无法连接 ${healthUrl}${detail}。请确认服务器已启动，并填写 http://公网IP:3000，不要填 127.0.0.1。`);
     } finally {
       setSaving(false);
     }

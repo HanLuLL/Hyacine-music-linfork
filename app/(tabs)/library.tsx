@@ -6,12 +6,9 @@ import { useI18n } from "@/i18n";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
 
 interface Playlist { id: number; name: string; coverUrl: string; playCount: number; trackCount: number; description: string; }
-
-function apiBase(url: string): string {
-  return url.trim().replace(/\/+$/, "").replace(/\/api\/v1$/, "") + "/api/v1";
-}
 
 function formatPlayCount(value: number, language: string): string {
   return new Intl.NumberFormat(language, { notation: "compact", maximumFractionDigits: 1 }).format(value);

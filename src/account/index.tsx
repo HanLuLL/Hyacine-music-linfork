@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import { normalizeBackendUrl } from "@/utils/apiBase";
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 export type MusicSource = "netease" | "bilibili";
@@ -18,7 +19,7 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => { void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => { if (raw) try { setProfile(readProfile(JSON.parse(raw) as Partial<AccountProfile>)); } catch {} setHydrated(true); }); }, []);
   const value = useMemo<AccountContextValue>(() => ({ profile, hydrated,
-    saveProfile: async (next) => { const normalized = { displayName: next.displayName.trim(), avatarUrl: next.avatarUrl.trim(), backendUrl: next.backendUrl.trim().replace(/\/$/, ""), musicSource: next.musicSource, onboardingCompleted: next.onboardingCompleted }; await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized)); setProfile(normalized); },
+    saveProfile: async (next) => { const normalized = { displayName: next.displayName.trim(), avatarUrl: next.avatarUrl.trim(), backendUrl: normalizeBackendUrl(next.backendUrl), musicSource: next.musicSource, onboardingCompleted: next.onboardingCompleted }; await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized)); setProfile(normalized); },
     saveSourceCredential: async (source, credential) => { await SecureStore.setItemAsync(credentialKey(source), credential); const next = profile ? { ...profile, musicSource: source } : null; if (next) { await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next)); setProfile(next); } },
     getSourceCredential: (source) => SecureStore.getItemAsync(credentialKey(source)),
   }), [hydrated, profile]);

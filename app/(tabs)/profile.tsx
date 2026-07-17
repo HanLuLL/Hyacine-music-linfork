@@ -6,12 +6,9 @@ import { useAccount } from "@/account";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
 
 interface PersonalPlaylist { id: number; name: string; coverUrl: string; }
-
-function apiBase(url: string): string {
-  return url.trim().replace(/\/+$/, "").replace(/\/api\/v1$/, "") + "/api/v1";
-}
 
 export default function ProfileScreen(): React.JSX.Element {
   const { t } = useI18n();
