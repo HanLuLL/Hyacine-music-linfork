@@ -1,4 +1,5 @@
 import { View, type ViewProps } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/theme";
 
@@ -11,17 +12,42 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
+  const hasCustomBg = Boolean(preferences.customBackgroundUri);
+  const bgOpacity = Math.min(1, Math.max(0, preferences.backgroundOpacity));
 
   return (
     <View className={`flex-1 overflow-hidden ${className}`} style={[{ backgroundColor: tokens.background }, style]} {...props}>
-      {isLiquid ? (
+      {hasCustomBg ? (
+        <>
+          <Image
+            pointerEvents="none"
+            className="absolute inset-0"
+            source={{ uri: preferences.customBackgroundUri ?? undefined }}
+            contentFit="cover"
+            style={{ opacity: bgOpacity }}
+          />
+          <View
+            pointerEvents="none"
+            className="absolute inset-0"
+            style={{
+              backgroundColor: tokens.isLight
+                ? `rgba(244,248,255,${0.28 + (1 - bgOpacity) * 0.45})`
+                : `rgba(8,12,22,${0.35 + (1 - bgOpacity) * 0.45})`,
+            }}
+          />
+        </>
+      ) : null}
+
+      {isLiquid && !hasCustomBg ? (
         <>
           <LinearGradient
             pointerEvents="none"
             className="absolute inset-0"
-            colors={tokens.isLight
-              ? ["#cfe5ff", "#f5f8ff", "#d9ecff", "#f8f4ff"]
-              : [tokens.background, "#162745", "#151a33", tokens.backgroundSecondary]}
+            colors={
+              tokens.isLight
+                ? ["#cfe5ff", "#f5f8ff", "#d9ecff", "#f8f4ff"]
+                : [tokens.background, "#162745", "#151a33", tokens.backgroundSecondary]
+            }
             locations={[0, 0.34, 0.68, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -36,7 +62,18 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
           />
         </>
       ) : null}
-      {isMiuix ? (
+
+      {isLiquid && hasCustomBg ? (
+        <LinearGradient
+          pointerEvents="none"
+          className="absolute inset-0"
+          colors={[`${tokens.accent}22`, "#ffffff00", "#ffffff10"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        />
+      ) : null}
+
+      {isMiuix && !hasCustomBg ? (
         <LinearGradient
           pointerEvents="none"
           className="absolute inset-0"
@@ -45,6 +82,7 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
           end={{ x: 0, y: 1 }}
         />
       ) : null}
+
       {children}
     </View>
   );

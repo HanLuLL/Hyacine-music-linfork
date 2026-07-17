@@ -3,16 +3,12 @@ import { createContext, useContext, useEffect, useMemo, useState, type PropsWith
 
 export const uiStyles = ["native", "liquid", "miuix"] as const;
 export type UiStyle = (typeof uiStyles)[number];
-
 export const themePresets = ["midnight", "black", "daylight", "aurora"] as const;
 export type ThemePreset = (typeof themePresets)[number];
-
 export const playerLayouts = ["vinyl", "immersive", "minimal"] as const;
 export type PlayerLayout = (typeof playerLayouts)[number];
-
 export const fontScales = ["small", "medium", "large"] as const;
 export type FontScale = (typeof fontScales)[number];
-
 export const listDensities = ["compact", "comfortable"] as const;
 export type ListDensity = (typeof listDensities)[number];
 
@@ -24,6 +20,9 @@ export interface ThemePreferences {
   listDensity: ListDensity;
   customAccent: string | null;
   magicColorEnabled: boolean;
+  customBackgroundUri: string | null;
+  backgroundOpacity: number;
+  glassOpacity: number;
 }
 
 export interface ThemeTokens {
@@ -43,16 +42,24 @@ export interface ThemeTokens {
 }
 
 const DEFAULT_PREFERENCES: ThemePreferences = {
-  uiStyle: "native",
+  uiStyle: "liquid",
   preset: "daylight",
   playerLayout: "minimal",
   fontScale: "medium",
   listDensity: "comfortable",
   customAccent: null,
   magicColorEnabled: false,
+  customBackgroundUri: null,
+  backgroundOpacity: 0.42,
+  glassOpacity: 0.34,
 };
 
-export const presetAccents: Record<ThemePreset, string> = { midnight: "#a855f7", black: "#00d4ff", daylight: "#4e7a64", aurora: "#34d399" };
+export const presetAccents: Record<ThemePreset, string> = {
+  midnight: "#a855f7",
+  black: "#00d4ff",
+  daylight: "#4e7a64",
+  aurora: "#34d399",
+};
 
 const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">> = {
   midnight: {
@@ -80,15 +87,15 @@ const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillR
     isLight: false,
   },
   daylight: {
-    background: "#f7f7f5",
-    backgroundSecondary: "#eeeeea",
+    background: "#eef4fb",
+    backgroundSecondary: "#e4edf8",
     surface: "#ffffff",
     surfaceStrong: "#ffffff",
-    surfaceBorder: "#deded8",
-    primary: "#f7f7f5",
+    surfaceBorder: "#d7e2ef",
+    primary: "#eef4fb",
     accent: "#4e7a64",
-    text: "#20211e",
-    mutedText: "#777871",
+    text: "#1d2430",
+    mutedText: "#6b7788",
     isLight: true,
   },
   aurora: {
@@ -105,9 +112,30 @@ const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillR
   },
 };
 
-function withStyle(base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">, style: UiStyle, accent: string): ThemeTokens {
-  const common = { ...base, accent };
+function clamp01(value: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(1, Math.max(0, value));
+}
 
+function withAlpha(hexOrRgba: string, alpha: number): string {
+  const a = clamp01(alpha, 1);
+  if (hexOrRgba.startsWith("#") && (hexOrRgba.length === 7 || hexOrRgba.length === 9)) {
+    const r = Number.parseInt(hexOrRgba.slice(1, 3), 16);
+    const g = Number.parseInt(hexOrRgba.slice(3, 5), 16);
+    const b = Number.parseInt(hexOrRgba.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  return hexOrRgba;
+}
+
+function withStyle(
+  base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">,
+  style: UiStyle,
+  accent: string,
+  glassOpacity: number,
+): ThemeTokens {
+  const common = { ...base, accent };
+  const glass = clamp01(glassOpacity, DEFAULT_PREFERENCES.glassOpacity);
   if (style === "miuix") {
     return {
       ...common,
@@ -119,25 +147,23 @@ function withStyle(base: Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOp
       cardOpacity: 1,
     };
   }
-
   if (style === "liquid") {
     return {
       ...common,
-      surface: base.isLight ? "#ffffff45" : "#ffffff14",
-      surfaceStrong: base.isLight ? "#ffffff70" : "#17203378",
-      surfaceBorder: base.isLight ? "#ffffffd6" : "#ffffff70",
-      cardRadius: 24,
+      surface: base.isLight ? withAlpha("#ffffff", 0.28 + glass * 0.45) : withAlpha("#10182a", 0.22 + glass * 0.35),
+      surfaceStrong: base.isLight ? withAlpha("#ffffff", 0.48 + glass * 0.4) : withAlpha("#172033", 0.42 + glass * 0.35),
+      surfaceBorder: base.isLight ? withAlpha("#ffffff", 0.72 + glass * 0.2) : withAlpha("#ffffff", 0.28 + glass * 0.3),
+      cardRadius: 28,
       pillRadius: 999,
-      cardOpacity: 0.08,
+      cardOpacity: glass,
     };
   }
-
   return {
     ...common,
     surface: base.isLight ? "#ffffff" : "#ffffff26",
     surfaceStrong: base.isLight ? "#ffffff" : "#1b1836",
     surfaceBorder: base.isLight ? "#deded8" : "#ffffff33",
-    cardRadius: 12,
+    cardRadius: 16,
     pillRadius: 999,
     cardOpacity: 0,
   };
@@ -154,6 +180,9 @@ interface ThemeContextValue {
   setListDensity: (value: ListDensity) => Promise<void>;
   setCustomAccent: (value: string | null) => Promise<void>;
   setMagicColorEnabled: (value: boolean) => Promise<void>;
+  setCustomBackgroundUri: (value: string | null) => Promise<void>;
+  setBackgroundOpacity: (value: number) => Promise<void>;
+  setGlassOpacity: (value: number) => Promise<void>;
 }
 
 const STORAGE_KEY = "hyacine.theme-preferences";
@@ -162,7 +191,20 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 function migrateUiStyle(value: unknown): UiStyle {
   if (value === "liquid") return "liquid";
   if (value === "miui" || value === "miuix") return "miuix";
-  return "native";
+  if (value === "native") return "native";
+  return "liquid";
+}
+
+function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: unknown }): ThemePreferences {
+  return {
+    ...DEFAULT_PREFERENCES,
+    ...stored,
+    customAccent: stored.customAccent?.trim().toUpperCase() ?? null,
+    uiStyle: migrateUiStyle(stored.uiStyle),
+    customBackgroundUri: stored.customBackgroundUri?.trim() || null,
+    backgroundOpacity: clamp01(stored.backgroundOpacity ?? DEFAULT_PREFERENCES.backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity),
+    glassOpacity: clamp01(stored.glassOpacity ?? DEFAULT_PREFERENCES.glassOpacity, DEFAULT_PREFERENCES.glassOpacity),
+  };
 }
 
 export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Element {
@@ -174,7 +216,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       if (raw) {
         try {
           const stored = JSON.parse(raw) as Partial<ThemePreferences> & { uiStyle?: unknown };
-          setPreferences({ ...DEFAULT_PREFERENCES, ...stored, customAccent: stored.customAccent?.trim().toUpperCase() ?? null, uiStyle: migrateUiStyle(stored.uiStyle) });
+          setPreferences(normalizePreferences(stored));
         } catch {
           // Invalid local preferences are safely ignored.
         }
@@ -185,7 +227,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
 
   const update = async (patch: Partial<ThemePreferences>): Promise<void> => {
     setPreferences((current) => {
-      const next = { ...current, ...patch };
+      const next = normalizePreferences({ ...current, ...patch });
       void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -194,8 +236,8 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
   const tokens = useMemo(() => {
     const base = PRESET_COLORS[preferences.preset];
     const accent = preferences.customAccent ?? base.accent;
-    return withStyle(base, preferences.uiStyle, accent);
-  }, [preferences.customAccent, preferences.preset, preferences.uiStyle]);
+    return withStyle(base, preferences.uiStyle, accent, preferences.glassOpacity);
+  }, [preferences.customAccent, preferences.glassOpacity, preferences.preset, preferences.uiStyle]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
@@ -209,6 +251,9 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       setListDensity: (listDensity) => update({ listDensity }),
       setCustomAccent: (customAccent) => update({ customAccent: customAccent?.trim().toUpperCase() ?? null }),
       setMagicColorEnabled: (magicColorEnabled) => update({ magicColorEnabled }),
+      setCustomBackgroundUri: (customBackgroundUri) => update({ customBackgroundUri }),
+      setBackgroundOpacity: (backgroundOpacity) => update({ backgroundOpacity: clamp01(backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity) }),
+      setGlassOpacity: (glassOpacity) => update({ glassOpacity: clamp01(glassOpacity, DEFAULT_PREFERENCES.glassOpacity) }),
     }),
     [hydrated, preferences, tokens],
   );
