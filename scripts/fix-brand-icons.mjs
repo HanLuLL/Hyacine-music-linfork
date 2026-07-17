@@ -154,7 +154,7 @@ function cropToSquare(img, bounds) {
       const r = img.pixels[si];
       const g = img.pixels[si + 1];
       const b = img.pixels[si + 2];
-      if (isNearWhite(r, g, b, 248)) {
+      if (isNearWhite(r, g, b, 250)) {
         out[di] = 0;
         out[di + 1] = 0;
         out[di + 2] = 0;
@@ -205,13 +205,19 @@ const bounds = contentBounds(src);
 const cropped = cropToSquare(src, bounds);
 const size = 1024;
 const transparent = resize(cropped, size);
-const opaque = withBackground({ w: size, h: size, pixels: transparent }, [245, 246, 244, 255]);
+const opaque = withBackground({ w: size, h: size, pixels: transparent }, [17, 18, 14, 255]);
 
 writePng("assets/brand-icon.png", size, size, transparent);
 writePng("assets/android-icon-foreground.png", size, size, transparent);
 writePng("assets/icon.png", size, size, opaque);
 writePng("assets/favicon.png", size, size, opaque);
 writePng("assets/splash-icon.png", size, size, opaque);
+const bg = Buffer.alloc(size * size * 4);
+for (let i = 0; i < size * size; i++) {
+  const o = i * 4;
+  bg[o] = 17; bg[o + 1] = 18; bg[o + 2] = 14; bg[o + 3] = 255;
+}
+writePng("assets/android-icon-background.png", size, size, bg);
 
 const verify = readPng("assets/icon.png");
 const i = ((size / 2) * size + size / 2) * 4;
