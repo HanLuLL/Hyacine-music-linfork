@@ -9,8 +9,9 @@ interface ThemedScreenProps extends ViewProps {
 }
 
 export function ThemedScreen({ children, className = "", style, ...props }: ThemedScreenProps): React.JSX.Element {
-  const { preferences, tokens } = useTheme();
+  const { preferences, tokens, fontScaleMultiplier } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
+  const contentScale = preferences.uiScale * fontScaleMultiplier;
   const isMiuix = preferences.uiStyle === "miuix";
   const hasCustomBg = Boolean(preferences.customBackgroundUri);
   const bgOpacity = Math.min(1, Math.max(0, preferences.backgroundOpacity));
@@ -83,7 +84,12 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
         />
       ) : null}
 
-      {children}
+      <View
+        className="flex-1"
+        style={contentScale === 1 ? undefined : { transform: [{ scale: contentScale }], width: `${100 / contentScale}%`, height: `${100 / contentScale}%` }}
+      >
+        {children}
+      </View>
     </View>
   );
 }

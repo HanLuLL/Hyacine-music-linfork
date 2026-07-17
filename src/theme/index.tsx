@@ -23,6 +23,7 @@ export interface ThemePreferences {
   customBackgroundUri: string | null;
   backgroundOpacity: number;
   glassOpacity: number;
+  uiScale: number;
 }
 
 export interface ThemeTokens {
@@ -52,6 +53,7 @@ const DEFAULT_PREFERENCES: ThemePreferences = {
   customBackgroundUri: null,
   backgroundOpacity: 0.42,
   glassOpacity: 0.34,
+  uiScale: 1,
 };
 
 export const presetAccents: Record<ThemePreset, string> = {
@@ -183,6 +185,8 @@ interface ThemeContextValue {
   setCustomBackgroundUri: (value: string | null) => Promise<void>;
   setBackgroundOpacity: (value: number) => Promise<void>;
   setGlassOpacity: (value: number) => Promise<void>;
+  setUiScale: (value: number) => Promise<void>;
+  fontScaleMultiplier: number;
 }
 
 const STORAGE_KEY = "hyacine.theme-preferences";
@@ -204,6 +208,7 @@ function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: un
     customBackgroundUri: stored.customBackgroundUri?.trim() || null,
     backgroundOpacity: clamp01(stored.backgroundOpacity ?? DEFAULT_PREFERENCES.backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity),
     glassOpacity: clamp01(stored.glassOpacity ?? DEFAULT_PREFERENCES.glassOpacity, DEFAULT_PREFERENCES.glassOpacity),
+    uiScale: Math.min(1.3, Math.max(0.85, stored.uiScale ?? DEFAULT_PREFERENCES.uiScale)),
   };
 }
 
@@ -254,6 +259,8 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       setCustomBackgroundUri: (customBackgroundUri) => update({ customBackgroundUri }),
       setBackgroundOpacity: (backgroundOpacity) => update({ backgroundOpacity: clamp01(backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity) }),
       setGlassOpacity: (glassOpacity) => update({ glassOpacity: clamp01(glassOpacity, DEFAULT_PREFERENCES.glassOpacity) }),
+      setUiScale: (uiScale) => update({ uiScale: Math.min(1.3, Math.max(0.85, uiScale)) }),
+      fontScaleMultiplier: preferences.fontScale === "small" ? 0.88 : preferences.fontScale === "large" ? 1.16 : 1,
     }),
     [hydrated, preferences, tokens],
   );

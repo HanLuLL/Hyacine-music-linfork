@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
 import CommunitySlider from "@react-native-community/slider";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
 import { languages, type Language, useI18n } from "@/i18n";
@@ -103,6 +104,7 @@ export default function SettingsScreen(): React.JSX.Element {
     setCustomBackgroundUri,
     setBackgroundOpacity,
     setGlassOpacity,
+    setUiScale,
   } = useTheme();
   const { language, setLanguage, t } = useI18n();
   const { profile } = useAccount();
@@ -133,7 +135,11 @@ export default function SettingsScreen(): React.JSX.Element {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]?.uri) {
-      setCustomBackgroundUri(result.assets[0].uri);
+      const sourceUri = result.assets[0].uri;
+      const extension = sourceUri.split(".").pop()?.split("?")[0] || "jpg";
+      const targetUri = `${FileSystem.documentDirectory}hyacine-background.${extension}`;
+      await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
+      await setCustomBackgroundUri(targetUri);
     }
   };
 
@@ -329,6 +335,24 @@ export default function SettingsScreen(): React.JSX.Element {
             </View>
           </Row>
         </Section>
+
+        <Row title="界面缩放" hint="全局调整卡片、图标和操作区域大小。">
+            <View className="mt-4 flex-row items-center gap-3">
+              <CommunitySlider
+                style={{ flex: 1 }}
+                minimumValue={0.85}
+                maximumValue={1.3}
+                step={0.01}
+                value={preferences.uiScale}
+                onValueChange={(value) => void setUiScale(value)}
+                minimumTrackTintColor={tokens.accent}
+                maximumTrackTintColor={tokens.surfaceBorder}
+              />
+              <Text style={{ color: tokens.text, fontSize: 13, fontWeight: "700", minWidth: 42, textAlign: "right" }}>
+                {Math.round(preferences.uiScale * 100)}%
+              </Text>
+            </View>
+          </Row>
 
         {/* Player */}
         <Section title={t("playerSection")}>
