@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
-import { Animated, PanResponder, Platform, Pressable, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
+import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
 import { TabSwipeSurface } from "@/components/navigation/TabSwipeSurface";
 import { useTheme } from "@/theme";
@@ -71,16 +71,47 @@ function LiquidTabBar(): React.JSX.Element {
   };
 
 return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
-    <View className="absolute inset-0 overflow-hidden rounded-[38px] border" style={{ backgroundColor: "transparent", borderColor: "#ffffffc0", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 9 }}>
-      {Platform.OS === "ios" ? <BlurView intensity={70} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
-      <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "#ffffffdc" }} />
+    <View
+      className="absolute inset-0 overflow-hidden rounded-[38px] border"
+      style={{
+        backgroundColor: tokens.isLight ? "rgba(255,255,255,0.34)" : "rgba(18,24,38,0.42)",
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.28)",
+        shadowColor: "#182848",
+        shadowOpacity: 0.22,
+        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 8 },
+        elevation: 9,
+      }}
+    >
+      <BlurView
+        intensity={Platform.OS === "ios" ? 70 : 48}
+        tint={tokens.isLight ? "light" : "dark"}
+        experimentalBlurMethod="dimezisBlurView"
+        className="absolute inset-0"
+      />
+      <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
     </View>
     <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
       {tabWidth ? <LensPosition position={position} tabWidth={tabWidth} /> : null}
       <View pointerEvents="box-none" className="flex-1 flex-row">
-        {tabs.map((tab, index) => { const active = index === activeIndex; const focus = position.interpolate({ inputRange: [index - 1, index, index + 1], outputRange: [0, 1, 0], extrapolate: "clamp" }); const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [0.86, 1.12] }); const opacity = focus.interpolate({ inputRange: [0, 1], outputRange: [0.48, 1] }); return <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
-          <Animated.View className="h-[60px] items-center justify-center" style={{ opacity, transform: [{ scale }] }}><Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 21, fontWeight: "800" }}>{tab.symbol}</Text><Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 10, fontWeight: "800" }}>{t(tab.key)}</Text></Animated.View>
-        </Pressable>; })}
+        {tabs.map((tab, index) => {
+          const active = index === activeIndex;
+          const focus = position.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [0, 1, 0],
+            extrapolate: "clamp",
+          });
+          const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.08] });
+          const opacity = focus.interpolate({ inputRange: [0, 1], outputRange: [0.52, 1] });
+          return (
+            <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
+              <Animated.View className="h-[60px] items-center justify-center" style={{ opacity, transform: [{ scale }] }}>
+                <Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 21, fontWeight: "800" }}>{tab.symbol}</Text>
+                <Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 10, fontWeight: "800" }}>{t(tab.key)}</Text>
+              </Animated.View>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   </View>;
@@ -88,11 +119,42 @@ return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-
 
 function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWidth: number }): React.JSX.Element {
   const { tokens } = useTheme();
-  const translateX = position.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, tabWidth, tabWidth * 2, tabWidth * 3] });
-  return <Animated.View pointerEvents="none" className="absolute bottom-0 top-0 overflow-hidden rounded-[30px] border" style={{ width: tabWidth, backgroundColor: "transparent", borderColor: "#ffffffdc", shadowColor: tokens.isLight ? "#ffffff" : "#93c5fd", shadowOpacity: 0.65, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, transform: [{ translateX }] }}>
-    {Platform.OS === "ios" ? <BlurView intensity={44} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
-    <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "#ffffffef" }} />
-  </Animated.View>;
+  const pillInsetX = Math.max(4, tabWidth * 0.08);
+  const pillWidth = Math.max(48, tabWidth - pillInsetX * 2);
+  const translateX = position.interpolate({
+    inputRange: [0, 1, 2, 3],
+    outputRange: [pillInsetX, tabWidth + pillInsetX, tabWidth * 2 + pillInsetX, tabWidth * 3 + pillInsetX],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className="absolute overflow-hidden"
+      style={{
+        top: 4,
+        bottom: 4,
+        width: pillWidth,
+        borderRadius: 999,
+        backgroundColor: tokens.isLight ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.18)",
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.38)",
+        shadowColor: tokens.isLight ? "#94a3b8" : "#93c5fd",
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 6,
+        transform: [{ translateX }],
+      }}
+    >
+      <BlurView
+        intensity={Platform.OS === "ios" ? 56 : 40}
+        tint={tokens.isLight ? "light" : "dark"}
+        experimentalBlurMethod="dimezisBlurView"
+        className="absolute inset-0"
+      />
+      <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.9)" }} />
+    </Animated.View>
+  );
 }
 
 function MiuixTabBar(): React.JSX.Element {
