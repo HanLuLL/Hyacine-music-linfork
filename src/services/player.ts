@@ -45,6 +45,7 @@ export async function playTrack(track: Track): Promise<void> {
     title: track.title,
     artist: track.artist,
     artwork: track.artwork,
+    headers: track.headers,
   });
   await TrackPlayer.play();
   usePlayerStore.getState().setCurrentTrack(track);

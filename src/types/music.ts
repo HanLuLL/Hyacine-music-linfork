@@ -5,6 +5,7 @@ export interface Track {
   url: string;
   artwork?: string;
   duration?: number;
+  headers?: Record<string, string>;
 }
 
 export interface Playlist {

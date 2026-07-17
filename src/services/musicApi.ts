@@ -101,8 +101,15 @@ export async function resolvePlayableTrack(options: {
         cookie: options.cookie ?? undefined,
       },
     );
-    if (!result.url) throw new Error("未获取到 Bilibili 播放地址");
-    return { ...options.track, url: result.url };
+if (!result.url) throw new Error("未获取到 Bilibili 播放地址");
+    return {
+      ...options.track,
+      url: result.url,
+      headers: {
+        Referer: "https://www.bilibili.com/",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/124 Mobile Safari/537.36",
+      },
+    };
   }
 
   if (options.track.url) return options.track;
