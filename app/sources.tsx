@@ -17,7 +17,7 @@ interface QrPayload { key?: string; qrUrl?: string; message?: string; }
 interface PollPayload { status?: "pending" | "confirmed" | "expired"; cookie?: string; }
 
 export default function SourcesScreen(): React.JSX.Element {
-  const { profile, saveSourceCredential } = useAccount();
+  const { profile, saveSourceCredential, updateProfile } = useAccount();
   const { t } = useI18n();
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
@@ -30,6 +30,25 @@ export default function SourcesScreen(): React.JSX.Element {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const base = useMemo(() => apiBase(profile?.backendUrl), [profile?.backendUrl]);
+
+  const syncNeteaseProfile = async (cookie: string): Promise<void> => {
+    if (!base) return;
+    try {
+      const response = await fetch(`${base}/music-sources/netease/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie }),
+      });
+      const data = await response.json() as { nickname?: string; avatarUrl?: string; message?: string };
+      if (!response.ok) return;
+      await updateProfile({
+        displayName: data.nickname?.trim() || profile?.displayName || "网易云用户",
+        avatarUrl: data.avatarUrl?.trim() || profile?.avatarUrl || "",
+      });
+    } catch {
+      // Keep local profile if remote profile sync fails.
+    }
+  };
 
   const createQr = async (): Promise<void> => {
     if (!base) {
@@ -71,7 +90,7 @@ export default function SourcesScreen(): React.JSX.Element {
           if (!response.ok) return;
           if (data.status === "confirmed" && data.cookie) {
             clearInterval(timer);
-            void saveSourceCredential("netease", data.cookie).then(() => router.replace("/(tabs)"));
+            void saveSourceCredential("netease", data.cookie).then(async () => { await syncNeteaseProfile(data.cookie!); router.replace("/(tabs)"); });
           }
           if (data.status === "expired") {
             clearInterval(timer);

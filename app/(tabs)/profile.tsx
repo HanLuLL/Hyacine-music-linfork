@@ -8,11 +8,12 @@ import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
 import { loadListeningHistory } from "@/services/listeningHistory";
 import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
 
 export default function ProfileScreen(): React.JSX.Element {
   const { t } = useI18n();
-  const { profile } = useAccount();
+  const { profile, getSourceCredential, updateProfile } = useAccount();
   const { tokens } = useTheme();
   const { playTrack } = useAudio();
   const [history, setHistory] = useState<Track[]>([]);
@@ -24,6 +25,29 @@ export default function ProfileScreen(): React.JSX.Element {
   useEffect(() => {
     void refreshHistory();
   }, [refreshHistory]);
+
+  useEffect(() => {
+    if (!profile?.backendUrl || profile.musicSource !== "netease") return;
+    void (async () => {
+      try {
+        const cookie = await getSourceCredential("netease");
+        if (!cookie) return;
+        const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/profile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cookie }),
+        });
+        if (!response.ok) return;
+        const remote = await response.json() as { nickname?: string; avatarUrl?: string };
+        await updateProfile({
+          displayName: remote.nickname?.trim() || profile.displayName,
+          avatarUrl: remote.avatarUrl?.trim() || profile.avatarUrl,
+        });
+      } catch {
+        // Keep local avatar if remote profile is unavailable.
+      }
+    })();
+  }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSource, updateProfile]);
 
   const sourceName = profile?.musicSource === "netease" ? "网易云音乐已绑定" : profile?.musicSource === "bilibili" ? "哔哩哔哩已绑定" : "尚未绑定音乐服务";
 

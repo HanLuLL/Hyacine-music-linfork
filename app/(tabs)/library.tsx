@@ -15,7 +15,7 @@ function formatPlayCount(value: number, language: string): string {
 }
 
 export default function LibraryScreen(): React.JSX.Element {
-  const { profile, getSourceCredential } = useAccount();
+  const { profile, getSourceCredential, updateProfile } = useAccount();
   const { language, t } = useI18n();
   const { tokens } = useTheme();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -36,19 +36,40 @@ export default function LibraryScreen(): React.JSX.Element {
     setError("");
     try {
       const cookie = await getSourceCredential("netease");
-      if (!cookie) throw new Error("missing credential");
+      if (!cookie) throw new Error("网易云登录已失效，请重新扫码绑定");
+
+      // Keep local avatar/name in sync with the currently bound Netease account.
+      try {
+        const profileResponse = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/profile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cookie }),
+        });
+        if (profileResponse.ok) {
+          const remote = await profileResponse.json() as { nickname?: string; avatarUrl?: string };
+          await updateProfile({
+            displayName: remote.nickname?.trim() || profile.displayName,
+            avatarUrl: remote.avatarUrl?.trim() || profile.avatarUrl,
+          });
+        }
+      } catch {
+        // Profile sync is best-effort and must not block playlist loading.
+      }
+
       const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cookie }),
       });
-      const data = await response.json() as Playlist[];
-      if (!response.ok || !Array.isArray(data)) throw new Error("request failed");
+      const data = await response.json() as Playlist[] | { message?: string };
+      if (!response.ok || !Array.isArray(data)) {
+        throw new Error((data as { message?: string }).message || `加载失败 HTTP ${response.status}`);
+      }
       setPlaylists(data);
       if (!data.length) setError("暂无可展示的歌单。");
-    } catch {
+    } catch (cause) {
       setPlaylists([]);
-      setError("无法加载我的歌单，请检查网易云登录状态和服务器连接。");
+      setError(cause instanceof Error ? cause.message : "无法加载我的歌单，请检查网易云登录状态和服务器连接。");
     } finally {
       setLoading(false);
       setRefreshing(false);

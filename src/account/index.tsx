@@ -3,26 +3,96 @@ import { normalizeBackendUrl } from "@/utils/apiBase";
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 export type MusicSource = "netease" | "bilibili";
-export interface AccountProfile { displayName: string; avatarUrl: string; backendUrl: string; musicSource: MusicSource | null; onboardingCompleted: boolean; }
-interface AccountContextValue { profile: AccountProfile | null; hydrated: boolean; saveProfile: (profile: AccountProfile) => Promise<void>; saveSourceCredential: (source: MusicSource, credential: string) => Promise<void>; getSourceCredential: (source: MusicSource) => Promise<string | null>; }
+export interface AccountProfile {
+  displayName: string;
+  avatarUrl: string;
+  backendUrl: string;
+  musicSource: MusicSource | null;
+  onboardingCompleted: boolean;
+}
+
+interface AccountContextValue {
+  profile: AccountProfile | null;
+  hydrated: boolean;
+  saveProfile: (profile: AccountProfile) => Promise<void>;
+  updateProfile: (patch: Partial<AccountProfile>) => Promise<void>;
+  saveSourceCredential: (source: MusicSource, credential: string) => Promise<void>;
+  getSourceCredential: (source: MusicSource) => Promise<string | null>;
+}
+
 const STORAGE_KEY = "hyacine.account-profile";
 const credentialKey = (source: MusicSource): string => `hyacine.music-source.${source}`;
 const AccountContext = createContext<AccountContextValue | null>(null);
 
 function readProfile(value: Partial<AccountProfile>): AccountProfile | null {
   if (!value.displayName?.trim() || !value.backendUrl?.trim()) return null;
-  return { displayName: value.displayName, avatarUrl: value.avatarUrl?.trim() ?? "", backendUrl: value.backendUrl, musicSource: value.musicSource ?? null, onboardingCompleted: value.onboardingCompleted === true };
+  return {
+    displayName: value.displayName,
+    avatarUrl: value.avatarUrl?.trim() ?? "",
+    backendUrl: value.backendUrl,
+    musicSource: value.musicSource ?? null,
+    onboardingCompleted: value.onboardingCompleted === true,
+  };
 }
 
 export function AccountProvider({ children }: PropsWithChildren): React.JSX.Element {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => { if (raw) try { setProfile(readProfile(JSON.parse(raw) as Partial<AccountProfile>)); } catch {} setHydrated(true); }); }, []);
-  const value = useMemo<AccountContextValue>(() => ({ profile, hydrated,
-    saveProfile: async (next) => { const normalized = { displayName: next.displayName.trim(), avatarUrl: next.avatarUrl.trim(), backendUrl: normalizeBackendUrl(next.backendUrl), musicSource: next.musicSource, onboardingCompleted: next.onboardingCompleted }; await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized)); setProfile(normalized); },
-    saveSourceCredential: async (source, credential) => { await SecureStore.setItemAsync(credentialKey(source), credential); const next = profile ? { ...profile, musicSource: source } : null; if (next) { await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next)); setProfile(next); } },
+
+  useEffect(() => {
+    void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => {
+      if (raw) {
+        try {
+          setProfile(readProfile(JSON.parse(raw) as Partial<AccountProfile>));
+        } catch {
+          // ignore corrupt profile payload
+        }
+      }
+      setHydrated(true);
+    });
+  }, []);
+
+  const value = useMemo<AccountContextValue>(() => ({
+    profile,
+    hydrated,
+    saveProfile: async (next) => {
+      const normalized: AccountProfile = {
+        displayName: next.displayName.trim(),
+        avatarUrl: next.avatarUrl.trim(),
+        backendUrl: normalizeBackendUrl(next.backendUrl),
+        musicSource: next.musicSource,
+        onboardingCompleted: next.onboardingCompleted,
+      };
+      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
+      setProfile(normalized);
+    },
+    updateProfile: async (patch) => {
+      if (!profile) return;
+      const normalized: AccountProfile = {
+        displayName: (patch.displayName ?? profile.displayName).trim(),
+        avatarUrl: (patch.avatarUrl ?? profile.avatarUrl).trim(),
+        backendUrl: normalizeBackendUrl(patch.backendUrl ?? profile.backendUrl),
+        musicSource: patch.musicSource === undefined ? profile.musicSource : patch.musicSource,
+        onboardingCompleted: patch.onboardingCompleted ?? profile.onboardingCompleted,
+      };
+      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
+      setProfile(normalized);
+    },
+    saveSourceCredential: async (source, credential) => {
+      await SecureStore.setItemAsync(credentialKey(source), credential);
+      if (!profile) return;
+      const next: AccountProfile = { ...profile, musicSource: source };
+      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
+      setProfile(next);
+    },
     getSourceCredential: (source) => SecureStore.getItemAsync(credentialKey(source)),
   }), [hydrated, profile]);
+
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
-export function useAccount(): AccountContextValue { const context = useContext(AccountContext); if (!context) throw new Error("useAccount must be used inside AccountProvider"); return context; }
+
+export function useAccount(): AccountContextValue {
+  const context = useContext(AccountContext);
+  if (!context) throw new Error("useAccount must be used inside AccountProvider");
+  return context;
+}
