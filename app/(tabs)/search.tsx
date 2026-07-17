@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -27,9 +27,13 @@ export default function SearchScreen(): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [playingId, setPlayingId] = useState("");
   const [error, setError] = useState("");
+  const [source, setSource] = useState<"netease" | "bilibili">(profile?.musicSource ?? "netease");
+  useEffect(() => {
+    if (profile?.musicSource) setSource(profile.musicSource);
+  }, [profile?.musicSource]);
 
   const onSearch = useCallback(async (): Promise<void> => {
-    if (!profile?.backendUrl || !profile.musicSource) {
+    if (!profile?.backendUrl) {
       setError("请先连接音乐源");
       return;
     }
@@ -38,10 +42,10 @@ export default function SearchScreen(): React.JSX.Element {
     setLoading(true);
     setError("");
     try {
-      const cookie = await getSourceCredential(profile.musicSource);
+      const cookie = await getSourceCredential(source);
       const rows = await searchTracks({
         backendUrl: profile.backendUrl,
-        source: profile.musicSource,
+        source,
         keywords: q,
         cookie,
       });
@@ -53,15 +57,15 @@ export default function SearchScreen(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [getSourceCredential, keywords, profile]);
+  }, [getSourceCredential, keywords, profile?.backendUrl, source]);
 
   const onPlay = useCallback(
     async (track: Track): Promise<void> => {
-      if (!profile?.backendUrl || !profile.musicSource) return;
+      if (!profile?.backendUrl) return;
       setPlayingId(track.id);
       setError("");
       try {
-        const cookie = await getSourceCredential(profile.musicSource);
+        const cookie = await getSourceCredential(source);
         const playable = await resolvePlayableTrack({
           backendUrl: profile.backendUrl,
           track,
@@ -74,7 +78,7 @@ export default function SearchScreen(): React.JSX.Element {
         setPlayingId("");
       }
     },
-    [getSourceCredential, playTrack, profile],
+    [getSourceCredential, playTrack, profile?.backendUrl, source],
   );
 
   return (
@@ -82,14 +86,23 @@ export default function SearchScreen(): React.JSX.Element {
       <View className="flex-1 px-5 pb-36 pt-16">
         <Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("search")}</Text>
         <Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>
-          {profile?.musicSource === "bilibili"
-            ? "搜索 B 站视频并播放音频流"
-            : profile?.musicSource === "netease"
-              ? "搜索网易云歌曲并播放"
-              : t("searchHint")}
+          {source === "bilibili" ? "搜索 B 站视频并播放音频流" : "搜索网易云歌曲并播放"}
         </Text>
-
-        <LiquidControlSurface className="mt-8 h-14 flex-row items-center rounded-full px-5" style={{ borderRadius: 28 }}>
+        <LiquidControlSurface className="mt-5 flex-row rounded-full p-1" style={{ borderRadius: 24 }}>
+          {(["netease", "bilibili"] as const).map((item) => (
+            <Pressable
+              key={item}
+              className="h-10 flex-1 items-center justify-center rounded-full"
+              style={{ backgroundColor: source === item ? `${tokens.text}18` : "transparent" }}
+              onPress={() => { setSource(item); setResults([]); setError(""); }}
+            >
+              <Text style={{ color: source === item ? tokens.text : tokens.mutedText, fontSize: 13, fontWeight: "800" }}>
+                {item === "netease" ? "网易云音乐" : "哔哩哔哩"}
+              </Text>
+            </Pressable>
+          ))}
+        </LiquidControlSurface>
+        <LiquidControlSurface className="mt-5 h-14 flex-row items-center rounded-full px-5" style={{ borderRadius: 28 }}>
           <Text className="mr-3 text-xl" style={{ color: tokens.mutedText }}>
             ⌕
           </Text>
@@ -123,12 +136,10 @@ export default function SearchScreen(): React.JSX.Element {
             className="mt-6"
             data={results}
             keyExtractor={(item) => item.id}
-            ItemSeparatorComponent={() => <View className="h-px" style={{ backgroundColor: tokens.surfaceBorder }} />}
+            ItemSeparatorComponent={() => <View className="h-3" />}
             ListEmptyComponent={
               <Text className="mt-10 text-sm leading-6" style={{ color: tokens.mutedText }}>
-                {profile?.musicSource
-                  ? "输入关键词后点搜索。点结果即可解析播放地址并播放。"
-                  : "请先在音乐源页连接网易云或哔哩哔哩。"}
+                输入关键词后点搜索。点结果即可解析播放地址并播放。
               </Text>
             }
             renderItem={({ item }) => (

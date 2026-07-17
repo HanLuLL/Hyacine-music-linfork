@@ -82,7 +82,7 @@ function Row({
 }): React.JSX.Element {
   const { tokens } = useTheme();
   return (
-    <View className="border-b py-5" style={{ borderColor: tokens.surfaceBorder }}>
+    <View className="mt-3 py-4">
       <Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{title}</Text>
       {hint ? <Text className="mt-1 text-xs leading-5" style={{ color: tokens.mutedText }}>{hint}</Text> : null}
       {children}
@@ -191,12 +191,24 @@ export default function SettingsScreen(): React.JSX.Element {
               ))}
             </View>
           </Row>
-          <Row title={t("musicService")} hint={profile?.musicSource === "netease" ? t("neteaseCloud") : t("apiReady")}>
+          <Row title="账号状态" hint={profile ? `${profile.displayName} · 本地账户资料已保存` : "尚未创建本地账户资料"}>
+            <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/onboarding")}>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>编辑头像与昵称</Text>
+              <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
+            </Pressable>
+          </Row>
+          <Row title={t("musicService")} hint={profile?.musicSource === "netease" ? "网易云音乐已绑定" : profile?.musicSource === "bilibili" ? "哔哩哔哩已绑定" : "尚未绑定音乐服务"}>
             <Pressable
-              className="mt-4 flex-row items-center justify-between"
+              className="mt-3 flex-row items-center justify-between"
               onPress={() => router.push("/sources")}
             >
               <Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("manageMusicService")}</Text>
+              <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
+            </Pressable>
+          </Row>
+          <Row title="服务器地址" hint={profile?.backendUrl || "尚未配置服务器"}>
+            <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/onboarding")}>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>修改服务器地址</Text>
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>

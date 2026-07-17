@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, FlatList, Pressable, Text, TextInput, useWindowDimensions, View, type ListRenderItemInfo } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
 import { useI18n } from "@/i18n";
@@ -48,7 +49,13 @@ export default function OnboardingScreen(): React.JSX.Element {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) return;
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
-    if (!result.canceled) setAvatar(result.assets[0]?.uri ?? "");
+    if (!result.canceled && result.assets[0]?.uri) {
+      const sourceUri = result.assets[0].uri;
+      const extension = sourceUri.split(".").pop()?.split("?")[0] || "jpg";
+      const targetUri = `${FileSystem.documentDirectory}hyacine-avatar.${extension}`;
+      await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
+      setAvatar(targetUri);
+    }
   };
   const finish = async (): Promise<void> => {
     if (!complete || saving) return;

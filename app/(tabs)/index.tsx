@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useAudio } from "@/hooks/useAudio";
+import { useAccount } from "@/account";
 import { DEMO_TRACK } from "@/constants/config";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
@@ -11,12 +12,15 @@ export default function HomeScreen(): React.JSX.Element {
   const { playTrack } = useAudio();
   const { t } = useI18n();
   const { tokens } = useTheme();
+  const { profile } = useAccount();
 
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
         <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("greeting")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("subtitle")}</Text></View>
-        <LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>H</Text></LiquidControlSurface>
+        <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">
+          {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
+        </LiquidControlSurface>
       </View>
 
       <View className="relative mt-11 h-[338px] overflow-hidden" style={{ backgroundColor: `${tokens.accent}12`, borderRadius: 28 }}>
