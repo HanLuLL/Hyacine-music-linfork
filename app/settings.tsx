@@ -130,9 +130,8 @@ export default function SettingsScreen(): React.JSX.Element {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
+      allowsEditing: false,
+    quality: 0.8,
     });
     if (!result.canceled && result.assets[0]?.uri) {
       const sourceUri = result.assets[0].uri;
