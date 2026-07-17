@@ -39,7 +39,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
 
         <ThemedCard className="mt-8 p-0" style={{ borderRadius: 28 }}>
-          <Pressable className="flex-row items-center p-5" onPress={() => router.push("/onboarding")}>
+          <Pressable className="flex-row items-center p-5" style={{ backgroundColor: "transparent" }} onPress={() => router.push("/onboarding")}>
             <View className="h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}24`, borderWidth: 2, borderColor: `${tokens.accent}88` }}>
               {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
             </View>

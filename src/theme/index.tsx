@@ -152,8 +152,8 @@ function withStyle(
   if (style === "liquid") {
     return {
       ...common,
-      surface: base.isLight ? withAlpha("#ffffff", 0.28 + glass * 0.45) : withAlpha("#10182a", 0.22 + glass * 0.35),
-      surfaceStrong: base.isLight ? withAlpha("#ffffff", 0.48 + glass * 0.4) : withAlpha("#172033", 0.42 + glass * 0.35),
+      surface: "transparent",
+      surfaceStrong: "transparent",
       surfaceBorder: base.isLight ? withAlpha("#ffffff", 0.72 + glass * 0.2) : withAlpha("#ffffff", 0.28 + glass * 0.3),
       cardRadius: 28,
       pillRadius: 999,

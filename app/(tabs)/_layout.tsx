@@ -70,8 +70,8 @@ function LiquidTabBar(): React.JSX.Element {
     setContentWidth(width);
   };
 
-  return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
-    <View className="absolute inset-0 overflow-hidden rounded-[38px] border" style={{ backgroundColor: Platform.OS === "ios" ? "#ffffff30" : "#ffffff40", borderColor: "#ffffffc0", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 9 }}>
+return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
+    <View className="absolute inset-0 overflow-hidden rounded-[38px] border" style={{ backgroundColor: "transparent", borderColor: "#ffffffc0", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 9 }}>
       {Platform.OS === "ios" ? <BlurView intensity={70} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
       <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "#ffffffdc" }} />
     </View>
@@ -89,7 +89,7 @@ function LiquidTabBar(): React.JSX.Element {
 function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWidth: number }): React.JSX.Element {
   const { tokens } = useTheme();
   const translateX = position.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, tabWidth, tabWidth * 2, tabWidth * 3] });
-  return <Animated.View pointerEvents="none" className="absolute bottom-0 top-0 overflow-hidden rounded-[30px] border" style={{ width: tabWidth, backgroundColor: Platform.OS === "ios" ? "#ffffff5c" : "#ffffff74", borderColor: "#ffffffdc", shadowColor: tokens.isLight ? "#ffffff" : "#93c5fd", shadowOpacity: 0.65, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, transform: [{ translateX }] }}>
+  return <Animated.View pointerEvents="none" className="absolute bottom-0 top-0 overflow-hidden rounded-[30px] border" style={{ width: tabWidth, backgroundColor: "transparent", borderColor: "#ffffffdc", shadowColor: tokens.isLight ? "#ffffff" : "#93c5fd", shadowOpacity: 0.65, shadowRadius: 12, shadowOffset: { width: 0, height: 0 }, transform: [{ translateX }] }}>
     {Platform.OS === "ios" ? <BlurView intensity={44} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" /> : null}
     <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "#ffffffef" }} />
   </Animated.View>;
