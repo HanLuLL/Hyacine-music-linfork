@@ -22,18 +22,21 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
         <>
           <Image
             pointerEvents="none"
-            className="absolute inset-0"
             source={{ uri: preferences.customBackgroundUri ?? undefined }}
             contentFit="cover"
-            style={{ opacity: bgOpacity }}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, width: "100%", height: "100%", opacity: bgOpacity }}
           />
           <View
             pointerEvents="none"
-            className="absolute inset-0"
             style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
               backgroundColor: tokens.isLight
-                ? `rgba(244,248,255,${0.28 + (1 - bgOpacity) * 0.45})`
-                : `rgba(8,12,22,${0.35 + (1 - bgOpacity) * 0.45})`,
+                ? `rgba(244,248,255,${(1 - bgOpacity) * 0.22})`
+                : `rgba(8,12,22,${(1 - bgOpacity) * 0.24})`,
             }}
           />
         </>

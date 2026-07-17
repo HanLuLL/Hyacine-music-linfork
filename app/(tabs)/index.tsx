@@ -90,7 +90,18 @@ export default function HomeScreen(): React.JSX.Element {
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
         <Pressable className="overflow-hidden p-5" onPress={() => void onPlay(featured)}>
           <Image className="absolute inset-0 h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" style={{ opacity: 0.16 }} />
-          <View className="flex-row items-end"><View className="min-w-0 flex-1 pr-4"><Text className="text-xs font-bold" style={{ color: tokens.accent }}>今日推荐</Text><Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text><Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text></View><Image className="h-28 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" /></View>
+          <View className="min-h-48 flex-row items-end">
+            <View className="min-w-0 flex-1 pr-4">
+              <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
+              <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
+              <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text>
+            </View>
+            <View className="h-48 w-40">
+              <Image className="absolute h-36 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+              <Image className="absolute h-40 w-30 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+              <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 5, transform: [{ rotate: "-4deg" }] }}><Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" /></View>
+            </View>
+          </View>
           <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
         </Pressable>
       </ThemedCard> : null}
