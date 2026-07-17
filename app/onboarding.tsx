@@ -53,7 +53,7 @@ export default function OnboardingScreen(): React.JSX.Element {
     if (!complete || saving) return;
     setSaving(true);
     setBackendError("");
-    const normalizedBackend = backend.trim().replace(/\/$/, "");
+    const normalizedBackend = backend.trim().replace(/\/+$/, "").replace(/\/api\/v1$/i, "");
     try {
       const response = await fetch(`${normalizedBackend}/api/v1/health`);
       if (!response.ok) throw new Error();
