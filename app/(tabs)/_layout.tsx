@@ -74,8 +74,8 @@ return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-
     <View
       className="absolute inset-0 overflow-hidden rounded-[38px] border"
       style={{
-        backgroundColor: tokens.isLight ? "rgba(255,255,255,0.34)" : "rgba(18,24,38,0.42)",
-        borderColor: tokens.isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.28)",
+        backgroundColor: "transparent",
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.34)",
         shadowColor: "#182848",
         shadowOpacity: 0.22,
         shadowRadius: 20,
@@ -83,12 +83,6 @@ return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-
         elevation: 9,
       }}
     >
-      <BlurView
-        intensity={Platform.OS === "ios" ? 70 : 48}
-        tint={tokens.isLight ? "light" : "dark"}
-        experimentalBlurMethod="dimezisBlurView"
-        className="absolute inset-0"
-      />
       <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
     </View>
     <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
@@ -135,23 +129,17 @@ function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWid
         bottom: 4,
         width: pillWidth,
         borderRadius: 999,
-        backgroundColor: tokens.isLight ? "rgba(255,255,255,0.58)" : "rgba(255,255,255,0.18)",
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: tokens.isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.38)",
+        backgroundColor: "transparent",
+        borderWidth: 1,
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
         shadowColor: tokens.isLight ? "#94a3b8" : "#93c5fd",
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
+        shadowOpacity: 0.28,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 0,
         transform: [{ translateX }],
       }}
     >
-      <BlurView
-        intensity={Platform.OS === "ios" ? 56 : 40}
-        tint={tokens.isLight ? "light" : "dark"}
-        experimentalBlurMethod="dimezisBlurView"
-        className="absolute inset-0"
-      />
       <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.9)" }} />
     </Animated.View>
   );

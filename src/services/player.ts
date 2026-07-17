@@ -21,7 +21,15 @@ export async function initializePlayer(): Promise<void> {
   if (initialized) return;
 
   registerPlaybackService();
-  await TrackPlayer.setupPlayer();
+  try {
+    await TrackPlayer.setupPlayer({ autoHandleInterruptions: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Already initialized by a previous session or hot reload.
+    if (!/already been initialized|already initialized/i.test(message)) {
+      throw error;
+    }
+  }
   await TrackPlayer.updateOptions({
     capabilities: [
       Capability.Play,
@@ -42,14 +50,26 @@ export async function playTrack(track: Track): Promise<void> {
   await initializePlayer();
   await TrackPlayer.reset();
   try {
-    await TrackPlayer.add({
+    const payload: {
+      id: string;
+      url: string;
+      title: string;
+      artist: string;
+      artwork?: string;
+      headers?: Record<string, string>;
+    } = {
       id: track.id,
       url: track.url,
-      title: track.title,
-      artist: track.artist,
-      artwork: track.artwork,
-      headers: track.headers,
-    });
+      title: track.title || "未知歌曲",
+      artist: track.artist || "未知艺术家",
+    };
+    if (track.artwork && /^https?:\/\//i.test(track.artwork)) {
+      payload.artwork = track.artwork;
+    }
+    if (track.headers && Object.keys(track.headers).length > 0) {
+      payload.headers = track.headers;
+    }
+    await TrackPlayer.add(payload);
     await TrackPlayer.play();
   } catch (error) {
     usePlayerStore.getState().setPlaying(false);

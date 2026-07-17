@@ -12,6 +12,15 @@ import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
 
+function normalizeCoverUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  const value = url.trim();
+  if (!value) return undefined;
+  if (value.startsWith('//')) return `https:${value}`;
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  return value;
+}
+
 interface DailySong { id: number; title: string; artists: string[]; coverUrl?: string; durationMs?: number; }
 
 export default function HomeScreen(): React.JSX.Element {
@@ -47,7 +56,7 @@ export default function HomeScreen(): React.JSX.Element {
         id: `netease:${song.id}`,
         title: song.title,
         artist: song.artists.join(" / ") || "网易云音乐",
-        artwork: song.coverUrl,
+        artwork: normalizeCoverUrl(song.coverUrl),
         duration: song.durationMs ? Math.round(song.durationMs / 1000) : undefined,
         url: "",
       })));
@@ -96,10 +105,20 @@ export default function HomeScreen(): React.JSX.Element {
               <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
               <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text>
             </View>
-            <View className="h-48 w-40">
-              <Image className="absolute h-36 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
-              <Image className="absolute h-40 w-30 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
-              <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 5, transform: [{ rotate: "-4deg" }] }}><Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" /></View>
+            <View className="h-48 w-40 items-end justify-center">
+              {featured.artwork ? (
+                <>
+                  <Image className="absolute h-36 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+                  <Image className="absolute h-40 w-30 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+                  <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
+                    <Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" />
+                  </View>
+                </>
+              ) : (
+                <View className="h-44 w-32 items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.accent}22`, borderWidth: 1, borderColor: `${tokens.accent}55` }}>
+                  <Text style={{ color: tokens.accent, fontSize: 28, fontWeight: "900" }}>♪</Text>
+                </View>
+              )}
             </View>
           </View>
           <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
@@ -108,7 +127,7 @@ export default function HomeScreen(): React.JSX.Element {
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>每日歌曲</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>刷新</Text></Pressable></View>
-      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" onPress={() => void onPlay(song)}><Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" /><View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
+      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
     </ScrollView>
   </ThemedScreen>;
 }
