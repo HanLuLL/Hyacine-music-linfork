@@ -123,8 +123,10 @@ export default function SourcesScreen(): React.JSX.Element {
   })).current;
 
   const tabStyle = (item: Source) => ({
-    backgroundColor: source === item ? (isLiquid ? "#ffffffa8" : tokens.surfaceStrong) : "transparent",
+    backgroundColor: source === item ? (isLiquid ? "transparent" : tokens.surfaceStrong) : "transparent",
     borderRadius: 18,
+    borderWidth: source === item && isLiquid ? 1 : 0,
+    borderColor: source === item && isLiquid ? `${tokens.text}38` : "transparent",
   });
   const sourceContentStyle = {
     opacity: sourceMotion.interpolate({ inputRange: [-1, 0, 1], outputRange: [0.3, 1, 0.3] }),
@@ -168,7 +170,7 @@ export default function SourcesScreen(): React.JSX.Element {
           </View> : <View className="flex-1 pt-8">
             <ThemedCard className="p-0" style={{ borderRadius: 28 }}>
               <View className="px-5 pb-3 pt-5"><Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("importCookie")}</Text><Text className="mt-1 text-sm leading-5" style={{ color: tokens.mutedText }}>{t("cookieRequirements")}</Text></View>
-              <TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" autoCorrect={false} multiline placeholder={t("cookiePlaceholder")} placeholderTextColor={tokens.mutedText} textAlignVertical="top" style={{ minHeight: 210, color: tokens.text, backgroundColor: isLiquid ? "#ffffff30" : tokens.backgroundSecondary, borderTopWidth: 1, borderColor: tokens.surfaceBorder, padding: 20, fontSize: 14, lineHeight: 22 }} />
+              <TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" autoCorrect={false} multiline placeholder={t("cookiePlaceholder")} placeholderTextColor={tokens.mutedText} textAlignVertical="top" style={{ minHeight: 210, color: tokens.text, backgroundColor: isLiquid ? "transparent" : tokens.backgroundSecondary, borderTopWidth: 1, borderColor: tokens.surfaceBorder, padding: 20, fontSize: 14, lineHeight: 22 }} />
             </ThemedCard>
           </View>}
         </Animated.View>
