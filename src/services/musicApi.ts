@@ -89,7 +89,10 @@ export async function resolvePlayableTrack(options: {
       cookie: options.cookie ?? undefined,
     });
     if (!result.url) throw new Error("未获取到网易云播放地址");
-    return { ...options.track, url: result.url };
+    return {
+      ...options.track,
+      url: result.url.startsWith("http") ? result.url : `${base}${result.url}`,
+    };
   }
 
   if (options.track.id.startsWith("bilibili:")) {

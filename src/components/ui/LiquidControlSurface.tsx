@@ -15,7 +15,7 @@ export function LiquidControlSurface({ children, className = "", style, ...props
     className={`overflow-hidden border ${className}`}
     style={[
       {
-        backgroundColor: liquid ? (Platform.OS === "ios" ? "#ffffff24" : "#ffffff30") : tokens.surfaceStrong,
+        backgroundColor: liquid ? "transparent" : tokens.surfaceStrong,
         borderColor: liquid ? "#ffffff8c" : tokens.surfaceBorder,
         shadowColor: liquid ? "#24364f" : "#000000",
         shadowOpacity: liquid ? 0.13 : 0,

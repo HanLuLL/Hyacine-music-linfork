@@ -9,9 +9,8 @@ interface ThemedScreenProps extends ViewProps {
 }
 
 export function ThemedScreen({ children, className = "", style, ...props }: ThemedScreenProps): React.JSX.Element {
-  const { preferences, tokens, fontScaleMultiplier } = useTheme();
+  const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
-  const contentScale = preferences.uiScale * fontScaleMultiplier;
   const isMiuix = preferences.uiStyle === "miuix";
   const hasCustomBg = Boolean(preferences.customBackgroundUri);
   const bgOpacity = Math.min(1, Math.max(0, preferences.backgroundOpacity));
@@ -67,15 +66,7 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
         </>
       ) : null}
 
-      {isLiquid && hasCustomBg ? (
-        <LinearGradient
-          pointerEvents="none"
-          className="absolute inset-0"
-          colors={[`${tokens.accent}22`, "#ffffff00", "#ffffff10"]}
-          start={{ x: 1, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        />
-      ) : null}
+      {/* Custom wallpaper remains unmasked in liquid mode. */}
 
       {isMiuix && !hasCustomBg ? (
         <LinearGradient
@@ -87,10 +78,7 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
         />
       ) : null}
 
-      <View
-        className="flex-1"
-        style={contentScale === 1 ? undefined : { transform: [{ scale: contentScale }], width: `${100 / contentScale}%`, height: `${100 / contentScale}%` }}
-      >
+      <View className="flex-1">
         {children}
       </View>
     </View>

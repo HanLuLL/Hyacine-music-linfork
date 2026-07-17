@@ -348,34 +348,11 @@ export default function SettingsScreen(): React.JSX.Element {
           </Row>
         </Section>
 
-        <Row title="界面缩放" hint="全局调整卡片、图标和操作区域大小。">
-            <View className="mt-4 flex-row items-center gap-3">
-              <CommunitySlider
-                style={{ flex: 1 }}
-                minimumValue={0.85}
-                maximumValue={1.3}
-                step={0.01}
-                value={preferences.uiScale}
-                onValueChange={(value) => void setUiScale(value)}
-                minimumTrackTintColor={tokens.accent}
-                maximumTrackTintColor={tokens.surfaceBorder}
-              />
-              <Text style={{ color: tokens.text, fontSize: 13, fontWeight: "700", minWidth: 42, textAlign: "right" }}>
-                {Math.round(preferences.uiScale * 100)}%
-              </Text>
-            </View>
-          </Row>
-
         {/* Player */}
         <Section title={t("playerSection")}>
           <Row title={t("playerLayout")}>
             <Segment options={playerLayouts} value={preferences.playerLayout} labels={layouts} onChange={(value) => void setPlayerLayout(value)} />
-          </Row>
-          <Row title={t("fontSize")}>
-            <Segment options={fontScales} value={preferences.fontScale} labels={fonts} onChange={(value) => void setFontScale(value)} />
-          </Row>
-          <Row title={t("density")}>
-            <Segment options={listDensities} value={preferences.listDensity} labels={densities} onChange={(value) => void setListDensity(value)} />
+{/* Font and density controls remain unavailable until each screen supports responsive sizing. */}
           </Row>
         </Section>
       </ScrollView>
