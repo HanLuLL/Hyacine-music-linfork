@@ -1,44 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
 import { ThemedCard } from "@/components/ui/ThemedCard";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
+import { loadListeningHistory } from "@/services/listeningHistory";
 import { useTheme } from "@/theme";
-import { apiBase } from "@/utils/apiBase";
-
-interface PersonalPlaylist { id: number; name: string; coverUrl: string; }
+import type { Track } from "@/types/music";
 
 export default function ProfileScreen(): React.JSX.Element {
   const { t } = useI18n();
-  const { profile, getSourceCredential } = useAccount();
+  const { profile } = useAccount();
   const { tokens } = useTheme();
-  const [playlists, setPlaylists] = useState<PersonalPlaylist[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { playTrack } = useAudio();
+  const [history, setHistory] = useState<Track[]>([]);
 
-  const loadPlaylists = useCallback(async (): Promise<void> => {
-    if (!profile || profile.musicSource !== "netease") return;
-    setLoading(true);
-    try {
-      const cookie = await getSourceCredential("netease");
-      if (!cookie) return;
-      const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cookie }),
-      });
-      const data = await response.json() as PersonalPlaylist[];
-      setPlaylists(response.ok && Array.isArray(data) ? data.slice(0, 3) : []);
-    } catch {
-      setPlaylists([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [getSourceCredential, profile]);
+  const refreshHistory = useCallback(async (): Promise<void> => {
+    setHistory(await loadListeningHistory());
+  }, []);
 
-  useEffect(() => { void loadPlaylists(); }, [loadPlaylists]);
+  useEffect(() => {
+    void refreshHistory();
+  }, [refreshHistory]);
+
   const sourceName = profile?.musicSource === "netease" ? "网易云音乐已绑定" : profile?.musicSource === "bilibili" ? "哔哩哔哩已绑定" : "尚未绑定音乐服务";
 
   return (
@@ -46,11 +33,7 @@ export default function ProfileScreen(): React.JSX.Element {
       <ScrollView contentContainerClassName="px-5 pb-40 pt-14">
         <View className="flex-row items-center justify-between">
           <Text style={{ color: tokens.text, fontSize: 28, fontWeight: "800" }}>{t("profileTitle")}</Text>
-          <Pressable
-            className="h-12 w-12 items-center justify-center rounded-full"
-            style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
-            onPress={() => router.push("/settings")}
-          >
+          <Pressable className="h-12 w-12 items-center justify-center rounded-full" style={{ borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => router.push("/settings")}>
             <Text style={{ color: tokens.text, fontSize: 19 }}>⚙</Text>
           </Pressable>
         </View>
@@ -63,22 +46,30 @@ export default function ProfileScreen(): React.JSX.Element {
             <View className="ml-4 min-w-0 flex-1">
               <Text numberOfLines={1} style={{ color: tokens.text, fontSize: 22, fontWeight: "800" }}>{profile?.displayName || t("notSignedIn")}</Text>
               <Text className="mt-2 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{sourceName}</Text>
-              <Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{profile?.backendUrl || t("apiReady")}</Text>
             </View>
             <Text style={{ color: tokens.mutedText, fontSize: 26 }}>›</Text>
           </Pressable>
         </ThemedCard>
 
         <View className="mt-10 flex-row items-center justify-between">
-          <Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("myPlaylists")}</Text>
-          <Pressable onPress={() => void loadPlaylists()}><Text style={{ color: tokens.accent, fontSize: 13, fontWeight: "800" }}>{t("refresh")}</Text></Pressable>
+          <Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>听歌记录</Text>
+          <Pressable onPress={() => void refreshHistory()}><Text style={{ color: tokens.accent, fontSize: 13, fontWeight: "800" }}>{t("refresh")}</Text></Pressable>
         </View>
-
-        <ThemedCard className="mt-4 min-h-[172px] p-4" style={{ borderRadius: 24 }}>
-          {loading ? <View className="flex-1 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
-          {!loading && playlists.length ? <View className="flex-row justify-between">{playlists.map((playlist) => <Pressable key={playlist.id} className="w-[31%]" onPress={() => router.replace("/(tabs)/library")}><Image className="aspect-square w-full rounded-2xl" source={{ uri: playlist.coverUrl }} contentFit="cover" /><Text className="mt-2 text-xs font-bold" numberOfLines={1} style={{ color: tokens.text }}>{playlist.name}</Text></Pressable>)}</View> : null}
-          {!loading && !playlists.length ? <Pressable className="flex-1 items-center justify-center" onPress={() => router.push("/sources")}><Text style={{ color: tokens.mutedText, fontSize: 13 }}>{profile?.musicSource === "netease" ? "暂无歌单，点击刷新" : "绑定网易云音乐后查看我的歌单"}</Text></Pressable> : null}
-        </ThemedCard>
+        <View className="mt-4 gap-3">
+          {history.map((track) => (
+            <ThemedCard key={track.id} className="p-0" style={{ borderRadius: 20 }}>
+              <Pressable className="flex-row items-center p-3" onPress={() => void playTrack(track)}>
+                <Image className="h-14 w-14 rounded-2xl" source={{ uri: track.artwork }} contentFit="cover" style={{ backgroundColor: `${tokens.text}12` }} />
+                <View className="ml-3 min-w-0 flex-1">
+                  <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{track.title}</Text>
+                  <Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{track.artist}</Text>
+                </View>
+                <Text style={{ color: tokens.accent, fontSize: 18 }}>▶</Text>
+              </Pressable>
+            </ThemedCard>
+          ))}
+          {!history.length ? <ThemedCard className="items-center py-10" style={{ borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>播放歌曲后会显示在这里</Text></ThemedCard> : null}
+        </View>
       </ScrollView>
     </ThemedScreen>
   );

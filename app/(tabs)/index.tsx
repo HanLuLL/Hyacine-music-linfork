@@ -1,50 +1,103 @@
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
-import { useAudio } from "@/hooks/useAudio";
 import { useAccount } from "@/account";
-import { DEMO_TRACK } from "@/constants/config";
-import { useI18n } from "@/i18n";
-import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
+import { ThemedCard } from "@/components/ui/ThemedCard";
+import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { useAudio } from "@/hooks/useAudio";
+import { useI18n } from "@/i18n";
+import { resolvePlayableTrack } from "@/services/musicApi";
 import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
+import type { Track } from "@/types/music";
+
+interface DailySong { id: number; title: string; artists: string[]; coverUrl?: string; durationMs?: number; }
 
 export default function HomeScreen(): React.JSX.Element {
   const { playTrack } = useAudio();
   const { t } = useI18n();
   const { tokens } = useTheme();
-  const { profile } = useAccount();
+  const { profile, getSourceCredential } = useAccount();
+  const [songs, setSongs] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [playingId, setPlayingId] = useState("");
 
+  const loadDailySongs = useCallback(async (): Promise<void> => {
+    if (!profile?.backendUrl || profile.musicSource !== "netease") {
+      setSongs([]);
+      setLoading(false);
+      setError("绑定网易云音乐后可查看每日推荐");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const cookie = await getSourceCredential("netease");
+      if (!cookie) throw new Error("网易云登录已失效");
+      const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/daily-songs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie }),
+      });
+      const data = await response.json() as DailySong[] | { message?: string };
+      if (!response.ok || !Array.isArray(data)) throw new Error((data as { message?: string }).message || "无法加载每日推荐");
+      setSongs(data.map((song) => ({
+        id: `netease:${song.id}`,
+        title: song.title,
+        artist: song.artists.join(" / ") || "网易云音乐",
+        artwork: song.coverUrl,
+        duration: song.durationMs ? Math.round(song.durationMs / 1000) : undefined,
+        url: "",
+      })));
+    } catch (cause) {
+      setSongs([]);
+      setError(cause instanceof Error ? cause.message : "无法加载每日推荐");
+    } finally {
+      setLoading(false);
+    }
+  }, [getSourceCredential, profile?.backendUrl, profile?.musicSource]);
+
+  useEffect(() => { void loadDailySongs(); }, [loadDailySongs]);
+
+  const onPlay = async (track: Track): Promise<void> => {
+    if (!profile?.backendUrl) return;
+    setPlayingId(track.id);
+    setError("");
+    try {
+      const cookie = await getSourceCredential("netease");
+      const playable = await resolvePlayableTrack({ backendUrl: profile.backendUrl, track, cookie });
+      await playTrack(playable);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "播放失败");
+    } finally {
+      setPlayingId("");
+    }
+  };
+
+  const featured = songs[0];
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
-        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("greeting")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("subtitle")}</Text></View>
+        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("greeting")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>网易云音乐每日推荐</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">
           {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
         </LiquidControlSurface>
       </View>
 
-      <View className="relative mt-11 h-[338px] overflow-hidden" style={{ backgroundColor: `${tokens.accent}12`, borderRadius: 28 }}>
-        <View className="absolute right-[-20px] top-2 h-[230px] w-[218px]">
-          <Image className="absolute h-[178px] w-[142px] rounded-[22px]" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" style={{ left: 53, top: 7, opacity: 0.34, transform: [{ rotate: "13deg" }] }} />
-          <Image className="absolute h-[190px] w-[152px] rounded-[24px]" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" style={{ left: 23, top: 13, opacity: 0.64, transform: [{ rotate: "6deg" }] }} />
-          <View className="absolute h-[202px] w-[162px] overflow-hidden rounded-[26px]" style={{ left: 0, top: 18, shadowColor: "#17212d", shadowOpacity: 0.24, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 7, transform: [{ rotate: "-3deg" }] }}><Image className="h-full w-full" source={{ uri: DEMO_TRACK.artwork }} contentFit="cover" /></View>
-        </View>
-        <View className="absolute left-6 right-6 bottom-6">
-          <Text className="text-xs font-bold tracking-[2px]" style={{ color: tokens.accent }}>{t("featured")}</Text>
-          <Text className="mt-3 pr-28 text-3xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{DEMO_TRACK.title}</Text>
-          <Text className="mt-1 pr-24 text-base" numberOfLines={1} style={{ color: tokens.mutedText }}>{DEMO_TRACK.artist}</Text>
-          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><Pressable className="h-full flex-row items-center justify-center" onPress={() => void playTrack(DEMO_TRACK)}><Text style={{ color: tokens.text, fontWeight: "800" }}>▶  {t("playDemo")}</Text></Pressable></LiquidControlSurface>
-        </View>
-      </View>
+      {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
+      {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
+        <Pressable className="overflow-hidden p-5" onPress={() => void onPlay(featured)}>
+          <Image className="absolute inset-0 h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" style={{ opacity: 0.16 }} />
+          <View className="flex-row items-end"><View className="min-w-0 flex-1 pr-4"><Text className="text-xs font-bold" style={{ color: tokens.accent }}>今日推荐</Text><Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text><Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text></View><Image className="h-28 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" /></View>
+          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
+        </Pressable>
+      </ThemedCard> : null}
+      {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
-      <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("recentlyPlayed")}</Text><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>01</Text></View>
-      <Pressable className="mt-4 flex-row items-center py-2" onPress={() => void playTrack(DEMO_TRACK)}>
-        <Image className="h-16 w-16 rounded-2xl" style={{ backgroundColor: `${tokens.text}15` }} source={{ uri: DEMO_TRACK.artwork }} />
-        <View className="ml-4 flex-1"><Text className="font-semibold" style={{ color: tokens.text }}>{DEMO_TRACK.title}</Text><Text className="mt-1 text-sm" style={{ color: tokens.mutedText }}>{DEMO_TRACK.artist}</Text></View>
-        <LiquidControlSurface className="h-10 w-10 items-center justify-center rounded-full"><Text style={{ color: tokens.text, fontSize: 16 }}>▶</Text></LiquidControlSurface>
-      </Pressable>
-      <View className="mt-3 h-px" style={{ backgroundColor: tokens.surfaceBorder }} />
-      <Text className="mt-5 text-sm leading-6" style={{ color: tokens.mutedText }}>{t("historyHint")}</Text>
+      <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>每日歌曲</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>刷新</Text></Pressable></View>
+      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" onPress={() => void onPlay(song)}><Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" /><View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
     </ScrollView>
   </ThemedScreen>;
 }

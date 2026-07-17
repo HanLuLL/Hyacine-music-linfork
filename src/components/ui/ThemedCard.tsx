@@ -90,7 +90,7 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
   const { preferences, tokens } = useTheme();
   const isMiuix = preferences.uiStyle === "miuix";
   const isLiquid = preferences.uiStyle === "liquid";
-  const materialTint = tokens.isLight ? "#ffffff2b" : "#08101f30";
+  const materialTint = tokens.isLight ? "#ffffff12" : "#08101f24";
   const supportsBackdropBlur = Platform.OS === "ios";
 
   return (
@@ -98,7 +98,7 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
       className={`overflow-hidden border p-5 ${className}`}
       style={[
         {
-          backgroundColor: isLiquid ? (supportsBackdropBlur ? "transparent" : materialTint) : tokens.surface,
+          backgroundColor: isLiquid ? "transparent" : tokens.surface,
           borderColor: isLiquid ? "#ffffff8c" : tokens.surfaceBorder,
           borderRadius: tokens.cardRadius,
           shadowColor: isLiquid ? "#31415f" : "#000000",

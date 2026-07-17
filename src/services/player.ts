@@ -5,6 +5,7 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { usePlayerStore } from "@/store/playerStore";
 import playbackService from "@/services/playbackService";
+import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 
 let initialized = false;
@@ -37,19 +38,26 @@ export async function initializePlayer(): Promise<void> {
 }
 
 export async function playTrack(track: Track): Promise<void> {
+  if (!track.url) throw new Error("未获取到可播放的音频地址");
   await initializePlayer();
   await TrackPlayer.reset();
-  await TrackPlayer.add({
-    id: track.id,
-    url: track.url,
-    title: track.title,
-    artist: track.artist,
-    artwork: track.artwork,
-    headers: track.headers,
-  });
-  await TrackPlayer.play();
+  try {
+    await TrackPlayer.add({
+      id: track.id,
+      url: track.url,
+      title: track.title,
+      artist: track.artist,
+      artwork: track.artwork,
+      headers: track.headers,
+    });
+    await TrackPlayer.play();
+  } catch (error) {
+    usePlayerStore.getState().setPlaying(false);
+    throw error instanceof Error ? error : new Error("原生播放器无法播放此音频");
+  }
   usePlayerStore.getState().setCurrentTrack(track);
   usePlayerStore.getState().setPlaying(true);
+  void recordListeningHistory(track);
 }
 
 export async function togglePlayback(): Promise<void> {
