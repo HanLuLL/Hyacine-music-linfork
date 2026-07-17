@@ -24,6 +24,24 @@ import {
 
 const quickColors = ["#7C3AED", "#EC4899", "#F97316", "#22C55E", "#06B6D4", "#3B82F6"];
 const validHex = /^#[0-9A-Fa-f]{6}$/;
+const customBackgroundPrefix = "hyacine-background";
+
+async function removePreviousCustomBackgrounds(currentUri: string): Promise<void> {
+  if (!FileSystem.documentDirectory) return;
+
+  try {
+    const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory);
+    await Promise.all(
+      files
+        .filter((file) => file.startsWith(customBackgroundPrefix))
+        .map((file) => `${FileSystem.documentDirectory}${file}`)
+        .filter((uri) => uri !== currentUri)
+        .map((uri) => FileSystem.deleteAsync(uri, { idempotent: true })),
+    );
+  } catch {
+    // A cleanup failure must not prevent the selected wallpaper from applying.
+  }
+}
 const languageLabels: Record<Language, string> = { "zh-CN": "简体中文", en: "English", ja: "日本語" };
 
 function Segment<T extends string>({
@@ -136,9 +154,10 @@ export default function SettingsScreen(): React.JSX.Element {
     if (!result.canceled && result.assets[0]?.uri) {
       const sourceUri = result.assets[0].uri;
       const extension = sourceUri.split(".").pop()?.split("?")[0] || "jpg";
-      const targetUri = `${FileSystem.documentDirectory}hyacine-background.${extension}`;
+      const targetUri = `${FileSystem.documentDirectory}${customBackgroundPrefix}-${Date.now()}.${extension}`;
       await FileSystem.copyAsync({ from: sourceUri, to: targetUri });
       await setCustomBackgroundUri(targetUri);
+      void removePreviousCustomBackgrounds(targetUri);
     }
   };
 
