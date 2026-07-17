@@ -1,19 +1,160 @@
-import { ScrollView, Text, TextInput, View } from "react-native";
-import { useI18n } from "@/i18n";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { Image } from "expo-image";
+import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { useAudio } from "@/hooks/useAudio";
+import { useI18n } from "@/i18n";
+import { resolvePlayableTrack, searchTracks } from "@/services/musicApi";
 import { useTheme } from "@/theme";
+import type { Track } from "@/types/music";
 
 export default function SearchScreen(): React.JSX.Element {
   const { t } = useI18n();
   const { tokens } = useTheme();
-  return <ThemedScreen><ScrollView contentContainerClassName="px-5 pb-40 pt-16">
-    <Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("search")}</Text>
-    <Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("searchHint")}</Text>
-    <LiquidControlSurface className="mt-8 h-14 flex-row items-center rounded-full px-5" style={{ borderRadius: 28 }}><Text className="mr-3 text-xl" style={{ color: tokens.mutedText }}>⌕</Text><TextInput className="h-full flex-1 text-base" style={{ color: tokens.text }} placeholder={t("searchPlaceholder")} placeholderTextColor={tokens.mutedText} returnKeyType="search" /></LiquidControlSurface>
-    <Text className="mt-12 text-xs font-bold tracking-[2px]" style={{ color: tokens.mutedText }}>DISCOVER</Text>
-    <Text className="mt-4 text-2xl font-bold" style={{ color: tokens.text }}>{t("browseTitle")}</Text>
-    <Text className="mt-3 text-sm leading-6" style={{ color: tokens.mutedText }}>{t("browseHint")}</Text>
-    <View className="mt-8 h-px" style={{ backgroundColor: tokens.surfaceBorder }} />
-  </ScrollView></ThemedScreen>;
+  const { profile, getSourceCredential } = useAccount();
+  const { playTrack } = useAudio();
+  const [keywords, setKeywords] = useState("");
+  const [results, setResults] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [playingId, setPlayingId] = useState("");
+  const [error, setError] = useState("");
+
+  const onSearch = useCallback(async (): Promise<void> => {
+    if (!profile?.backendUrl || !profile.musicSource) {
+      setError("请先连接音乐源");
+      return;
+    }
+    const q = keywords.trim();
+    if (!q) return;
+    setLoading(true);
+    setError("");
+    try {
+      const cookie = await getSourceCredential(profile.musicSource);
+      const rows = await searchTracks({
+        backendUrl: profile.backendUrl,
+        source: profile.musicSource,
+        keywords: q,
+        cookie,
+      });
+      setResults(rows);
+      if (!rows.length) setError("没有找到结果");
+    } catch (e) {
+      setResults([]);
+      setError(e instanceof Error ? e.message : "搜索失败");
+    } finally {
+      setLoading(false);
+    }
+  }, [getSourceCredential, keywords, profile]);
+
+  const onPlay = useCallback(
+    async (track: Track): Promise<void> => {
+      if (!profile?.backendUrl || !profile.musicSource) return;
+      setPlayingId(track.id);
+      setError("");
+      try {
+        const cookie = await getSourceCredential(profile.musicSource);
+        const playable = await resolvePlayableTrack({
+          backendUrl: profile.backendUrl,
+          track,
+          cookie,
+        });
+        await playTrack(playable);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "播放失败");
+      } finally {
+        setPlayingId("");
+      }
+    },
+    [getSourceCredential, playTrack, profile],
+  );
+
+  return (
+    <ThemedScreen>
+      <View className="flex-1 px-5 pb-36 pt-16">
+        <Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("search")}</Text>
+        <Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>
+          {profile?.musicSource === "bilibili"
+            ? "搜索 B 站视频并播放音频流"
+            : profile?.musicSource === "netease"
+              ? "搜索网易云歌曲并播放"
+              : t("searchHint")}
+        </Text>
+
+        <LiquidControlSurface className="mt-8 h-14 flex-row items-center rounded-full px-5" style={{ borderRadius: 28 }}>
+          <Text className="mr-3 text-xl" style={{ color: tokens.mutedText }}>
+            ⌕
+          </Text>
+          <TextInput
+            className="h-full flex-1 text-base"
+            style={{ color: tokens.text }}
+            value={keywords}
+            onChangeText={setKeywords}
+            placeholder={t("searchPlaceholder")}
+            placeholderTextColor={tokens.mutedText}
+            returnKeyType="search"
+            onSubmitEditing={() => void onSearch()}
+          />
+          <Pressable onPress={() => void onSearch()} disabled={loading}>
+            <Text style={{ color: tokens.accent, fontWeight: "800" }}>{loading ? "..." : "搜索"}</Text>
+          </Pressable>
+        </LiquidControlSurface>
+
+        {error ? (
+          <Text className="mt-4 text-sm" style={{ color: "#ef4444" }}>
+            {error}
+          </Text>
+        ) : null}
+
+        {loading ? (
+          <View className="mt-16 items-center">
+            <ActivityIndicator color={tokens.accent} />
+          </View>
+        ) : (
+          <FlatList
+            className="mt-6"
+            data={results}
+            keyExtractor={(item) => item.id}
+            ItemSeparatorComponent={() => <View className="h-px" style={{ backgroundColor: tokens.surfaceBorder }} />}
+            ListEmptyComponent={
+              <Text className="mt-10 text-sm leading-6" style={{ color: tokens.mutedText }}>
+                {profile?.musicSource
+                  ? "输入关键词后点搜索。点结果即可解析播放地址并播放。"
+                  : "请先在音乐源页连接网易云或哔哩哔哩。"}
+              </Text>
+            }
+            renderItem={({ item }) => (
+              <Pressable className="flex-row items-center py-3" onPress={() => void onPlay(item)}>
+                <Image
+                  className="h-14 w-14 rounded-2xl"
+                  source={{ uri: item.artwork }}
+                  style={{ backgroundColor: `${tokens.text}12` }}
+                  contentFit="cover"
+                />
+                <View className="ml-3 min-w-0 flex-1">
+                  <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "700" }}>
+                    {item.title}
+                  </Text>
+                  <Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>
+                    {item.artist}
+                  </Text>
+                </View>
+                <Text style={{ color: tokens.accent, fontWeight: "800" }}>
+                  {playingId === item.id ? "..." : "▶"}
+                </Text>
+              </Pressable>
+            )}
+          />
+        )}
+      </View>
+    </ThemedScreen>
+  );
 }

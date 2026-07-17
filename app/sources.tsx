@@ -32,21 +32,35 @@ export default function SourcesScreen(): React.JSX.Element {
   const base = useMemo(() => apiBase(profile?.backendUrl), [profile?.backendUrl]);
 
   const createQr = async (): Promise<void> => {
+    if (!base) {
+      setNote("未配置服务器地址");
+      return;
+    }
     setLoading(true);
     setNote(t("creatingNeteaseSession"));
     try {
       const response = await fetch(`${base}/music-sources/netease/qr`);
       const data = await response.json() as QrPayload;
-      if (!response.ok || !data.key || !data.qrUrl) throw new Error(data.message);
+      if (!response.ok || !data.key || !data.qrUrl) {
+        throw new Error(data.message || `HTTP ${response.status}`);
+      }
       setKey(data.key);
       setQr(await QRCode.toDataURL(data.qrUrl, { margin: 0, width: 280, color: { dark: "#17212d", light: "#ffffff" } }));
       setNote(t("scanNeteaseCode"));
-    } catch {
-      setNote(t("qrUnavailable"));
+    } catch (error) {
+      const detail = error instanceof Error && error.message ? `（${error.message}）` : "";
+      setNote(`${t("qrUnavailable")}${detail}`);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (source !== "netease" || qr || loading) return;
+    void createQr();
+    // auto fetch once when entering netease tab
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source]);
 
   useEffect(() => {
     if (!key) return;
@@ -95,6 +109,8 @@ export default function SourcesScreen(): React.JSX.Element {
     sourceRef.current = next;
     setSource(next);
     setNote("");
+    setQr("");
+    setKey("");
     Animated.spring(sourceMotion, { toValue: 0, useNativeDriver: true, stiffness: 230, damping: 23, mass: 0.8 }).start();
   };
 
