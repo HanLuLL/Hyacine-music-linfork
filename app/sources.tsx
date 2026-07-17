@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import QRCode from "qrcode";
+import QRCode from "react-native-qrcode-svg";
 import { Animated, PanResponder, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAccount } from "@/account";
@@ -45,7 +45,7 @@ export default function SourcesScreen(): React.JSX.Element {
         throw new Error(data.message || `HTTP ${response.status}`);
       }
       setKey(data.key);
-      setQr(await QRCode.toDataURL(data.qrUrl, { margin: 0, width: 280, color: { dark: "#17212d", light: "#ffffff" } }));
+      setQr(data.qrUrl);
       setNote(t("scanNeteaseCode"));
     } catch (error) {
       const detail = error instanceof Error && error.message ? `（${error.message}）` : "";
@@ -160,7 +160,7 @@ export default function SourcesScreen(): React.JSX.Element {
           {source === "netease" ? <View className="flex-1 items-center justify-center pb-12">
             <View className="items-center">
               <ThemedCard className="h-[294px] w-[294px] items-center justify-center p-2" style={{ borderRadius: 42 }}>
-                {qr ? <Image className="h-[278px] w-[278px] rounded-[34px]" source={{ uri: qr }} contentFit="contain" /> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
+                {qr ? <View className="h-[278px] w-[278px] items-center justify-center rounded-[34px] bg-white p-3"><QRCode value={qr} size={254} color="#17212d" backgroundColor="#ffffff" /></View> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
                   <Text style={{ color: tokens.mutedText, fontSize: 15, fontWeight: "700" }}>{t("secureSessionWaiting")}</Text>
                 </LinearGradient>}
               </ThemedCard>
