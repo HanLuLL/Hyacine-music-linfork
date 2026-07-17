@@ -3,7 +3,6 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
-import { ThemedCard } from "@/components/ui/ThemedCard";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
@@ -38,7 +37,7 @@ export default function ProfileScreen(): React.JSX.Element {
           </Pressable>
         </View>
 
-        <ThemedCard className="mt-8 p-0" style={{ borderRadius: 28 }}>
+        <View className="mt-8 overflow-hidden border" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 28 }}>
           <Pressable className="flex-row items-center p-5" style={{ backgroundColor: "transparent" }} onPress={() => router.push("/onboarding")}>
             <View className="h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}24`, borderWidth: 2, borderColor: `${tokens.accent}88` }}>
               {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
@@ -49,7 +48,7 @@ export default function ProfileScreen(): React.JSX.Element {
             </View>
             <Text style={{ color: tokens.mutedText, fontSize: 26 }}>›</Text>
           </Pressable>
-        </ThemedCard>
+        </View>
 
         <View className="mt-10 flex-row items-center justify-between">
           <Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>听歌记录</Text>
@@ -57,8 +56,8 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
         <View className="mt-4 gap-3">
           {history.map((track) => (
-            <ThemedCard key={track.id} className="p-0" style={{ borderRadius: 20 }}>
-              <Pressable className="flex-row items-center p-3" onPress={() => void playTrack(track)}>
+            <View key={track.id} className="overflow-hidden border" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 20 }}>
+              <Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void playTrack(track)}>
                 <Image className="h-14 w-14 rounded-2xl" source={{ uri: track.artwork }} contentFit="cover" style={{ backgroundColor: `${tokens.text}12` }} />
                 <View className="ml-3 min-w-0 flex-1">
                   <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{track.title}</Text>
@@ -66,9 +65,9 @@ export default function ProfileScreen(): React.JSX.Element {
                 </View>
                 <Text style={{ color: tokens.accent, fontSize: 18 }}>▶</Text>
               </Pressable>
-            </ThemedCard>
+            </View>
           ))}
-          {!history.length ? <ThemedCard className="items-center py-10" style={{ borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>播放歌曲后会显示在这里</Text></ThemedCard> : null}
+          {!history.length ? <View className="items-center border py-10" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>播放歌曲后会显示在这里</Text></View> : null}
         </View>
       </ScrollView>
     </ThemedScreen>
