@@ -194,7 +194,7 @@ export default function TabsLayout(): React.JSX.Element {
     animation: "fade",
     sceneStyle: { backgroundColor: tokens.background },
     tabBarStyle: {
-      display: isLiquid ? "none" : "flex",
+      display: isLiquid || isMiuix ? "none" : "flex",
       position: isMiuix ? "absolute" : "relative",
       left: isMiuix ? 12 : 0,
       right: isMiuix ? 12 : 0,
