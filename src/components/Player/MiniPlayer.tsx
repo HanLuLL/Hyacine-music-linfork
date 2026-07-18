@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
@@ -31,7 +32,8 @@ export function MiniPlayer(): React.JSX.Element | null {
   if (preferences.miniPlayerStyle === "capsule") {
     return (
       <View pointerEvents="box-none" style={[s.wrap, { bottom: 100 }]}>
-        <View style={[s.bg, { backgroundColor: isPlaying ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)" }]}>
+        <View style={s.bg}>
+          <BlurView intensity={isPlaying ? 90 : 85} tint="light" style={StyleSheet.absoluteFill} />
           <View style={s.topLine} />
         </View>
         <View style={s.row} {...panResponder.panHandlers}>
@@ -49,7 +51,8 @@ export function MiniPlayer(): React.JSX.Element | null {
 
   return (
     <View pointerEvents="box-none" style={[s.wrap, { bottom: 100 }]}>
-      <View style={[s.bg, { backgroundColor: isPlaying ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)" }]}>
+      <View style={s.bg}>
+        <BlurView intensity={isPlaying ? 90 : 85} tint="light" style={StyleSheet.absoluteFill} />
         <View style={s.topLine} />
       </View>
       <View style={s.row} {...panResponder.panHandlers}>

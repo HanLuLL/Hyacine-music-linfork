@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
+import { BlurView } from "expo-blur";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
 import { useI18n } from "@/i18n";
@@ -81,7 +82,8 @@ function HuaweiFloatingNav(): React.JSX.Element {
 
   return (
     <View pointerEvents="box-none" style={[s.navWrap, { width: navWidth, alignSelf: "center" }]}>
-      <View style={[s.navBg, { backgroundColor: playing ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)" }]}>
+      <View style={s.navBg}>
+        <BlurView intensity={playing ? 90 : 85} tint="light" style={StyleSheet.absoluteFill} />
         <View style={s.navTopLine} />
       </View>
       <View style={s.navContent} onLayout={onLayout} {...panResponder.panHandlers}>
