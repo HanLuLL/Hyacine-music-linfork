@@ -1,21 +1,14 @@
 import "../global.css";
-import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { MiniPlayer } from "@/components/Player/MiniPlayer";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { AccountProvider, useAccount } from "@/account";
 import { I18nProvider } from "@/i18n";
-import { ThemeProvider, useTheme } from "@/theme";
-import { registerPlaybackServiceOnce } from "@/services/registerPlaybackService";
+import { ThemeProvider } from "@/theme";
 
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
-  const { tokens } = useTheme();
-
-  useEffect(() => {
-    registerPlaybackServiceOnce();
-  }, []);
 
   if (!hydrated) return <AppLoadingScreen />;
   if (!profile || !profile.onboardingCompleted) {
