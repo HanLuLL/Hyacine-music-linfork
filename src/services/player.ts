@@ -5,12 +5,14 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { usePlayerStore } from "@/store/playerStore";
 import { recordListeningHistory } from "@/services/listeningHistory";
+import { registerPlaybackServiceOnce } from "@/services/registerPlaybackService";
 import type { Track } from "@/types/music";
 
 let initialized = false;
 let optionsApplied = false;
 
 export async function initializePlayer(): Promise<void> {
+  registerPlaybackServiceOnce();
   if (!initialized) {
     try {
       await TrackPlayer.setupPlayer({
