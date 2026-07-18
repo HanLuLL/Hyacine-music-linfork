@@ -1,7 +1,6 @@
 import { View, type ViewProps } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { AnimatedScreen } from "@/components/navigation/AnimatedScreen";
 import { useTheme } from "@/theme";
 
 interface ThemedScreenProps extends ViewProps {
@@ -89,11 +88,9 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
         />
       ) : null}
 
-      <AnimatedScreen>
-        <View className="flex-1">
-          {children}
-        </View>
-      </AnimatedScreen>
+      <View className="flex-1">
+        {children}
+      </View>
     </View>
   );
 }
