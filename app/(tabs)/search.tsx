@@ -7,8 +7,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { useAccount } from "@/account";
+import { TrackCover } from "@/components/TrackCover";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAudio } from "@/hooks/useAudio";
@@ -149,23 +149,22 @@ export default function SearchScreen(): React.JSX.Element {
               </Text>
             }
             renderItem={({ item }) => (
-              <Pressable className="flex-row items-center py-3" onPress={() => void onPlay(item)}>
-                <Image
-                  className="h-14 w-14 rounded-2xl"
-                  source={{ uri: item.artwork }}
-                  style={{ backgroundColor: `${tokens.text}12` }}
-                  contentFit="cover"
-                />
+              <Pressable
+                className="flex-row items-center rounded-3xl border px-3 py-3"
+                style={{ borderColor: tokens.surfaceBorder, backgroundColor: tokens.surface }}
+                onPress={() => void onPlay(item)}
+              >
+                <TrackCover uri={item.artwork} title={item.title} size={56} radius={16} />
                 <View className="ml-3 min-w-0 flex-1">
-                  <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "700" }}>
+                  <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>
                     {item.title}
                   </Text>
                   <Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>
                     {item.artist}
                   </Text>
                 </View>
-                <Text style={{ color: tokens.accent, fontWeight: "800" }}>
-                  {playingId === item.id ? "..." : "▶"}
+                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 18 }}>
+                  {playingId === item.id ? "…" : "▶"}
                 </Text>
               </Pressable>
             )}

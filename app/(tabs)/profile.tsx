@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
+import { TrackCover } from "@/components/TrackCover";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
@@ -82,7 +83,7 @@ export default function ProfileScreen(): React.JSX.Element {
           {history.map((track) => (
             <View key={track.id} className="overflow-hidden border" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 20 }}>
               <Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void playTrack(track)}>
-                <Image className="h-14 w-14 rounded-2xl" source={{ uri: track.artwork }} contentFit="cover" style={{ backgroundColor: `${tokens.text}12` }} />
+                <TrackCover uri={track.artwork} title={track.title} size={56} radius={16} />
                 <View className="ml-3 min-w-0 flex-1">
                   <Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{track.title}</Text>
                   <Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{track.artist}</Text>
