@@ -39,7 +39,8 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "ios": {
       "supportsTablet": true,

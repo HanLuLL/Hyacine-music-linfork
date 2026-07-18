@@ -323,6 +323,21 @@ export default function SettingsScreen(): React.JSX.Element {
                 />
               </LiquidControlSurface>
             </View>
+            <View
+              className="mt-4 overflow-hidden p-4"
+              style={{ borderRadius: tokens.cardRadius, backgroundColor: validHex.test(hex) ? `${hex}18` : `${tokens.accent}18`, borderWidth: 1, borderColor: validHex.test(hex) ? hex : tokens.accent }}
+            >
+              <Text style={{ color: tokens.text, fontSize: 15, fontWeight: "800" }}>颜色效果预览</Text>
+              <Text className="mt-1 text-xs" style={{ color: tokens.mutedText }}>强调文字、按钮、进度条和卡片边框会立即使用此颜色</Text>
+              <View className="mt-3 flex-row items-center gap-3">
+                <View className="h-10 flex-1 justify-center px-4" style={{ borderRadius: tokens.pillRadius, backgroundColor: validHex.test(hex) ? hex : tokens.accent }}>
+                  <Text style={{ color: "#ffffff", fontWeight: "900", textAlign: "center" }}>播放按钮</Text>
+                </View>
+                <View className="h-2 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.text}20` }}>
+                  <View className="h-full w-2/3 rounded-full" style={{ backgroundColor: validHex.test(hex) ? hex : tokens.accent }} />
+                </View>
+              </View>
+            </View>
             <View className="mt-4 flex-row justify-between">
               {quickColors.map((color) => (
                 <Pressable

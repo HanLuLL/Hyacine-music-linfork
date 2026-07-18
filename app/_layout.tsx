@@ -1,5 +1,5 @@
 import "../global.css";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
@@ -22,6 +22,8 @@ const stackAnimation = {
 
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
+  const pathname = usePathname();
+  const showMiniPlayer = !pathname.startsWith("/settings");
 
   useEffect(() => {
     if (!hydrated) return;
@@ -77,7 +79,7 @@ function AppNavigator(): React.JSX.Element {
           }}
         />
       </Stack>
-      <MiniPlayer />
+      {showMiniPlayer ? <MiniPlayer /> : null}
     </>
   );
 }

@@ -7,7 +7,6 @@ function normalizeMediaUrl(url?: string | null): string | undefined {
   const value = url.trim();
   if (!value) return undefined;
   if (value.startsWith("//")) return `https:${value}`;
-  if (value.startsWith("http://")) return `https://${value.slice("http://".length)}`;
   return value;
 }
 

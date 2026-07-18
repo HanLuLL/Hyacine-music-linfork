@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type PropsWith
 
 export const uiStyles = ["native", "liquid", "miuix"] as const;
 export type UiStyle = (typeof uiStyles)[number];
-export const themePresets = ["midnight", "black", "daylight", "aurora"] as const;
+export const themePresets = ["midnight", "black", "daylight", "aurora", "pink"] as const;
 export type ThemePreset = (typeof themePresets)[number];
 export const playerLayouts = ["vinyl", "immersive", "minimal"] as const;
 export type PlayerLayout = (typeof playerLayouts)[number];
@@ -61,6 +61,7 @@ export const presetAccents: Record<ThemePreset, string> = {
   black: "#00d4ff",
   daylight: "#4e7a64",
   aurora: "#34d399",
+  pink: "#ec4899",
 };
 
 const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillRadius" | "cardOpacity">> = {
@@ -98,6 +99,18 @@ const PRESET_COLORS: Record<ThemePreset, Omit<ThemeTokens, "cardRadius" | "pillR
     accent: "#4e7a64",
     text: "#1d2430",
     mutedText: "#6b7788",
+    isLight: true,
+  },
+  pink: {
+    background: "#fff1f6",
+    backgroundSecondary: "#ffe4ef",
+    surface: "#ffffff",
+    surfaceStrong: "#ffffff",
+    surfaceBorder: "#f9a8c5",
+    primary: "#fff1f6",
+    accent: "#ec4899",
+    text: "#4a1028",
+    mutedText: "#a43a64",
     isLight: true,
   },
   aurora: {
@@ -200,11 +213,15 @@ function migrateUiStyle(value: unknown): UiStyle {
 }
 
 function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: unknown }): ThemePreferences {
+  const preset = themePresets.includes(stored.preset as ThemePreset) ? stored.preset as ThemePreset : DEFAULT_PREFERENCES.preset;
+  const playerLayout = playerLayouts.includes(stored.playerLayout as PlayerLayout) ? stored.playerLayout as PlayerLayout : DEFAULT_PREFERENCES.playerLayout;
   return {
     ...DEFAULT_PREFERENCES,
     ...stored,
     customAccent: stored.customAccent?.trim().toUpperCase() ?? null,
     uiStyle: migrateUiStyle(stored.uiStyle),
+    preset,
+    playerLayout,
     customBackgroundUri: stored.customBackgroundUri?.trim() || null,
     backgroundOpacity: clamp01(stored.backgroundOpacity ?? DEFAULT_PREFERENCES.backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity),
     glassOpacity: clamp01(stored.glassOpacity ?? DEFAULT_PREFERENCES.glassOpacity, DEFAULT_PREFERENCES.glassOpacity),

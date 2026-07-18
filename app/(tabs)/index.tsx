@@ -19,7 +19,6 @@ function normalizeCoverUrl(url?: string | null): string | undefined {
   const value = url.trim();
   if (!value) return undefined;
   if (value.startsWith("//")) return `https:${value}`;
-  if (value.startsWith("http://")) return `https://${value.slice("http://".length)}`;
   if (value.startsWith("https://")) return value;
   return value;
 }

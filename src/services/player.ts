@@ -1,31 +1,50 @@
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import { usePlayerStore } from "@/store/playerStore";
 import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 import { appLog } from "@/utils/logger";
 
-/**
- * Startup-safe player facade.
- *
- * expo-av 16 loads libexpo-av during Expo module registration. The installed
- * APK pairs that library with an incompatible React Native JSI ABI and crashes
- * before JavaScript starts. Keep state and queue interactions available while
- * the playback backend is replaced with an SDK-compatible implementation.
- */
+let player: AudioPlayer | null = null;
+let modeReady = false;
+
+async function ensureAudioMode(): Promise<void> {
+  if (modeReady) return;
+  await setAudioModeAsync({ playsInSilentMode: true, interruptionMode: "doNotMix", shouldPlayInBackground: true });
+  modeReady = true;
+}
+
+function bindStatus(active: AudioPlayer): void {
+  active.addListener("playbackStatusUpdate", (status) => {
+    usePlayerStore.getState().setPlaying(status.playing);
+    usePlayerStore.getState().setProgress(status.currentTime, status.duration || 0);
+  });
+}
+
 export async function playTrack(track: Track): Promise<void> {
   if (!track.url) throw new Error("未获取到可播放的音频地址");
-  appLog.warn("player", "playback backend unavailable in this build", { id: track.id });
-  usePlayerStore.getState().setCurrentTrack(track);
-  usePlayerStore.getState().setPlaying(false);
-  await recordListeningHistory(track).catch((error) => appLog.warn("player", "record history failed", error));
+  await ensureAudioMode();
+  try {
+    player?.pause();
+    player = createAudioPlayer(track.url);
+    bindStatus(player);
+    usePlayerStore.getState().setCurrentTrack(track);
+    usePlayerStore.getState().setProgress(0, 0);
+    player.play();
+    player.setActiveForLockScreen(true, { title: track.title, artist: track.artist, artworkUrl: track.artwork });
+    await recordListeningHistory(track);
+  } catch (error) {
+    usePlayerStore.getState().setPlaying(false);
+    appLog.error("player", "expo-audio playback failed", error);
+    throw error instanceof Error ? error : new Error("无法播放此音频");
+  }
 }
 
 export async function togglePlayback(): Promise<void> {
-  const state = usePlayerStore.getState();
-  if (!state.currentTrack) return;
-  state.setPlaying(false);
-  throw new Error("播放组件正在维护，暂不可用");
+  if (!player) return;
+  if (player.playing) player.pause(); else player.play();
 }
 
-export async function seekBy(_seconds: number): Promise<void> {
-  usePlayerStore.getState().setPlaying(false);
+export async function seekBy(seconds: number): Promise<void> {
+  if (!player) return;
+  await player.seekTo(Math.max(0, player.currentTime + seconds));
 }
