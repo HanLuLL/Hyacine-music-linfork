@@ -5,12 +5,13 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
 
 export type MusicSource = "netease" | "bilibili";
+
 export interface AccountProfile {
   displayName: string;
   avatarUrl: string;
@@ -43,15 +44,30 @@ function readProfile(value: Partial<AccountProfile>): AccountProfile | null {
   };
 }
 
+function profilesEqual(a: AccountProfile | null, b: AccountProfile | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.displayName === b.displayName &&
+    a.avatarUrl === b.avatarUrl &&
+    a.backendUrl === b.backendUrl &&
+    a.musicSource === b.musicSource &&
+    a.onboardingCompleted === b.onboardingCompleted
+  );
+}
+
 export function AccountProvider({ children }: PropsWithChildren): React.JSX.Element {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const profileRef = useRef<AccountProfile | null>(null);
 
   useEffect(() => {
     void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => {
       if (raw) {
         try {
-          setProfile(readProfile(JSON.parse(raw) as Partial<AccountProfile>));
+          const parsed = readProfile(JSON.parse(raw) as Partial<AccountProfile>);
+          profileRef.current = parsed;
+          setProfile(parsed);
         } catch {
           // ignore corrupt profile payload
         }
@@ -69,6 +85,7 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
       onboardingCompleted: next.onboardingCompleted,
     };
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
+    profileRef.current = normalized;
     setProfile(normalized);
   }, []);
 
@@ -82,6 +99,8 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
         musicSource: patch.musicSource === undefined ? current.musicSource : patch.musicSource,
         onboardingCompleted: patch.onboardingCompleted ?? current.onboardingCompleted,
       };
+      if (profilesEqual(current, normalized)) return current;
+      profileRef.current = normalized;
       void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
       return normalized;
     });
@@ -93,6 +112,7 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
       if (!current) return current;
       if (current.musicSource === source) return current;
       const next: AccountProfile = { ...current, musicSource: source };
+      profileRef.current = next;
       void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
@@ -103,19 +123,20 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
     [],
   );
 
-  const value = useMemo<AccountContextValue>(
-    () => ({
+  // Stable context: only update when profile reference actually changes.
+  const valueRef = useRef<AccountContextValue | null>(null);
+  if (!valueRef.current || valueRef.current.profile !== profile || valueRef.current.hydrated !== hydrated) {
+    valueRef.current = {
       profile,
       hydrated,
       saveProfile,
       updateProfile,
       saveSourceCredential,
       getSourceCredential,
-    }),
-    [profile, hydrated, saveProfile, updateProfile, saveSourceCredential, getSourceCredential],
-  );
+    };
+  }
 
-  return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
+  return <AccountContext.Provider value={valueRef.current}>{children}</AccountContext.Provider>;
 }
 
 export function useAccount(): AccountContextValue {
