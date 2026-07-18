@@ -1,5 +1,6 @@
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
+import { appLog, cookieMeta, summarizeUrl } from "@/utils/logger";
 
 function normalizeMediaUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
@@ -30,19 +31,42 @@ function resolveBackendAssetUrl(backendUrl: string, rawUrl: string): string {
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  const data = (await response.json().catch(() => null)) as T & { message?: string };
-  if (!response.ok) {
-    throw new Error((data as { message?: string } | null)?.message ?? `HTTP ${response.status}`);
+  appLog.info("http", "POST start", { url: summarizeUrl(url) });
+  const started = Date.now();
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    const data = (await response.json().catch(() => null)) as T & { message?: string };
+    appLog.info("http", "POST done", {
+      url: summarizeUrl(url),
+      status: response.status,
+      ok: response.ok,
+      ms: Date.now() - started,
+    });
+    if (!response.ok) {
+      const message = (data as { message?: string } | null)?.message ?? `HTTP ${response.status}`;
+      appLog.error("http", "POST failed", {
+        url: summarizeUrl(url),
+        status: response.status,
+        message,
+      });
+      throw new Error(message);
+    }
+    return data;
+  } catch (error) {
+    appLog.error("http", "POST error", {
+      url: summarizeUrl(url),
+      ms: Date.now() - started,
+      error,
+    });
+    throw error;
   }
-  return data;
 }
 
 export async function searchTracks(options: {
@@ -54,6 +78,12 @@ export async function searchTracks(options: {
   const base = apiBase(options.backendUrl);
   const keywords = options.keywords.trim();
   if (!base || !keywords) return [];
+
+  appLog.info("musicApi", "searchTracks", {
+    source: options.source,
+    keywords,
+    cookie: cookieMeta(options.cookie),
+  });
 
   if (options.source === "netease") {
     const rows = await postJson<
@@ -109,6 +139,13 @@ export async function resolvePlayableTrack(options: {
   const base = apiBase(options.backendUrl);
   if (!base) throw new Error("未配置服务器地址");
 
+  appLog.info("musicApi", "resolvePlayableTrack start", {
+    trackId: options.track.id,
+    title: options.track.title,
+    cookie: cookieMeta(options.cookie),
+    backend: summarizeUrl(base),
+  });
+
   if (options.track.id.startsWith("netease:")) {
     const id = Number(options.track.id.replace("netease:", ""));
     const result = await postJson<{ url: string; br?: number }>(`${base}/music-sources/netease/play-url`, {
@@ -117,10 +154,17 @@ export async function resolvePlayableTrack(options: {
       cookie: options.cookie ?? undefined,
     });
     if (!result.url) throw new Error("未获取到网易云播放地址");
+    const resolved = resolveBackendAssetUrl(options.backendUrl, result.url);
+    appLog.info("musicApi", "netease play-url resolved", {
+      id,
+      rawUrl: summarizeUrl(result.url),
+      resolvedUrl: summarizeUrl(resolved),
+      br: result.br,
+    });
     return {
       ...options.track,
       artwork: normalizeMediaUrl(options.track.artwork),
-      url: resolveBackendAssetUrl(options.backendUrl, result.url),
+      url: resolved,
     };
   }
 
@@ -133,7 +177,12 @@ export async function resolvePlayableTrack(options: {
         cookie: options.cookie ?? undefined,
       },
     );
-if (!result.url) throw new Error("未获取到 Bilibili 播放地址");
+    if (!result.url) throw new Error("未获取到 Bilibili 播放地址");
+    appLog.info("musicApi", "bilibili play-url resolved", {
+      id,
+      url: summarizeUrl(result.url),
+      quality: result.quality,
+    });
     return {
       ...options.track,
       url: result.url,
@@ -144,6 +193,13 @@ if (!result.url) throw new Error("未获取到 Bilibili 播放地址");
     };
   }
 
-  if (options.track.url) return options.track;
+  if (options.track.url) {
+    appLog.info("musicApi", "track already has url", {
+      trackId: options.track.id,
+      url: summarizeUrl(options.track.url),
+    });
+    return options.track;
+  }
+  appLog.error("musicApi", "unable to resolve track url", { trackId: options.track.id });
   throw new Error("无法解析该音源的播放地址");
 }

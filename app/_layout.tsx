@@ -6,9 +6,23 @@ import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { AccountProvider, useAccount } from "@/account";
 import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/theme";
+import { appLog, bootMeta, installGlobalErrorHandlers } from "@/utils/logger";
+import { useEffect } from "react";
 
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
+
+  useEffect(() => {
+    if (!hydrated) return;
+    appLog.info("boot", "account hydrated", {
+      hasProfile: Boolean(profile),
+      onboardingCompleted: profile?.onboardingCompleted === true,
+      musicSource: profile?.musicSource ?? null,
+      backendHost: profile?.backendUrl
+        ? profile.backendUrl.replace(/^https?:\/\//i, "").split("/")[0]
+        : null,
+    });
+  }, [hydrated, profile]);
 
   if (!hydrated) return <AppLoadingScreen />;
   if (!profile || !profile.onboardingCompleted) {
@@ -46,6 +60,11 @@ function AppNavigator(): React.JSX.Element {
 }
 
 export default function RootLayout(): React.JSX.Element {
+  useEffect(() => {
+    installGlobalErrorHandlers();
+    appLog.info("boot", "root layout mounted", bootMeta());
+  }, []);
+
   return (
     <ThemeProvider>
       <I18nProvider>

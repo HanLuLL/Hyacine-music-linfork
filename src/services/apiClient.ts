@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { apiBase } from "@/utils/apiBase";
+import { appLog, summarizeUrl } from "@/utils/logger";
 
 const PROFILE_KEY = "hyacine.account-profile";
 
@@ -35,20 +36,54 @@ export async function apiClient<T>(
   const token = await SecureStore.getItemAsync("accessToken");
   const base = await resolveApiBaseUrl();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const response = await fetch(`${base}${normalizedPath}`, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init.headers,
-    },
+  const url = `${base}${normalizedPath}`;
+  const method = (init.method ?? "GET").toUpperCase();
+  appLog.info("apiClient", "request start", {
+    method,
+    url: summarizeUrl(url),
+    hasAuth: Boolean(token),
   });
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as {
-      message?: string;
-    } | null;
-    throw new ApiError(response.status, body?.message ?? "Request failed");
+  const started = Date.now();
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
+    });
+    appLog.info("apiClient", "request done", {
+      method,
+      url: summarizeUrl(url),
+      status: response.status,
+      ok: response.ok,
+      ms: Date.now() - started,
+    });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      const message = body?.message ?? "Request failed";
+      appLog.error("apiClient", "request failed", {
+        method,
+        url: summarizeUrl(url),
+        status: response.status,
+        message,
+      });
+      throw new ApiError(response.status, message);
+    }
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (!(error instanceof ApiError)) {
+      appLog.error("apiClient", "request error", {
+        method,
+        url: summarizeUrl(url),
+        ms: Date.now() - started,
+        error,
+      });
+    }
+    throw error;
   }
-  return response.json() as Promise<T>;
 }

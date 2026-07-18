@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, Share, Switch, Text, TextInput, View } from "react-native";
 import CommunitySlider from "@react-native-community/slider";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { router } from "expo-router";
+import { appLog, clearLogs, getLogText } from "@/utils/logger";
 import { useAccount } from "@/account";
 import { languages, type Language, useI18n } from "@/i18n";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -127,6 +128,8 @@ export default function SettingsScreen(): React.JSX.Element {
   const { language, setLanguage, t } = useI18n();
   const { profile } = useAccount();
   const [hex, setHex] = useState(preferences.customAccent ?? "");
+  const [logPreview, setLogPreview] = useState("");
+  const [logLoading, setLogLoading] = useState(false);
   useEffect(() => setHex(preferences.customAccent ?? ""), [preferences.customAccent]);
 
   const apply = (value: string): void => {
@@ -164,6 +167,47 @@ export default function SettingsScreen(): React.JSX.Element {
   const clearBackground = (): void => {
     setCustomBackgroundUri(null);
   };
+  const refreshLogs = async (): Promise<void> => {
+    setLogLoading(true);
+    try {
+      const textValue = await getLogText();
+      setLogPreview(textValue);
+      appLog.info("settings", "logs refreshed", { length: textValue.length });
+    } catch (error) {
+      appLog.error("settings", "refresh logs failed", error);
+      Alert.alert("日志", "读取日志失败");
+    } finally {
+      setLogLoading(false);
+    }
+  };
+
+  const shareLogs = async (): Promise<void> => {
+    try {
+      const textValue = await getLogText();
+      await Share.share({ message: textValue, title: "Hyacine App Log" });
+      appLog.info("settings", "logs shared", { length: textValue.length });
+    } catch (error) {
+      appLog.error("settings", "share logs failed", error);
+      Alert.alert("日志", "分享日志失败");
+    }
+  };
+
+  const onClearLogs = (): void => {
+    Alert.alert("清空日志", "确定清空本地 App 日志？", [
+      { text: "取消", style: "cancel" },
+      {
+        text: "清空",
+        style: "destructive",
+        onPress: () => {
+          void clearLogs().then(async () => {
+            appLog.info("settings", "logs cleared");
+            setLogPreview(await getLogText());
+          });
+        },
+      },
+    ]);
+  };
+
 
   return (
     <ThemedScreen>
@@ -373,6 +417,45 @@ export default function SettingsScreen(): React.JSX.Element {
 {/* Font and density controls remain unavailable until each screen supports responsive sizing. */}
           </Row>
         </Section>
+
+        {/* Diagnostics */}
+        <Section title="诊断日志">
+          <Row title="App 日志" hint="记录启动、接口与播放链路；Cookie/Token 会自动脱敏。崩溃后可到这里查看或分享。">
+            <View className="mt-4 flex-row gap-3">
+              <Pressable
+                className="flex-1 items-center justify-center rounded-full py-3"
+                style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
+                onPress={() => void refreshLogs()}
+              >
+                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>{logLoading ? "读取中..." : "查看日志"}</Text>
+              </Pressable>
+              <Pressable
+                className="flex-1 items-center justify-center rounded-full py-3"
+                style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
+                onPress={() => void shareLogs()}
+              >
+                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>分享日志</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              className="mt-3 items-center justify-center rounded-full py-3"
+              style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
+              onPress={onClearLogs}
+            >
+              <Text style={{ color: "#ef4444", fontWeight: "800", fontSize: 14 }}>清空日志</Text>
+            </Pressable>
+            {logPreview ? (
+              <LiquidControlSurface className="mt-4 rounded-3xl p-4" style={{ borderRadius: 24 }}>
+                <ScrollView style={{ maxHeight: 280 }} nestedScrollEnabled>
+                  <Text selectable style={{ color: tokens.mutedText, fontSize: 11, lineHeight: 16, fontFamily: "monospace" }}>
+                    {logPreview}
+                  </Text>
+                </ScrollView>
+              </LiquidControlSurface>
+            ) : null}
+          </Row>
+        </Section>
+
       </ScrollView>
     </ThemedScreen>
   );
