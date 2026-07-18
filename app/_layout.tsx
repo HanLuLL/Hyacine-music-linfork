@@ -72,7 +72,7 @@ function AppNavigator(): React.JSX.Element {
           options={{
             presentation: "fullScreenModal",
             animation: "slide_from_bottom",
-            animationDuration: 320,
+            animationDuration: 300,
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
             gestureDirection: "vertical",
