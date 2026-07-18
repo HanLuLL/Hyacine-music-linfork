@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { apiBase } from "@/utils/apiBase";
 
 interface Playlist { id: number; name: string; coverUrl: string; playCount: number; trackCount: number; description: string; }
@@ -35,6 +36,11 @@ export default function LibraryScreen(): React.JSX.Element {
     refresh ? setRefreshing(true) : setLoading(true);
     setError("");
     try {
+      if (!(await supportsNeteaseCapability(profile.backendUrl, "playlists"))) {
+        setPlaylists([]);
+        setError("当前服务器尚未提供网易云歌单管理。");
+        return;
+      }
       const cookie = await getSourceCredential("netease");
       if (!cookie) throw new Error("网易云登录已失效，请重新扫码绑定");
 
@@ -83,6 +89,10 @@ export default function LibraryScreen(): React.JSX.Element {
     setCreating(true);
     setError("");
     try {
+      if (!(await supportsNeteaseCapability(profile.backendUrl, "createPlaylist"))) {
+        setError("当前服务器尚未提供网易云歌单创建。");
+        return;
+      }
       const cookie = await getSourceCredential("netease");
       if (!cookie) throw new Error("missing credential");
       const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists/create`, {

@@ -14,6 +14,7 @@ import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
 import { resolvePlayableTrack, searchTracks } from "@/services/musicApi";
+import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import type { Track } from "@/types/music";
 
@@ -42,6 +43,11 @@ export default function SearchScreen(): React.JSX.Element {
     setLoading(true);
     setError("");
     try {
+      if (source === "netease" && !(await supportsNeteaseCapability(profile.backendUrl, "search"))) {
+        setResults([]);
+        setError("当前服务器尚未提供网易云搜索，请切换到哔哩哔哩或配置兼容上游。");
+        return;
+      }
       const cookie = await getSourceCredential(source);
       const rows = await searchTracks({
         backendUrl: profile.backendUrl,

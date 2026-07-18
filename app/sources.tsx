@@ -10,6 +10,7 @@ import { ThemedCard } from "@/components/ui/ThemedCard";
 import { useI18n } from "@/i18n";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useTheme } from "@/theme";
+import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { apiBase } from "@/utils/apiBase";
 
 type Source = "netease" | "bilibili";
@@ -54,6 +55,11 @@ export default function SourcesScreen(): React.JSX.Element {
   const createQr = async (): Promise<void> => {
     if (!base) {
       setNote("未配置服务器地址");
+      return;
+    }
+    if (!(await supportsNeteaseCapability(profile?.backendUrl, "qr"))) {
+      setNeteaseMode("cookie");
+      setNote("当前服务器不支持扫码登录，请导入网易云 Cookie。");
       return;
     }
     setLoading(true);

@@ -8,6 +8,7 @@ import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAudio } from "@/hooks/useAudio";
 import { useI18n } from "@/i18n";
 import { resolvePlayableTrack } from "@/services/musicApi";
+import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
@@ -43,6 +44,11 @@ export default function HomeScreen(): React.JSX.Element {
     setLoading(true);
     setError("");
     try {
+      if (!(await supportsNeteaseCapability(profile.backendUrl, "dailySongs"))) {
+        setSongs([]);
+        setError("当前服务器尚未提供网易云每日推荐。");
+        return;
+      }
       const cookie = await getSourceCredential("netease");
       if (!cookie) throw new Error("网易云登录已失效");
       const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/daily-songs`, {
