@@ -22,6 +22,7 @@ export default function SourcesScreen(): React.JSX.Element {
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const [source, setSource] = useState<Source>("netease");
+  const [neteaseMode, setNeteaseMode] = useState<"qr" | "cookie">("qr");
   const sourceMotion = useRef(new Animated.Value(0)).current;
   const sourceRef = useRef<Source>("netease");
   const [qr, setQr] = useState("");
@@ -75,7 +76,7 @@ export default function SourcesScreen(): React.JSX.Element {
   };
 
   useEffect(() => {
-    if (source !== "netease" || qr || loading) return;
+    if (source !== "netease" || neteaseMode !== "qr" || qr || loading) return;
     void createQr();
     // auto fetch once when entering netease tab
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,6 +102,22 @@ export default function SourcesScreen(): React.JSX.Element {
     }, 1800);
     return () => clearInterval(timer);
   }, [base, key, saveSourceCredential]);
+
+  const saveNeteaseCookie = async (): Promise<void> => {
+    const credential = cookie.trim();
+    if (!credential) return;
+    setLoading(true);
+    setNote("正在安全保存凭据...");
+    try {
+      await saveSourceCredential("netease", credential);
+      await syncNeteaseProfile(credential);
+      router.replace("/(tabs)");
+    } catch {
+      setNote("Cookie 保存失败，请重试。");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const saveBilibili = async (): Promise<void> => {
     if (!cookie.trim()) return;
@@ -176,16 +193,30 @@ export default function SourcesScreen(): React.JSX.Element {
         </ThemedCard>
 
         <Animated.View className="flex-1" style={sourceContentStyle} {...sourcePan.panHandlers}>
-          {source === "netease" ? <View className="flex-1 items-center justify-center pb-12">
-            <View className="items-center">
-              <ThemedCard className="h-[294px] w-[294px] items-center justify-center p-2" style={{ borderRadius: 42 }}>
-                {qr ? <View className="h-[278px] w-[278px] items-center justify-center rounded-[34px] bg-white p-3"><QRCode value={qr} size={254} color="#17212d" backgroundColor="#ffffff" /></View> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
-                  <Text style={{ color: tokens.mutedText, fontSize: 15, fontWeight: "700" }}>{t("secureSessionWaiting")}</Text>
-                </LinearGradient>}
+          {source === "netease" ? <View className="flex-1 pt-8">
+            <ThemedCard className="p-1.5" style={{ borderRadius: 23 }}>
+              <View className="flex-row">
+                {(["qr", "cookie"] as const).map((mode) => <Pressable key={mode} className="h-11 flex-1 items-center justify-center" style={{ backgroundColor: neteaseMode === mode ? (isLiquid ? "transparent" : tokens.surfaceStrong) : "transparent", borderRadius: 18, borderWidth: neteaseMode === mode && isLiquid ? 1 : 0, borderColor: neteaseMode === mode && isLiquid ? `${tokens.text}38` : "transparent" }} onPress={() => { setNeteaseMode(mode); setQr(""); setKey(""); setNote(""); }}>
+                  <Text style={{ color: neteaseMode === mode ? tokens.text : tokens.mutedText, fontSize: 14, fontWeight: "800" }}>{mode === "qr" ? "扫码登录" : "导入 Cookie"}</Text>
+                </Pressable>)}
+              </View>
+            </ThemedCard>
+            {neteaseMode === "qr" ? <View className="flex-1 items-center justify-center pb-12">
+              <View className="items-center">
+                <ThemedCard className="h-[294px] w-[294px] items-center justify-center p-2" style={{ borderRadius: 42 }}>
+                  {qr ? <View className="h-[278px] w-[278px] items-center justify-center rounded-[34px] bg-white p-3"><QRCode value={qr} size={254} color="#17212d" backgroundColor="#ffffff" /></View> : <LinearGradient className="h-[278px] w-[278px] items-center justify-center rounded-[34px]" colors={isLiquid ? ["#ffffff74", "#d8ecff50"] : [tokens.backgroundSecondary, tokens.surface]}>
+                    <Text style={{ color: tokens.mutedText, fontSize: 15, fontWeight: "700" }}>{t("secureSessionWaiting")}</Text>
+                  </LinearGradient>}
+                </ThemedCard>
+                <Text className="mt-6" style={{ color: tokens.text, fontSize: 19, fontWeight: "800" }}>{qr ? t("scanInNetease") : t("connectNetease")}</Text>
+                <Text className="mt-2 text-center text-sm leading-5" style={{ color: tokens.mutedText }}>{qr ? t("qrCompletesAutomatically") : t("qrSessionOnly")}</Text>
+              </View>
+            </View> : <View className="flex-1 pt-6">
+              <ThemedCard className="p-0" style={{ borderRadius: 28 }}>
+                <View className="px-5 pb-3 pt-5"><Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>导入网易云 Cookie</Text><Text className="mt-1 text-sm leading-5" style={{ color: tokens.mutedText }}>粘贴包含 MUSIC_U 的 Cookie。它仅加密保存在本机，用于后端直连播放。</Text></View>
+                <TextInput value={cookie} onChangeText={setCookie} autoCapitalize="none" autoCorrect={false} multiline placeholder="粘贴网易云 Cookie" placeholderTextColor={tokens.mutedText} textAlignVertical="top" style={{ minHeight: 210, color: tokens.text, backgroundColor: isLiquid ? "transparent" : tokens.backgroundSecondary, borderTopWidth: 1, borderColor: tokens.surfaceBorder, padding: 20, fontSize: 14, lineHeight: 22 }} />
               </ThemedCard>
-              <Text className="mt-6" style={{ color: tokens.text, fontSize: 19, fontWeight: "800" }}>{qr ? t("scanInNetease") : t("connectNetease")}</Text>
-              <Text className="mt-2 text-center text-sm leading-5" style={{ color: tokens.mutedText }}>{qr ? t("qrCompletesAutomatically") : t("qrSessionOnly")}</Text>
-            </View>
+            </View>}
           </View> : <View className="flex-1 pt-8">
             <ThemedCard className="p-0" style={{ borderRadius: 28 }}>
               <View className="px-5 pb-3 pt-5"><Text style={{ color: tokens.text, fontSize: 18, fontWeight: "800" }}>{t("importCookie")}</Text><Text className="mt-1 text-sm leading-5" style={{ color: tokens.mutedText }}>{t("cookieRequirements")}</Text></View>
@@ -195,9 +226,9 @@ export default function SourcesScreen(): React.JSX.Element {
         </Animated.View>
 
         <View className="mb-2">
-          <Pressable disabled={loading || (source === "bilibili" && !cookie.trim())} className="h-14 items-center justify-center overflow-hidden rounded-[28px]" style={{ opacity: loading || (source === "bilibili" && !cookie.trim()) ? 0.48 : 1 }} onPress={() => void (source === "netease" ? createQr() : saveBilibili())}>
+          <Pressable disabled={loading || ((source === "bilibili" || (source === "netease" && neteaseMode === "cookie")) && !cookie.trim())} className="h-14 items-center justify-center overflow-hidden rounded-[28px]" style={{ opacity: loading || ((source === "bilibili" || (source === "netease" && neteaseMode === "cookie")) && !cookie.trim()) ? 0.48 : 1 }} onPress={() => void (source === "netease" ? (neteaseMode === "cookie" ? saveNeteaseCookie() : createQr()) : saveBilibili())}>
             <LinearGradient className="absolute inset-0" colors={isLiquid ? ["#203e60", "#6b9cc0", "#274561"] : [tokens.accent, tokens.accent]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-            <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "800" }}>{loading ? t("working") : source === "netease" ? (qr ? t("refreshQr") : t("getQr")) : t("verifyAndSave")}</Text>
+            <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "800" }}>{loading ? t("working") : source === "netease" ? (neteaseMode === "cookie" ? "安全保存并继续" : (qr ? t("refreshQr") : t("getQr"))) : t("verifyAndSave")}</Text>
           </Pressable>
           <Text className="mx-5 mt-4 text-center text-xs leading-5" style={{ color: tokens.mutedText }}>{note || t("credentialsLocal")}</Text>
         </View>
