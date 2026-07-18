@@ -47,5 +47,4 @@ minimumReleaseAgeExclude:
   - expo-splash-screen@57.0.4
   - expo-blur@57.0.2
   - expo-linear-gradient@57.0.1
-patchedDependencies:
-  react-native-track-player@4.1.2: patches/react-native-track-player@4.1.2.patch
+# No patched dependencies.
