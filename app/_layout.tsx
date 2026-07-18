@@ -1,6 +1,8 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { StyleSheet } from "react-native";
 import { MiniPlayer } from "@/components/Player/MiniPlayer";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { AccountProvider, useAccount } from "@/account";
@@ -8,6 +10,15 @@ import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/theme";
 import { appLog, bootMeta, installGlobalErrorHandlers } from "@/utils/logger";
 import { useEffect } from "react";
+
+const stackAnimation = {
+  headerShown: false as const,
+  animation: "slide_from_right" as const,
+  animationDuration: 280,
+  gestureEnabled: true,
+  fullScreenGestureEnabled: true,
+  animationTypeForReplace: "push" as const,
+};
 
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
@@ -27,32 +38,44 @@ function AppNavigator(): React.JSX.Element {
   if (!hydrated) return <AppLoadingScreen />;
   if (!profile || !profile.onboardingCompleted) {
     return (
-      <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+      <Stack screenOptions={{ ...stackAnimation, animation: "fade" }}>
         <Stack.Screen name="onboarding" />
       </Stack>
     );
   }
   if (!profile.musicSource) {
     return (
-      <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+      <Stack screenOptions={{ ...stackAnimation, animation: "fade_from_bottom" }}>
         <Stack.Screen name="sources" />
       </Stack>
     );
   }
   return (
     <>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "fade_from_bottom",
-          animationDuration: 260,
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" options={{ presentation: "card" }} />
-        <Stack.Screen name="sources" options={{ presentation: "card" }} />
-        <Stack.Screen name="settings" options={{ presentation: "card" }} />
-        <Stack.Screen name="player/[id]" options={{ presentation: "card" }} />
+      <Stack screenOptions={stackAnimation}>
+        <Stack.Screen name="(tabs)" options={{ animation: "fade", gestureEnabled: false }} />
+        <Stack.Screen name="onboarding" options={{ presentation: "card", animation: "slide_from_right" }} />
+        <Stack.Screen name="sources" options={{ presentation: "card", animation: "slide_from_right" }} />
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: "card",
+            animation: "slide_from_right",
+            gestureEnabled: true,
+            fullScreenGestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="player/[id]"
+          options={{
+            presentation: "fullScreenModal",
+            animation: "slide_from_bottom",
+            animationDuration: 320,
+            gestureEnabled: true,
+            fullScreenGestureEnabled: true,
+            gestureDirection: "vertical",
+          }}
+        />
       </Stack>
       <MiniPlayer />
     </>
@@ -66,13 +89,19 @@ export default function RootLayout(): React.JSX.Element {
   }, []);
 
   return (
-    <ThemeProvider>
-      <I18nProvider>
-        <AccountProvider>
-          <StatusBar style="dark" />
-          <AppNavigator />
-        </AccountProvider>
-      </I18nProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <ThemeProvider>
+        <I18nProvider>
+          <AccountProvider>
+            <StatusBar style="dark" />
+            <AppNavigator />
+          </AccountProvider>
+        </I18nProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

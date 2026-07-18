@@ -242,6 +242,10 @@ export default function TabsLayout(): React.JSX.Element {
   return <TabSwipeSurface><View className="flex-1"><Tabs screenOptions={{
     headerShown: false,
     animation: "shift",
+    transitionSpec: {
+      animation: "spring",
+      config: { stiffness: 320, damping: 28, mass: 0.78, overshootClamping: false },
+    },
     sceneStyle: { backgroundColor: tokens.background },
     tabBarStyle: {
       display: isLiquid || isMiuix ? "none" : "flex",
