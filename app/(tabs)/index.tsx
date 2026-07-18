@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
@@ -36,44 +36,65 @@ export default function HomeScreen(): React.JSX.Element {
   const [error, setError] = useState("");
   const [playingId, setPlayingId] = useState("");
 
+  const requestSeq = useRef(0);
   const loadDailySongs = useCallback(async (): Promise<void> => {
+    const seq = ++requestSeq.current;
     if (!profile?.backendUrl || profile.musicSource !== "netease") {
-      setSongs([]);
-      setLoading(false);
-      setError("绑定网易云音乐后可查看每日推荐");
+      if (seq === requestSeq.current) {
+        setSongs([]);
+        setLoading(false);
+        setError("绑定网易云音乐后可查看每日推荐");
+      }
       appLog.info("home", "daily songs skipped", {
         hasBackend: Boolean(profile?.backendUrl),
         musicSource: profile?.musicSource ?? null,
       });
       return;
     }
-    setLoading(true);
-    setError("");
-    appLog.info("home", "daily songs load start");
+    if (seq === requestSeq.current) {
+      setLoading(true);
+      setError("");
+    }
+    appLog.info("home", "daily songs load start", { seq });
     try {
       if (!(await supportsNeteaseCapability(profile.backendUrl, "dailySongs"))) {
-        setSongs([]);
-        setError("当前服务器尚未提供网易云每日推荐。");
+        if (seq === requestSeq.current) {
+          setSongs([]);
+          setError("当前服务器尚未提供网易云每日推荐。");
+        }
         appLog.warn("home", "daily songs capability missing");
         return;
       }
       const cookie = await getSourceCredential("netease");
-      appLog.info("home", "daily songs cookie", cookieMeta(cookie));
+      appLog.info("home", "daily songs cookie", { cookieMeta: cookieMeta(cookie) });
       if (!cookie) throw new Error("网易云登录已失效");
       const started = Date.now();
-      const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/daily-songs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cookie }),
-      });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      let response: Response;
+      try {
+        response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/daily-songs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cookie }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
       const data = await response.json() as DailySong[] | { message?: string };
       appLog.info("home", "daily songs response", {
         status: response.status,
         ok: response.ok,
         ms: Date.now() - started,
         count: Array.isArray(data) ? data.length : 0,
+        seq,
       });
       if (!response.ok || !Array.isArray(data)) throw new Error((data as { message?: string }).message || "无法加载每日推荐");
+      if (seq !== requestSeq.current) {
+        appLog.info("home", "daily songs stale response ignored", { seq, current: requestSeq.current });
+        return;
+      }
       setSongs(data.map((song) => ({
         id: `netease:${song.id}`,
         title: song.title,
@@ -82,17 +103,20 @@ export default function HomeScreen(): React.JSX.Element {
         duration: song.durationMs ? Math.round(song.durationMs / 1000) : undefined,
         url: "",
       })));
-      appLog.info("home", "daily songs load ok", { count: data.length });
+      appLog.info("home", "daily songs load ok", { count: data.length, seq });
     } catch (cause) {
+      if (seq !== requestSeq.current) return;
       setSongs([]);
       setError(cause instanceof Error ? cause.message : "无法加载每日推荐");
       appLog.error("home", "daily songs load failed", cause);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [getSourceCredential, profile?.backendUrl, profile?.musicSource]);
 
-  useEffect(() => { void loadDailySongs(); }, [loadDailySongs]);
+  useEffect(() => {
+    void loadDailySongs();
+  }, [loadDailySongs]);
 
   const onPlay = async (track: Track): Promise<void> => {
     if (!profile?.backendUrl) {
@@ -104,7 +128,7 @@ export default function HomeScreen(): React.JSX.Element {
     appLog.info("home", "play pressed", { trackId: track.id, title: track.title });
     try {
       const cookie = await getSourceCredential("netease");
-      appLog.info("home", "play cookie", cookieMeta(cookie));
+      appLog.info("home", "play cookie", { cookieMeta: cookieMeta(cookie) });
       const playable = await resolvePlayableTrack({ backendUrl: profile.backendUrl, track, cookie });
       appLog.info("home", "playable resolved", { trackId: playable.id, hasUrl: Boolean(playable.url) });
       await playTrack(playable);

@@ -93,6 +93,10 @@ function formatDetail(detail?: unknown): string | undefined {
 }
 
 function formatLine(entry: LogEntry): string {
+  if (entry.scope === "persist") {
+    // Historical file lines already contain full formatting.
+    return entry.message.startsWith(entry.ts) ? entry.message : `${entry.ts} ${entry.message}`;
+  }
   const base = `${entry.ts} [${entry.level.toUpperCase()}][${entry.scope}] ${entry.message}`;
   return entry.detail ? `${base} | ${entry.detail}` : base;
 }
@@ -111,8 +115,8 @@ async function ensureHydrated(): Promise<void> {
       entries.push({
         ts: line.slice(0, 23) || nowIso(),
         level: "info",
-        scope: "history",
-        message: line.length > 23 ? line.slice(24) : line,
+        scope: "persist",
+        message: line,
       });
     }
     if (entries.length > MAX_ENTRIES) {

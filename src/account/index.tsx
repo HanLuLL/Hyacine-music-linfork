@@ -1,6 +1,14 @@
 import * as SecureStore from "expo-secure-store";
 import { normalizeBackendUrl } from "@/utils/apiBase";
-import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type PropsWithChildren,
+} from "react";
 
 export type MusicSource = "netease" | "bilibili";
 export interface AccountProfile {
@@ -52,41 +60,60 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
     });
   }, []);
 
-  const value = useMemo<AccountContextValue>(() => ({
-    profile,
-    hydrated,
-    saveProfile: async (next) => {
+  const saveProfile = useCallback(async (next: AccountProfile) => {
+    const normalized: AccountProfile = {
+      displayName: next.displayName.trim(),
+      avatarUrl: next.avatarUrl.trim(),
+      backendUrl: normalizeBackendUrl(next.backendUrl),
+      musicSource: next.musicSource,
+      onboardingCompleted: next.onboardingCompleted,
+    };
+    await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
+    setProfile(normalized);
+  }, []);
+
+  const updateProfile = useCallback(async (patch: Partial<AccountProfile>) => {
+    setProfile((current) => {
+      if (!current) return current;
       const normalized: AccountProfile = {
-        displayName: next.displayName.trim(),
-        avatarUrl: next.avatarUrl.trim(),
-        backendUrl: normalizeBackendUrl(next.backendUrl),
-        musicSource: next.musicSource,
-        onboardingCompleted: next.onboardingCompleted,
+        displayName: (patch.displayName ?? current.displayName).trim(),
+        avatarUrl: (patch.avatarUrl ?? current.avatarUrl).trim(),
+        backendUrl: normalizeBackendUrl(patch.backendUrl ?? current.backendUrl),
+        musicSource: patch.musicSource === undefined ? current.musicSource : patch.musicSource,
+        onboardingCompleted: patch.onboardingCompleted ?? current.onboardingCompleted,
       };
-      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
-      setProfile(normalized);
-    },
-    updateProfile: async (patch) => {
-      if (!profile) return;
-      const normalized: AccountProfile = {
-        displayName: (patch.displayName ?? profile.displayName).trim(),
-        avatarUrl: (patch.avatarUrl ?? profile.avatarUrl).trim(),
-        backendUrl: normalizeBackendUrl(patch.backendUrl ?? profile.backendUrl),
-        musicSource: patch.musicSource === undefined ? profile.musicSource : patch.musicSource,
-        onboardingCompleted: patch.onboardingCompleted ?? profile.onboardingCompleted,
-      };
-      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
-      setProfile(normalized);
-    },
-    saveSourceCredential: async (source, credential) => {
-      await SecureStore.setItemAsync(credentialKey(source), credential);
-      if (!profile) return;
-      const next: AccountProfile = { ...profile, musicSource: source };
-      await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
-      setProfile(next);
-    },
-    getSourceCredential: (source) => SecureStore.getItemAsync(credentialKey(source)),
-  }), [hydrated, profile]);
+      void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
+      return normalized;
+    });
+  }, []);
+
+  const saveSourceCredential = useCallback(async (source: MusicSource, credential: string) => {
+    await SecureStore.setItemAsync(credentialKey(source), credential);
+    setProfile((current) => {
+      if (!current) return current;
+      if (current.musicSource === source) return current;
+      const next: AccountProfile = { ...current, musicSource: source };
+      void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const getSourceCredential = useCallback(
+    (source: MusicSource) => SecureStore.getItemAsync(credentialKey(source)),
+    [],
+  );
+
+  const value = useMemo<AccountContextValue>(
+    () => ({
+      profile,
+      hydrated,
+      saveProfile,
+      updateProfile,
+      saveSourceCredential,
+      getSourceCredential,
+    }),
+    [profile, hydrated, saveProfile, updateProfile, saveSourceCredential, getSourceCredential],
+  );
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }

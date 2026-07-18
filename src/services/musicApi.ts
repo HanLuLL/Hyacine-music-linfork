@@ -30,9 +30,11 @@ function resolveBackendAssetUrl(backendUrl: string, rawUrl: string): string {
   return `${base}/${value}`;
 }
 
-async function postJson<T>(url: string, body: unknown): Promise<T> {
-  appLog.info("http", "POST start", { url: summarizeUrl(url) });
+async function postJson<T>(url: string, body: unknown, timeoutMs = 20000): Promise<T> {
+  appLog.info("http", "POST start", { url: summarizeUrl(url), timeoutMs });
   const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -41,6 +43,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
     const data = (await response.json().catch(() => null)) as T & { message?: string };
     appLog.info("http", "POST done", {
@@ -60,12 +63,16 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     }
     return data;
   } catch (error) {
-    appLog.error("http", "POST error", {
+    const aborted = error instanceof Error && (error.name === "AbortError" || /aborted/i.test(error.message));
+    appLog.error("http", aborted ? "POST timeout/aborted" : "POST error", {
       url: summarizeUrl(url),
       ms: Date.now() - started,
       error,
     });
+    if (aborted) throw new Error("请求超时，请检查后端或网络");
     throw error;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -82,7 +89,7 @@ export async function searchTracks(options: {
   appLog.info("musicApi", "searchTracks", {
     source: options.source,
     keywords,
-    cookie: cookieMeta(options.cookie),
+    cookieMeta: cookieMeta(options.cookie),
   });
 
   if (options.source === "netease") {
@@ -142,7 +149,7 @@ export async function resolvePlayableTrack(options: {
   appLog.info("musicApi", "resolvePlayableTrack start", {
     trackId: options.track.id,
     title: options.track.title,
-    cookie: cookieMeta(options.cookie),
+    cookieMeta: cookieMeta(options.cookie),
     backend: summarizeUrl(base),
   });
 
