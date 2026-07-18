@@ -1,0 +1,70 @@
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
+import { useLocalSearchParams, router } from "expo-router";
+import { useAudio } from "@/hooks/useAudio";
+import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { useAccount } from "@/account";
+import { useTheme } from "@/theme";
+import { apiBase } from "@/utils/apiBase";
+import { appLog, cookieMeta } from "@/utils/logger";
+import type { Track } from "@/types/music";
+
+interface PlaylistTrack { id: number; title: string; artists: string[]; coverUrl: string; durationMs: number; }
+
+export default function PlaylistDetailScreen(): React.JSX.Element {
+  const { id, name, cover } = useLocalSearchParams<{ id: string; name: string; cover?: string }>();
+  const { profile, getSourceCredential } = useAccount();
+  const { playTrack } = useAudio();
+  const { tokens } = useTheme();
+  const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!profile?.backendUrl || !id) { setLoading(false); setError("缺少参数"); return; }
+    const cookie = await getSourceCredential("netease");
+    appLog.info("playlist-detail", "load start", { id, cookieMeta: cookieMeta(cookie) });
+    try {
+      const res = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists/detail`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: Number(id), cookie }), signal: AbortSignal.timeout(20000),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message ?? `HTTP ${res.status}`);
+      setTracks(data);
+    } catch (e) { setError(String(e)); appLog.error("playlist-detail", "load failed", { error: e }); }
+    setLoading(false);
+  }, [getSourceCredential, id, profile?.backendUrl]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const play = (t: PlaylistTrack) => {
+    const track: Track = { id: String(t.id), title: t.title, artist: t.artists.join(" / "), url: "", artwork: t.coverUrl, duration: t.durationMs / 1000 };
+    void playTrack(track);
+  };
+
+  return (
+    <ThemedScreen>
+      <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
+        <View className="flex-row items-center gap-4 px-5 pt-16">
+          <Pressable onPress={() => router.back()}><Text style={{ color: tokens.accent, fontWeight: "800" }}>← 返回</Text></Pressable>
+          {cover ? <Image source={{ uri: cover }} style={{ width: 80, height: 80, borderRadius: 16 }} contentFit="cover" /> : null}
+          <View className="flex-1"><Text style={{ color: tokens.text, fontSize: 22, fontWeight: "900" }} numberOfLines={2}>{name ?? "歌单"}</Text><Text style={{ color: tokens.mutedText, fontSize: 13, marginTop: 4 }}>{tracks.length} 首歌曲</Text></View>
+        </View>
+        {loading ? <ActivityIndicator className="mt-12" color={tokens.accent} /> : null}
+        {error ? <Text className="mt-8 px-5" style={{ color: tokens.mutedText }}>{error}</Text> : null}
+        {!loading && tracks.map((t, i) => (
+          <Pressable key={t.id} className="mx-4 mt-3 flex-row items-center gap-3 rounded-2xl px-3 py-3" style={{ backgroundColor: `${tokens.text}08` }} onPress={() => play(t)}>
+            <Text style={{ color: tokens.mutedText, fontSize: 14, fontWeight: "700", width: 28 }}>{i + 1}</Text>
+            {t.coverUrl ? <Image source={{ uri: t.coverUrl }} style={{ width: 48, height: 48, borderRadius: 10 }} contentFit="cover" /> : <View style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: `${tokens.accent}18` }} />}
+            <View className="min-w-0 flex-1">
+              <Text numberOfLines={1} style={{ color: tokens.text, fontSize: 15, fontWeight: "700" }}>{t.title}</Text>
+              <Text numberOfLines={1} style={{ color: tokens.mutedText, fontSize: 12, marginTop: 2 }}>{t.artists.join(" / ")}</Text>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </ThemedScreen>
+  );
+}
