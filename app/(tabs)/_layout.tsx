@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
-import { Animated, PanResponder, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
+import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
 import { useI18n } from "@/i18n";
@@ -24,13 +24,21 @@ function HuaweiFloatingNav(): React.JSX.Element {
   const router = useRouter();
   const { t } = useI18n();
   const { togglePlayback } = useAudio();
-  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const playing = usePlayerStore((s) => s.isPlaying);
   const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : 0;
   const position = useRef(new Animated.Value(activeIndex)).current;
   const activeIndexRef = useRef(activeIndex);
   const tabWidthRef = useRef(0);
   const [contentWidth, setContentWidth] = useState(0);
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
   const tabWidth = contentWidth / tabs.length;
+
+  useEffect(() => {
+    const handler = Dimensions.addEventListener("change", ({ window }) => setScreenWidth(window.width));
+    return () => handler.remove();
+  }, []);
+
+  const navWidth = screenWidth < 600 ? 200 : screenWidth < 840 ? 300 : 400;
 
   useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
   useEffect(() => {
@@ -72,8 +80,8 @@ function HuaweiFloatingNav(): React.JSX.Element {
   };
 
   return (
-    <View pointerEvents="box-none" style={s.navWrap}>
-      <View style={[s.navBg, { backgroundColor: isPlaying ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)" }]}>
+    <View pointerEvents="box-none" style={[s.navWrap, { width: navWidth, alignSelf: "center" }]}>
+      <View style={[s.navBg, { backgroundColor: playing ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)" }]}>
         <View style={s.navTopLine} />
       </View>
       <View style={s.navContent} onLayout={onLayout} {...panResponder.panHandlers}>
@@ -92,7 +100,7 @@ function HuaweiFloatingNav(): React.JSX.Element {
           );
         })}
         <Pressable style={s.playBtn} onPress={() => void togglePlayback()}>
-          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "900" }}>{isPlaying ? "Ⅱ" : "▶"}</Text>
+          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "900" }}>{playing ? "Ⅱ" : "▶"}</Text>
         </Pressable>
       </View>
     </View>
@@ -100,7 +108,7 @@ function HuaweiFloatingNav(): React.JSX.Element {
 }
 
 const s = StyleSheet.create({
-  navWrap: { position: "absolute", bottom: 28, left: 16, right: 16, height: 64 },
+  navWrap: { position: "absolute", bottom: 28, height: 64 },
   navBg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 32, borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, overflow: "hidden" },
   navTopLine: { position: "absolute", left: 0, right: 0, top: 0, height: 1, backgroundColor: "rgba(255,255,255,0.78)" },
   navContent: { position: "absolute", top: 2, bottom: 2, left: 6, right: 4, flexDirection: "row", alignItems: "center" },
