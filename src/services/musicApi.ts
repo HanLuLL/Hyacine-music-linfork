@@ -5,8 +5,28 @@ function normalizeMediaUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   const value = url.trim();
   if (!value) return undefined;
-  if (value.startsWith('//')) return `https:${value}`;
+  if (value.startsWith("//")) return `https:${value}`;
+  if (value.startsWith("http://")) return `https://${value.slice("http://".length)}`;
   return value;
+}
+
+function resolveBackendAssetUrl(backendUrl: string, rawUrl: string): string {
+  const value = rawUrl.trim();
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base = apiBase(backendUrl);
+  const origin = base.replace(/\/api\/v1$/i, "");
+
+  // Older servers returned /api/v1/music-sources/...; newer ones return
+  // /music-sources/... so clients that already prefix apiBase stay correct.
+  if (value.startsWith("/api/v1/")) {
+    return `${origin}${value}`;
+  }
+  if (value.startsWith("/")) {
+    return `${base}${value}`;
+  }
+  return `${base}/${value}`;
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
@@ -97,16 +117,10 @@ export async function resolvePlayableTrack(options: {
       cookie: options.cookie ?? undefined,
     });
     if (!result.url) throw new Error("未获取到网易云播放地址");
-    const rawUrl = result.url.trim();
-    const absoluteUrl = rawUrl.startsWith("http")
-      ? rawUrl
-      : rawUrl.startsWith("/")
-        ? `${base}${rawUrl}`
-        : `${base}/${rawUrl}`;
     return {
       ...options.track,
       artwork: normalizeMediaUrl(options.track.artwork),
-      url: absoluteUrl,
+      url: resolveBackendAssetUrl(options.backendUrl, result.url),
     };
   }
 
