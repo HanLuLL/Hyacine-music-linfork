@@ -6,7 +6,7 @@
     "node": ">=20.19.4",
     "pnpm": "10.15.0"
   },
-  "main": "expo-router/entry",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "start": "expo start --dev-client",

@@ -4,45 +4,49 @@ import TrackPlayer, {
   State,
 } from "react-native-track-player";
 import { usePlayerStore } from "@/store/playerStore";
-import playbackService from "@/services/playbackService";
 import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 
 let initialized = false;
-let serviceRegistered = false;
-
-function registerPlaybackService(): void {
-  if (serviceRegistered) return;
-  TrackPlayer.registerPlaybackService(() => playbackService);
-  serviceRegistered = true;
-}
+let optionsApplied = false;
 
 export async function initializePlayer(): Promise<void> {
-  if (initialized) return;
-
-  registerPlaybackService();
-  try {
-    await TrackPlayer.setupPlayer({ autoHandleInterruptions: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    // Already initialized by a previous session or hot reload.
-    if (!/already been initialized|already initialized/i.test(message)) {
-      throw error;
+  if (!initialized) {
+    try {
+      await TrackPlayer.setupPlayer({
+        autoHandleInterruptions: true,
+        waitForBuffer: true,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // Already initialized by a previous session or hot reload.
+      if (!/already been initialized|already initialized/i.test(message)) {
+        throw error;
+      }
     }
+    initialized = true;
   }
-  await TrackPlayer.updateOptions({
-    capabilities: [
-      Capability.Play,
-      Capability.Pause,
-      Capability.SkipToNext,
-      Capability.SkipToPrevious,
-    ],
-    compactCapabilities: [Capability.Play, Capability.Pause],
-    android: {
-      appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
-    },
-  });
-  initialized = true;
+
+  if (!optionsApplied) {
+    await TrackPlayer.updateOptions({
+      capabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SeekTo,
+        Capability.Stop,
+      ],
+      compactCapabilities: [Capability.Play, Capability.Pause],
+      notificationCapabilities: [Capability.Play, Capability.Pause, Capability.Stop],
+      color: 0xd7f56a,
+      android: {
+        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+        alwaysPauseOnInterruption: true,
+        stopForegroundGracePeriod: 5,
+      },
+      progressUpdateEventInterval: 1,
+    });
+    optionsApplied = true;
+  }
 }
 
 export async function playTrack(track: Track): Promise<void> {
@@ -73,11 +77,12 @@ export async function playTrack(track: Track): Promise<void> {
     await TrackPlayer.play();
   } catch (error) {
     usePlayerStore.getState().setPlaying(false);
+    usePlayerStore.getState().setCurrentTrack(null);
     throw error instanceof Error ? error : new Error("原生播放器无法播放此音频");
   }
   usePlayerStore.getState().setCurrentTrack(track);
   usePlayerStore.getState().setPlaying(true);
-  void recordListeningHistory(track);
+  void recordListeningHistory(track).catch(() => undefined);
 }
 
 export async function togglePlayback(): Promise<void> {
