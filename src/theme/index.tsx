@@ -6,6 +6,8 @@ export type UiStyle = (typeof uiStyles)[number];
 export const themePresets = ["midnight", "black", "daylight", "aurora", "pink"] as const;
 export type ThemePreset = (typeof themePresets)[number];
 export const playerLayouts = ["vinyl", "immersive", "minimal"] as const;
+export const miniPlayerStyles = ["full", "capsule"] as const;
+export type MiniPlayerStyle = (typeof miniPlayerStyles)[number];
 export type PlayerLayout = (typeof playerLayouts)[number];
 export const fontScales = ["small", "medium", "large"] as const;
 export type FontScale = (typeof fontScales)[number];
@@ -16,6 +18,7 @@ export interface ThemePreferences {
   uiStyle: UiStyle;
   preset: ThemePreset;
   playerLayout: PlayerLayout;
+  miniPlayerStyle: MiniPlayerStyle;
   fontScale: FontScale;
   listDensity: ListDensity;
   customAccent: string | null;
@@ -46,6 +49,7 @@ const DEFAULT_PREFERENCES: ThemePreferences = {
   uiStyle: "liquid",
   preset: "daylight",
   playerLayout: "minimal",
+  miniPlayerStyle: "full",
   fontScale: "medium",
   listDensity: "comfortable",
   customAccent: null,
@@ -191,6 +195,7 @@ interface ThemeContextValue {
   setUiStyle: (value: UiStyle) => Promise<void>;
   setPreset: (value: ThemePreset) => Promise<void>;
   setPlayerLayout: (value: PlayerLayout) => Promise<void>;
+  setMiniPlayerStyle: (value: MiniPlayerStyle) => Promise<void>;
   setFontScale: (value: FontScale) => Promise<void>;
   setListDensity: (value: ListDensity) => Promise<void>;
   setCustomAccent: (value: string | null) => Promise<void>;
@@ -215,6 +220,7 @@ function migrateUiStyle(value: unknown): UiStyle {
 function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: unknown }): ThemePreferences {
   const preset = themePresets.includes(stored.preset as ThemePreset) ? stored.preset as ThemePreset : DEFAULT_PREFERENCES.preset;
   const playerLayout = playerLayouts.includes(stored.playerLayout as PlayerLayout) ? stored.playerLayout as PlayerLayout : DEFAULT_PREFERENCES.playerLayout;
+  const miniPlayerStyle = miniPlayerStyles.includes(stored.miniPlayerStyle as MiniPlayerStyle) ? stored.miniPlayerStyle as MiniPlayerStyle : DEFAULT_PREFERENCES.miniPlayerStyle;
   return {
     ...DEFAULT_PREFERENCES,
     ...stored,
@@ -222,6 +228,7 @@ function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: un
     uiStyle: migrateUiStyle(stored.uiStyle),
     preset,
     playerLayout,
+    miniPlayerStyle,
     customBackgroundUri: stored.customBackgroundUri?.trim() || null,
     backgroundOpacity: clamp01(stored.backgroundOpacity ?? DEFAULT_PREFERENCES.backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity),
     glassOpacity: clamp01(stored.glassOpacity ?? DEFAULT_PREFERENCES.glassOpacity, DEFAULT_PREFERENCES.glassOpacity),
@@ -269,6 +276,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       setUiStyle: (uiStyle) => update({ uiStyle }),
       setPreset: (preset) => update({ preset, customAccent: null }),
       setPlayerLayout: (playerLayout) => update({ playerLayout }),
+      setMiniPlayerStyle: (miniPlayerStyle) => update({ miniPlayerStyle }),
       setFontScale: (fontScale) => update({ fontScale }),
       setListDensity: (listDensity) => update({ listDensity }),
       setCustomAccent: (customAccent) => update({ customAccent: customAccent?.trim().toUpperCase() ?? null }),

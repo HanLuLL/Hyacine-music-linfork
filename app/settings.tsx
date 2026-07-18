@@ -13,12 +13,14 @@ import {
   fontScales,
   listDensities,
   playerLayouts,
+  miniPlayerStyles,
   presetAccents,
   themePresets,
   uiStyles,
   type FontScale,
   type ListDensity,
   type PlayerLayout,
+  type MiniPlayerStyle,
   type UiStyle,
   useTheme,
 } from "@/theme";
@@ -118,6 +120,7 @@ export default function SettingsScreen(): React.JSX.Element {
     setListDensity,
     setMagicColorEnabled,
     setPlayerLayout,
+    setMiniPlayerStyle,
     setPreset,
     setUiStyle,
     setCustomBackgroundUri,
@@ -139,7 +142,8 @@ export default function SettingsScreen(): React.JSX.Element {
   };
 
   const styles: Record<UiStyle, string> = { native: t("styleNative"), liquid: t("styleLiquid"), miuix: t("styleMiuix") };
-  const layouts: Record<PlayerLayout, string> = { vinyl: t("layoutVinyl"), immersive: t("layoutImmersive"), minimal: t("layoutMinimal") };
+  const layouts: Record<PlayerLayout, string> = { vinyl: "歌词流动", immersive: "沉浸封面", minimal: "极简封面" };
+  const miniStyles: Record<MiniPlayerStyle, string> = { full: "主题 1 · 完整栏", capsule: "主题 2 · 小胶囊" };
   const fonts: Record<FontScale, string> = { small: t("fontSmall"), medium: t("fontMedium"), large: t("fontLarge") };
   const densities: Record<ListDensity, string> = { compact: t("densityCompact"), comfortable: t("densityComfortable") };
 
@@ -429,7 +433,9 @@ export default function SettingsScreen(): React.JSX.Element {
         <Section title={t("playerSection")}>
           <Row title={t("playerLayout")}>
             <Segment options={playerLayouts} value={preferences.playerLayout} labels={layouts} onChange={(value) => void setPlayerLayout(value)} />
-{/* Font and density controls remain unavailable until each screen supports responsive sizing. */}
+          </Row>
+          <Row title="正在播放栏主题" hint="主题 1 为完整歌曲栏；主题 2 为更紧凑的小胶囊。">
+            <Segment options={miniPlayerStyles} value={preferences.miniPlayerStyle} labels={miniStyles} onChange={(value) => void setMiniPlayerStyle(value)} />
           </Row>
         </Section>
 
