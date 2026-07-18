@@ -1,7 +1,12 @@
 import TrackPlayer, { Event, State } from "react-native-track-player";
-import { usePlayerStore } from "@/store/playerStore";
 
 export default async function playbackService(): Promise<void> {
+  const getStore = () => {
+    // Lazy import avoids pulling zustand into the app entry path.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require("@/store/playerStore").usePlayerStore as typeof import("@/store/playerStore").usePlayerStore;
+  };
+
   TrackPlayer.addEventListener(Event.RemotePlay, () => {
     void TrackPlayer.play();
   });
@@ -15,9 +20,17 @@ export default async function playbackService(): Promise<void> {
     void TrackPlayer.seekTo(position);
   });
   TrackPlayer.addEventListener(Event.PlaybackState, ({ state }) => {
-    usePlayerStore.getState().setPlaying(state === State.Playing);
+    try {
+      getStore().getState().setPlaying(state === State.Playing);
+    } catch {
+      // ignore store failures in headless context
+    }
   });
   TrackPlayer.addEventListener(Event.PlaybackError, () => {
-    usePlayerStore.getState().setPlaying(false);
+    try {
+      getStore().getState().setPlaying(false);
+    } catch {
+      // ignore store failures in headless context
+    }
   });
 }
