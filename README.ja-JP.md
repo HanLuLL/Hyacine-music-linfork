@@ -1,29 +1,39 @@
-# 風菫音楽
+# Hyacine Music · 風菫音楽
 
-[English](README.md) · [简体中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md) · [English](README.md) · 日本語
 
-風菫音楽は、Hyacine Server API に接続する React Native / Expo モバイル音楽クライアントです。
+Hyacine Music は TypeScript、Expo Router、React Native で実装されたモバイル音楽クライアントです。[Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) を介して NetEase Cloud Music と Bilibili の音楽ソースを利用します。
 
-## 主な機能
+## 実装済み
 
-- バックグラウンド再生、再生キュー、メディアコントロール、フルプレーヤー
-- NetEase Cloud Music の QR ログイン、推薦プレイリスト、個人プレイリスト
-- 日本語、簡体字中国語、英語の UI
-- Native、Liquid、MIUIX の表示スタイルとローカル外観設定
+- Native / Liquid Glass / MIUIX の UI スタイル
+- 4 種類のプレイヤーレイアウト
+- NetEase QR ログイン、デイリー曲、プレイリスト、検索、再生、同期歌詞、閲覧専用コメント
+- 端末内のお気に入りと再生履歴
+- 保存曲の再生前に URL を再取得し、期限切れストリームを回避
+- 歌詞の自動追従とタップシーク
+- タブ切り替えスワイプは下部ナビゲーションだけで有効
+- 端末内ユーザーデータ、匿名化ログ、バックエンド状態を表示する管理画面
 
-## 起動
+## 管理画面とプライバシー
+
+**設定 → 管理画面** から開きます。Cookie、Token、Authorization の生データは表示しません。これは端末内診断画面であり、リモートの複数ユーザー管理コンソールではありません。
+
+## 開発
 
 ```bash
 pnpm install
 pnpm start
+pnpm typecheck
 ```
 
-ネイティブクライアントは Development Build で実行します。初回設定でアクセス可能な Hyacine Server のアドレスを入力してください。
+ネイティブモジュールには Expo Development Build が必要です。
 
-## バックエンド
+## リポジトリ
 
-デプロイ方法、利用方法、音楽ソース連携については [hyacine-server](https://github.com/Ruoxi-TH/hyacine-server) を参照してください。
+- Mobile: <https://github.com/Ruoxi-TH/Hyacine-music>
+- Backend: <https://github.com/Ruoxi-TH/hyacine-server>
 
-## ライセンス
+## License
 
 [LICENSE](LICENSE) を参照してください。

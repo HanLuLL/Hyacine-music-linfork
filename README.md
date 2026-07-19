@@ -1,54 +1,48 @@
-# 风堇音乐 · Hyacine Music
+# Hyacine Music · 风堇音乐
 
-[简体中文](README.zh-CN.md) · [English](README.md) · [日本語](README.ja-JP.md)
+[简体中文](README.zh-CN.md) · English · [日本語](README.ja-JP.md)
 
-风堇音乐是连接 [Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) API 的移动端音乐客户端，基于 React Native + Expo 构建，同时包含 Android 10+ Jetpack Compose 原生导航架构。
+Hyacine Music is an Expo Router / React Native music client written in TypeScript. It connects to [Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) and supports Netease Cloud Music and Bilibili sources.
 
-## 当前版本：1.2.0
+## Current implementation
 
-### 已实现
+- TypeScript, Expo Router, React Native, NativeWind, `expo-image`, and `expo-audio`
+- Native, liquid-glass, and MIUIX interface styles
+- Four player layouts: flowing lyrics, immersive artwork, minimal artwork, and cover lyrics
+- Netease QR login, profile, daily songs, recommendations, playlists, search, playback, timed lyrics, read-only comments
+- Local favorites and listening history stored on the device
+- Play URLs are resolved again before playback so saved/history entries do not depend on expired stream URLs
+- Lyrics auto-positioning and tap-to-seek
+- Bottom-bar-only swipe navigation; page content does not capture tab swipes
+- On-device administration screen for profile summary, local data counts, credential-presence status, redacted logs, and backend health
 
-- **华为风格悬浮胶囊导航**：三页签（首页 / 音乐厅 / 我的），选中 `#00A1FF`，未选中 `#86909C`，右侧 56dp 蓝色播放按钮，左右滑动切换页签
-- **64dp 迷你播放条**：毛玻璃材质（BlurView），左右滑动切歌（30dp 阈值），点击展开全屏播放器（300ms 动画）
-- **导航宽度自适应**：小屏 200dp / 中屏 300dp / 大屏 400dp
-- **自定义背景**：`cover` 全屏填充，轻量可调遮罩，不再被厚白底冲淡
-- **歌单详情页**：歌单可点击进入，封面入场缩放动画，歌曲列表可播放
-- **歌词同步**：点击歌词跳转进度，翻译歌词匹配，自动滚动高亮
-- **首页封面堆叠**：推荐卡片三层旋转封面堆叠，每日歌曲列表封面
-- **真实毛玻璃**：导航栏与迷你条使用 `expo-blur` 的 `BlurView`，播放时透明度 0.90，暂停时 0.85
-- **网易云音乐**：扫码登录、每日推荐、歌单、搜索、播放、歌词
-- **三种播放器布局**：vinyl / immersive / minimal
-- **三种 UI 风格**：native / liquid（华为悬浮导航）/ MIUIX
-- **多语言**：简体中文、English、日本語
+## Administration and privacy
 
-### 进行中 / 待完善
+Open **Settings → Administration**. The screen reads data from the current device only. It never displays raw cookies, tokens, or authorization headers. Logs are redacted before persistence and display. This is a diagnostics screen, not a remote multi-user server console.
 
-- 封面共享元素转场（Reanimated 闪退风险，当前用 Animated 缩放入场替代）
-- 平板 240dp 可折叠侧边导航
-- 真实 Media3 播放与后台通知
-- 真机构建验证
-
-## 运行
+## Run
 
 ```bash
 pnpm install
 pnpm start
 ```
 
-客户端需要使用 Development Build 运行。首次设置时填写可访问的 Hyacine Server 地址。
-
-## 原生 Android 构建
-
-项目包含 Jetpack Compose 原生 Gradle 工程结构（`minSdk 29`，`targetSdk 35`），可直接用 Gradle 构建 APK：
+Use an Expo Development Build for native modules. Configure a Hyacine Server URL reachable from the phone; do not use `localhost` unless the backend runs on that phone.
 
 ```bash
-./gradlew :app:assembleDebug
+pnpm typecheck
+pnpm android
 ```
 
-## 后端
+## Repositories
 
-后端部署、使用方法和音乐源接入说明请前往 [hyacine-server](https://github.com/Ruoxi-TH/hyacine-server)。
+- Mobile: <https://github.com/Ruoxi-TH/Hyacine-music>
+- Backend: <https://github.com/Ruoxi-TH/hyacine-server>
 
-## 许可证
+## Status boundaries
 
-参见 [LICENSE](LICENSE)。
+A source commit or successful TypeScript check does not mean a phone has received the change. Build, installation, backend deployment, and real-device verification are separate steps.
+
+## License
+
+See [LICENSE](LICENSE).

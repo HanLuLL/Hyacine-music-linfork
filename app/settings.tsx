@@ -258,6 +258,12 @@ export default function SettingsScreen(): React.JSX.Element {
               ))}
             </View>
           </Row>
+          <Row title="管理后台" hint="查看当前设备用户数据、脱敏日志与后端健康状态。">
+            <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/admin")}>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>打开管理后台</Text>
+              <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
+            </Pressable>
+          </Row>
           <Row title="账号状态" hint={profile ? `${profile.displayName} · 本地账户资料已保存` : "尚未创建本地账户资料"}>
             <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/onboarding")}>
               <Text style={{ color: tokens.accent, fontWeight: "800" }}>编辑头像与昵称</Text>
