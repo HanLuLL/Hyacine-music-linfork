@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Dimensions, PanResponder, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -178,14 +179,13 @@ export default function HomeScreen(): React.JSX.Element {
     if (songs.length < 2) return;
     setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
   };
-  const recommendationPan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponderCapture: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderRelease: (_, gesture) => {
-      if (Math.abs(gesture.dx) >= 32) changeFeatured(gesture.dx < 0 ? 1 : -1);
-    },
-  })).current;
+  const recommendationSwipe = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-24, 24])
+    .onEnd((event) => {
+      if (Math.abs(event.translationX) >= 36) changeFeatured(event.translationX < 0 ? 1 : -1);
+    });
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
@@ -197,8 +197,8 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-<Animated.View {...recommendationPan.panHandlers} className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-             <View className="min-h-48 flex-row items-end">
+<Animated.View className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+             <GestureDetector gesture={recommendationSwipe}><View className="min-h-48 flex-row items-end">
               <View className="min-w-0 flex-1 pr-4">
                 <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
                 <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
@@ -208,7 +208,7 @@ export default function HomeScreen(): React.JSX.Element {
                 {featured.artwork ? <><Image source={{ uri: songs[(featuredIndex + 2) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} /><Image source={{ uri: songs[(featuredIndex + 1) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} /><View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}><Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} /></View></> : <View className="h-44 w-32 items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.accent}22`, borderWidth: 1, borderColor: `${tokens.accent}55` }}><Text style={{ color: tokens.accent, fontSize: 28, fontWeight: "900" }}>♪</Text></View>}
               </View>
             </View>
-            <Pressable onPress={() => void onPlay(featured)}><LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface></Pressable>
+            </GestureDetector><Pressable onPress={() => void onPlay(featured)}><LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface></Pressable>
           </Animated.View>
 
        </ThemedCard> : null}
