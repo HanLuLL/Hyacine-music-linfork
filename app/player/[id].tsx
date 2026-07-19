@@ -6,6 +6,7 @@ import { normalizeMediaUrl } from "@/utils/media";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
+import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { useTheme } from "@/theme";
 import { useAccount } from "@/account";
 import { loadLyrics, type LyricLine } from "@/services/lyrics";
@@ -13,7 +14,7 @@ import { loadLyrics, type LyricLine } from "@/services/lyrics";
 function time(value: number): string { return `${Math.floor(value / 60)}:${Math.floor(value % 60).toString().padStart(2, "0")}`; }
 function Controls({ playing, toggle, seek }: { playing: boolean; toggle: () => void; seek: (seconds: number) => void }): React.JSX.Element {
   const { tokens } = useTheme();
-  return <View className="mt-8 flex-row items-center justify-center gap-8"><Pressable className="h-12 w-12 items-center justify-center" onPress={() => seek(-15)}><Text style={{ color: tokens.text, fontWeight: "800" }}>−15</Text></Pressable><Pressable className="h-[72px] w-[72px] items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent }} onPress={toggle}><Text style={{ color: "#111", fontSize: 24, fontWeight: "900" }}>{playing ? "Ⅱ" : "▶"}</Text></Pressable><Pressable className="h-12 w-12 items-center justify-center" onPress={() => seek(15)}><Text style={{ color: tokens.text, fontWeight: "800" }}>+15</Text></Pressable></View>;
+  return <LiquidControlSurface className="mt-6 self-center rounded-full px-3 py-2" style={{ borderRadius: 999 }}><View className="flex-row items-center gap-3"><Pressable className="h-11 w-11 items-center justify-center rounded-full" onPress={() => seek(-15)}><Text style={{ color: tokens.text, fontSize: 12, fontWeight: "800" }}>−15</Text></Pressable><Pressable className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent, shadowColor: tokens.accent, shadowOpacity: 0.2, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }} onPress={toggle}><Text style={{ color: tokens.isLight ? "#ffffff" : "#111111", fontSize: 22, fontWeight: "900" }}>{playing ? "Ⅱ" : "▶"}</Text></Pressable><Pressable className="h-11 w-11 items-center justify-center rounded-full" onPress={() => seek(15)}><Text style={{ color: tokens.text, fontSize: 12, fontWeight: "800" }}>+15</Text></Pressable></View></LiquidControlSurface>;
 }
 function Lyrics({ lines, progress, coverMode = false }: { lines: LyricLine[]; progress: number; coverMode?: boolean }): React.JSX.Element {
   const { tokens, preferences } = useTheme(); const scroll = useRef<ScrollView>(null);
