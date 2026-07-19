@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -53,8 +53,6 @@ export default function HomeScreen(): React.JSX.Element {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
-  const featuredScroll = useRef<ScrollView>(null);
-  const featuredCardWidth = Math.min(Dimensions.get("window").width - 72, 264);
   useEffect(() => {
     const timer = setInterval(() => setGreeting(greetingForHour(new Date().getHours())), 60_000);
     return () => clearInterval(timer);
@@ -178,22 +176,36 @@ export default function HomeScreen(): React.JSX.Element {
       </View>
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
-      {!loading && featured ? <View className="mt-9">
-        <View className="flex-row items-end justify-between">
-          <View className="min-w-0 flex-1 pr-4"><Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text><Text className="mt-2 text-2xl font-bold" numberOfLines={1} style={{ color: tokens.text }}>{featured.title}</Text><Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text></View>
-          <Text className="text-xs font-semibold" style={{ color: tokens.mutedText }}>{featuredIndex + 1} / {songs.length}</Text>
-        </View>
-        <View className="mt-5" style={{ height: featuredCardWidth + 16 }}>
-          <View pointerEvents="none" style={{ position: "absolute", width: featuredCardWidth, aspectRatio: 1, right: 2, top: 13, borderRadius: 24, overflow: "hidden", opacity: 0.24, transform: [{ rotate: "8deg" }], backgroundColor: tokens.surface }}>{songs.length > 1 && songs[(featuredIndex + 2) % songs.length]?.artwork ? <Image source={{ uri: songs[(featuredIndex + 2) % songs.length].artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} /> : null}</View>
-          <View pointerEvents="none" style={{ position: "absolute", width: featuredCardWidth, aspectRatio: 1, right: 16, top: 7, borderRadius: 24, overflow: "hidden", opacity: 0.48, transform: [{ rotate: "4deg" }], backgroundColor: tokens.surface }}>{songs.length > 1 && songs[(featuredIndex + 1) % songs.length]?.artwork ? <Image source={{ uri: songs[(featuredIndex + 1) % songs.length].artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} /> : null}</View>
-          <ScrollView ref={featuredScroll} horizontal pagingEnabled snapToInterval={featuredCardWidth + 12} decelerationRate="fast" showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 44 }} onMomentumScrollEnd={(event) => setFeaturedIndex(Math.round(event.nativeEvent.contentOffset.x / (featuredCardWidth + 12)))}>
-            {songs.map((song) => <Pressable key={song.id} onPress={() => void onPlay(song)} style={{ width: featuredCardWidth, aspectRatio: 1, borderRadius: 24, overflow: "hidden", backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}>
-              {song.artwork ? <Image source={{ uri: song.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} /> : <View className="flex-1 items-center justify-center"><Text style={{ color: tokens.accent, fontSize: 36, fontWeight: "900" }}>♪</Text></View>}
-              <View style={{ position: "absolute", left: 14, right: 14, bottom: 14 }}><LiquidControlSurface className="h-11 self-start rounded-full px-4" style={{ borderRadius: 22 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === song.id ? "正在播放..." : "▶ 播放"}</Text></View></LiquidControlSurface></View>
-            </Pressable>)}
-          </ScrollView>
-        </View>
-      </View> : null}
+      {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setFeaturedIndex(Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width))}>
+        {songs.map((song, index) => <Pressable key={song.id} className="overflow-hidden p-5" style={{ width: "100%" }} onPress={() => void onPlay(song)}>
+          <View pointerEvents="none" style={{ position: "absolute", inset: 0, opacity: 0 }} />
+          <View className="min-h-48 flex-row items-end">
+            <View className="min-w-0 flex-1 pr-4">
+              <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
+              <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{song.title}</Text>
+              <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text>
+            </View>
+            <View className="h-48 w-40 items-end justify-center">
+              {song.artwork ? (
+                <>
+                  <Image source={{ uri: songs[(index + 2) % songs.length]?.artwork ?? song.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+                  <Image source={{ uri: songs[(index + 1) % songs.length]?.artwork ?? song.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+                  <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
+                    <Image source={{ uri: song.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} />
+                  </View>
+                </>
+              ) : (
+                <View className="h-44 w-32 items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.accent}22`, borderWidth: 1, borderColor: `${tokens.accent}55` }}>
+                  <Text style={{ color: tokens.accent, fontSize: 28, fontWeight: "900" }}>♪</Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === song.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
+        </Pressable>)}
+        </ScrollView>
+      </ThemedCard> : null}
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>每日歌曲</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>刷新</Text></Pressable></View>
