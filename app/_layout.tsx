@@ -70,6 +70,7 @@ function AppNavigator(): React.JSX.Element {
           options={{
             presentation: "card",
             animation: "slide_from_right",
+            animationDuration: 280,
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
           }}

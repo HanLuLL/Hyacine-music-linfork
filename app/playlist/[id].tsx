@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, router } from "expo-router";
 import { useAudio } from "@/hooks/useAudio";
@@ -20,6 +20,16 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Cover entrance animation: scale from 0.4 to 1, opacity 0 to 1
+  const coverScale = useRef(new Animated.Value(0.4)).current;
+  const coverOpacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(coverScale, { toValue: 1, stiffness: 200, damping: 18, mass: 0.8, useNativeDriver: true }),
+      Animated.timing(coverOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const load = useCallback(async () => {
     if (!profile?.backendUrl || !id) { setLoading(false); setError("缺少参数"); return; }
@@ -49,7 +59,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
       <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
         <View className="flex-row items-center gap-4 px-5 pt-16">
           <Pressable onPress={() => router.back()}><Text style={{ color: tokens.accent, fontWeight: "800" }}>← 返回</Text></Pressable>
-          {cover ? <Image source={{ uri: cover }} style={{ width: 80, height: 80, borderRadius: 16 }} contentFit="cover" /> : null}
+          {cover ? <Animated.View style={{ transform: [{ scale: coverScale }], opacity: coverOpacity }}><Image source={{ uri: cover }} style={{ width: 80, height: 80, borderRadius: 16 }} contentFit="cover" /></Animated.View> : null}
           <View className="flex-1"><Text style={{ color: tokens.text, fontSize: 22, fontWeight: "900" }} numberOfLines={2}>{name ?? "歌单"}</Text><Text style={{ color: tokens.mutedText, fontSize: 13, marginTop: 4 }}>{tracks.length} 首歌曲</Text></View>
         </View>
         {loading ? <ActivityIndicator className="mt-12" color={tokens.accent} /> : null}
