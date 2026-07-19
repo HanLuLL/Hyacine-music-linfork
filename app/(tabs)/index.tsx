@@ -14,6 +14,21 @@ import { apiBase } from "@/utils/apiBase";
 import { appLog, cookieMeta } from "@/utils/logger";
 import type { Track } from "@/types/music";
 
+function coverMeta(url?: string | null): { present: boolean; protocol?: string; host?: string; path?: string } {
+  const normalized = normalizeCoverUrl(url);
+  if (!normalized) return { present: false };
+  try {
+    const parsed = new URL(normalized);
+    return { present: true, protocol: parsed.protocol, host: parsed.host, path: parsed.pathname.slice(0, 80) };
+  } catch {
+    return { present: true, path: normalized.slice(0, 80) };
+  }
+}
+
+function logCoverResult(event: "load" | "error", id: string, url?: string): void {
+  appLog.info("cover", event, { id, ...coverMeta(url) });
+}
+
 function normalizeCoverUrl(url?: string | null): string | undefined {
   if (!url) return undefined;
   const value = url.trim();
@@ -90,6 +105,10 @@ export default function HomeScreen(): React.JSX.Element {
         seq,
       });
       if (!response.ok || !Array.isArray(data)) throw new Error((data as { message?: string }).message || "无法加载每日推荐");
+      appLog.info("home", "daily songs cover sample", {
+        seq,
+        samples: data.slice(0, 3).map((song) => ({ id: song.id, ...coverMeta(song.coverUrl) })),
+      });
       if (seq !== requestSeq.current) {
         appLog.info("home", "daily songs stale response ignored", { seq, current: requestSeq.current });
         return;
@@ -166,7 +185,7 @@ export default function HomeScreen(): React.JSX.Element {
                   <Image className="absolute h-36 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
                   <Image className="absolute h-40 w-30 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
                   <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
-                    <Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" />
+                    <Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
                   </View>
                 </>
               ) : (
@@ -182,7 +201,7 @@ export default function HomeScreen(): React.JSX.Element {
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>每日歌曲</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>刷新</Text></Pressable></View>
-      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
+      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
     </ScrollView>
   </ThemedScreen>;
 }
