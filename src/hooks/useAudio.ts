@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import type { Track } from "@/types/music";
 import { appLog, summarizeUrl } from "@/utils/logger";
+import { useAccount } from "@/account";
+import { resolvePlayableTrack } from "@/services/musicApi";
 
 type PlayerModule = typeof import("@/services/player");
 
@@ -16,6 +18,7 @@ interface UseAudioResult {
 }
 
 export function useAudio(): UseAudioResult {
+  const { profile, getSourceCredential } = useAccount();
   const playTrack = useCallback(async (track: Track) => {
     appLog.info("audio", "playTrack called", {
       trackId: track.id,
@@ -23,7 +26,13 @@ export function useAudio(): UseAudioResult {
       url: summarizeUrl(track.url),
     });
     try {
-      await (await loadPlayer()).playTrack(track);
+      let playable = track;
+      if (profile?.backendUrl && (track.id.startsWith("netease:") || track.id.startsWith("bilibili:"))) {
+        const source = track.id.startsWith("netease:") ? "netease" : "bilibili";
+        const cookie = await getSourceCredential(source);
+        playable = await resolvePlayableTrack({ backendUrl: profile.backendUrl, track, cookie });
+      }
+      await (await loadPlayer()).playTrack(playable);
     } catch (error) {
       appLog.error("audio", "playTrack failed", error);
       throw error;

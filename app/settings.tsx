@@ -143,7 +143,7 @@ export default function SettingsScreen(): React.JSX.Element {
   };
 
   const styles: Record<UiStyle, string> = { native: t("styleNative"), liquid: t("styleLiquid"), miuix: t("styleMiuix") };
-  const layouts: Record<PlayerLayout, string> = { vinyl: "歌词流动", immersive: "沉浸封面", minimal: "极简封面", coverLyrics: "主题 4 · 封面歌词" };
+  const layouts: Record<PlayerLayout, string> = { vinyl: "歌词流动", immersive: "沉浸封面", minimal: "极简封面" };
   const miniStyles: Record<MiniPlayerStyle, string> = { full: "主题 1 · 完整栏", capsule: "主题 2 · 小胶囊" };
   const fonts: Record<FontScale, string> = { small: t("fontSmall"), medium: t("fontMedium"), large: t("fontLarge") };
   const densities: Record<ListDensity, string> = { compact: t("densityCompact"), comfortable: t("densityComfortable") };

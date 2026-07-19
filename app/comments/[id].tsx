@@ -34,9 +34,9 @@ export default function CommentsScreen(): React.JSX.Element {
     {loading && !comments.length ? <View className="flex-1 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
     {error ? <LiquidControlSurface className="p-4" style={{ borderRadius: 20 }}><Text style={{ color: tokens.text }}>{error}</Text><Pressable className="mt-3" onPress={() => void load()}><Text style={{ color: tokens.accent, fontWeight: "800" }}>重新加载</Text></Pressable></LiquidControlSurface> : null}
     {!loading && !error && !comments.length ? <View className="flex-1 items-center justify-center"><Text style={{ color: tokens.mutedText }}>暂无评论</Text></View> : null}
-    <ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void load()} tintColor={tokens.accent} />} showsVerticalScrollIndicator={false}>{comments.map((comment) => <View key={comment.id} className="flex-row border-b py-4" style={{ borderColor: tokens.surfaceBorder }}>
+    <LiquidControlSurface className="flex-1 overflow-hidden px-4" style={{ borderRadius: 28 }}><ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={() => void load()} tintColor={tokens.accent} />} showsVerticalScrollIndicator={false}>{comments.map((comment) => <View key={comment.id} className="flex-row border-b py-5" style={{ borderColor: tokens.surfaceBorder }}>
       {comment.avatarUrl ? <Image source={{ uri: normalizeMediaUrl(comment.avatarUrl) }} style={{ width: 42, height: 42, borderRadius: 21 }} /> : <View className="h-[42px] w-[42px] rounded-full" style={{ backgroundColor: `${tokens.accent}22` }} />}
       <View className="ml-3 min-w-0 flex-1"><View className="flex-row justify-between"><Text numberOfLines={1} style={{ color: tokens.accent, fontWeight: "800" }}>{comment.nickname}</Text><Text style={{ color: tokens.mutedText, fontSize: 11 }}>♡ {comment.likedCount}</Text></View><Text className="mt-2" style={{ color: tokens.text, lineHeight: 22 }}>{comment.content}</Text><Text className="mt-2" style={{ color: tokens.mutedText, fontSize: 11 }}>{comment.timeText || new Date(comment.time).toLocaleDateString()}{comment.location ? ` · ${comment.location}` : ""}</Text></View>
-    </View>)}</ScrollView>
+    </View>)}</ScrollView></LiquidControlSurface>
   </View></ThemedScreen>;
 }

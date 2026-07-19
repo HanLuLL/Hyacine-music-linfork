@@ -51,7 +51,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   useEffect(() => { void load(); }, [load]);
 
   const play = (t: PlaylistTrack) => {
-    const track: Track = { id: String(t.id), title: t.title, artist: t.artists.join(" / "), url: "", artwork: normalizeMediaUrl(t.coverUrl), duration: t.durationMs / 1000 };
+    const track: Track = { id: `netease:${t.id}`, title: t.title, artist: t.artists.join(" / "), url: "", artwork: normalizeMediaUrl(t.coverUrl), duration: t.durationMs / 1000 };
     void playTrack(track);
   };
 
@@ -73,6 +73,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
               <Text numberOfLines={1} style={{ color: tokens.text, fontSize: 15, fontWeight: "700" }}>{t.title}</Text>
               <Text numberOfLines={1} style={{ color: tokens.mutedText, fontSize: 12, marginTop: 2 }}>{t.artists.join(" / ")}</Text>
             </View>
+            <Text style={{ color: tokens.accent, fontSize: 18 }}>▶</Text>
           </Pressable>
         ))}
       </ScrollView>

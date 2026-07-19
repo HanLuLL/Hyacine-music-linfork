@@ -5,7 +5,7 @@ export const uiStyles = ["native", "liquid", "miuix"] as const;
 export type UiStyle = (typeof uiStyles)[number];
 export const themePresets = ["midnight", "black", "daylight", "aurora", "pink"] as const;
 export type ThemePreset = (typeof themePresets)[number];
-export const playerLayouts = ["vinyl", "immersive", "minimal", "coverLyrics"] as const;
+export const playerLayouts = ["vinyl", "immersive", "minimal"] as const;
 export const miniPlayerStyles = ["full", "capsule"] as const;
 export type MiniPlayerStyle = (typeof miniPlayerStyles)[number];
 export type PlayerLayout = (typeof playerLayouts)[number];
@@ -226,7 +226,8 @@ function migrateUiStyle(value: unknown): UiStyle {
 
 function normalizePreferences(stored: Partial<ThemePreferences> & { uiStyle?: unknown }): ThemePreferences {
   const preset = themePresets.includes(stored.preset as ThemePreset) ? stored.preset as ThemePreset : DEFAULT_PREFERENCES.preset;
-  const playerLayout = playerLayouts.includes(stored.playerLayout as PlayerLayout) ? stored.playerLayout as PlayerLayout : DEFAULT_PREFERENCES.playerLayout;
+  const rawPlayerLayout = stored.playerLayout as unknown;
+  const playerLayout: PlayerLayout = rawPlayerLayout === "coverLyrics" ? "immersive" : playerLayouts.includes(rawPlayerLayout as PlayerLayout) ? rawPlayerLayout as PlayerLayout : DEFAULT_PREFERENCES.playerLayout;
   const miniPlayerStyle = miniPlayerStyles.includes(stored.miniPlayerStyle as MiniPlayerStyle) ? stored.miniPlayerStyle as MiniPlayerStyle : DEFAULT_PREFERENCES.miniPlayerStyle;
   return {
     ...DEFAULT_PREFERENCES,
