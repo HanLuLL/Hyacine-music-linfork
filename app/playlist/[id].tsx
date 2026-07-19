@@ -8,6 +8,7 @@ import { useAccount } from "@/account";
 import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import { appLog, cookieMeta } from "@/utils/logger";
+import { normalizeMediaUrl } from "@/utils/media";
 import type { Track } from "@/types/music";
 
 interface PlaylistTrack { id: number; title: string; artists: string[]; coverUrl: string; durationMs: number; }
@@ -50,7 +51,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   useEffect(() => { void load(); }, [load]);
 
   const play = (t: PlaylistTrack) => {
-    const track: Track = { id: String(t.id), title: t.title, artist: t.artists.join(" / "), url: "", artwork: t.coverUrl, duration: t.durationMs / 1000 };
+    const track: Track = { id: String(t.id), title: t.title, artist: t.artists.join(" / "), url: "", artwork: normalizeMediaUrl(t.coverUrl), duration: t.durationMs / 1000 };
     void playTrack(track);
   };
 
@@ -67,7 +68,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
         {!loading && tracks.map((t, i) => (
           <Pressable key={t.id} className="mx-4 mt-3 flex-row items-center gap-3 rounded-2xl px-3 py-3" style={{ backgroundColor: `${tokens.text}08` }} onPress={() => play(t)}>
             <Text style={{ color: tokens.mutedText, fontSize: 14, fontWeight: "700", width: 28 }}>{i + 1}</Text>
-            {t.coverUrl ? <Image source={{ uri: t.coverUrl }} style={{ width: 48, height: 48, borderRadius: 10 }} contentFit="cover" /> : <View style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: `${tokens.accent}18` }} />}
+            {normalizeMediaUrl(t.coverUrl) ? <Image source={{ uri: normalizeMediaUrl(t.coverUrl) }} style={{ width: 48, height: 48, borderRadius: 10 }} contentFit="cover" /> : <View style={{ width: 48, height: 48, borderRadius: 10, backgroundColor: `${tokens.accent}18` }} />}
             <View className="min-w-0 flex-1">
               <Text numberOfLines={1} style={{ color: tokens.text, fontSize: 15, fontWeight: "700" }}>{t.title}</Text>
               <Text numberOfLines={1} style={{ color: tokens.mutedText, fontSize: 12, marginTop: 2 }}>{t.artists.join(" / ")}</Text>

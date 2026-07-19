@@ -1,14 +1,7 @@
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
 import { appLog, cookieMeta, summarizeUrl } from "@/utils/logger";
-
-function normalizeMediaUrl(url?: string | null): string | undefined {
-  if (!url) return undefined;
-  const value = url.trim();
-  if (!value) return undefined;
-  if (value.startsWith("//")) return `https:${value}`;
-  return value;
-}
+import { normalizeMediaUrl } from "@/utils/media";
 
 function resolveBackendAssetUrl(backendUrl: string, rawUrl: string): string {
   const value = rawUrl.trim();

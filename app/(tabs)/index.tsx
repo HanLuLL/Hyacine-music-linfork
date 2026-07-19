@@ -12,10 +12,10 @@ import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import { appLog, cookieMeta } from "@/utils/logger";
+import { normalizeMediaUrl } from "@/utils/media";
 import type { Track } from "@/types/music";
-
 function coverMeta(url?: string | null): { present: boolean; protocol?: string; host?: string; path?: string } {
-  const normalized = normalizeCoverUrl(url);
+  const normalized = normalizeMediaUrl(url);
   if (!normalized) return { present: false };
   try {
     const parsed = new URL(normalized);
@@ -29,14 +29,7 @@ function logCoverResult(event: "load" | "error", id: string, url?: string): void
   appLog.info("cover", event, { id, ...coverMeta(url) });
 }
 
-function normalizeCoverUrl(url?: string | null): string | undefined {
-  if (!url) return undefined;
-  const value = url.trim();
-  if (!value) return undefined;
-  if (value.startsWith("//")) return `https:${value}`;
-  if (value.startsWith("https://")) return value;
-  return value;
-}
+// Cover URLs are normalized through the shared media helper.
 
 interface DailySong { id: number; title: string; artists: string[]; coverUrl?: string; durationMs?: number; }
 
@@ -117,7 +110,7 @@ export default function HomeScreen(): React.JSX.Element {
         id: `netease:${song.id}`,
         title: song.title,
         artist: song.artists.join(" / ") || "网易云音乐",
-        artwork: normalizeCoverUrl(song.coverUrl),
+        artwork: normalizeMediaUrl(song.coverUrl),
         duration: song.durationMs ? Math.round(song.durationMs / 1000) : undefined,
         url: "",
       })));
