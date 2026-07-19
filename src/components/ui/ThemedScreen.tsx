@@ -25,8 +25,17 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
             source={{ uri: preferences.customBackgroundUri ?? undefined }}
             cachePolicy="none"
             contentFit="cover"
+            blurRadius={28}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, width: "100%", height: "100%", opacity: bgOpacity * 0.7, transform: [{ scale: 1.08 }] }}
+          />
+          <View pointerEvents="none" style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: tokens.isLight ? "rgba(235,242,252,0.2)" : "rgba(5,10,18,0.28)" }} />
+          <Image
+            pointerEvents="none"
+            source={{ uri: preferences.customBackgroundUri ?? undefined }}
+            cachePolicy="none"
+            contentFit="cover"
             contentPosition="center"
-            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, width: "100%", height: "100%" }}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, width: "100%", height: "100%", opacity: bgOpacity }}
           />
           <View
             pointerEvents="none"
@@ -37,8 +46,8 @@ export function ThemedScreen({ children, className = "", style, ...props }: Them
               bottom: 0,
               left: 0,
               backgroundColor: tokens.isLight
-                ? `rgba(244,248,255,${(1 - bgOpacity) * 0.35})`
-                : `rgba(8,12,22,${(1 - bgOpacity) * 0.4})`,
+                ? `rgba(244,248,255,${(1 - bgOpacity) * 0.22})`
+                : `rgba(8,12,22,${(1 - bgOpacity) * 0.24})`,
             }}
           />
         </>

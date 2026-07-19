@@ -1,45 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import { Tabs, usePathname, useRouter } from "expo-router";
-import { Animated, Dimensions, PanResponder, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { BlurView } from "expo-blur";
-import { useAudio } from "@/hooks/useAudio";
-import { usePlayerStore } from "@/store/playerStore";
+import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
+import { TabSwipeSurface } from "@/components/navigation/TabSwipeSurface";
 import { useTheme } from "@/theme";
 
 const tabs = [
   { route: "/(tabs)", symbol: "⌂", key: "home" },
   { route: "/(tabs)/search", symbol: "⌕", key: "search" },
   { route: "/(tabs)/library", symbol: "♫", key: "library" },
+  { route: "/(tabs)/profile", symbol: "◉", key: "profile" },
 ] as const;
-
-const HUAWEI_BLUE = "#00A1FF";
-const HUAWEI_GRAY = "#86909C";
 
 function TabIcon({ symbol, color }: { symbol: string; color: ColorValue }): React.JSX.Element {
   return <Text style={{ color, fontSize: 19, fontWeight: "700" }}>{symbol}</Text>;
 }
 
-function HuaweiFloatingNav(): React.JSX.Element {
+function LiquidTabBar(): React.JSX.Element {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useI18n();
-  const { togglePlayback } = useAudio();
-  const playing = usePlayerStore((s) => s.isPlaying);
-  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : 0;
+  const { tokens } = useTheme();
+  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : pathname.includes("/profile") ? 3 : 0;
   const position = useRef(new Animated.Value(activeIndex)).current;
   const activeIndexRef = useRef(activeIndex);
   const tabWidthRef = useRef(0);
   const [contentWidth, setContentWidth] = useState(0);
-  const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
   const tabWidth = contentWidth / tabs.length;
-
-  useEffect(() => {
-    const handler = Dimensions.addEventListener("change", ({ window }) => setScreenWidth(window.width));
-    return () => handler.remove();
-  }, []);
-
-  const navWidth = screenWidth < 600 ? 200 : screenWidth < 840 ? 300 : 400;
 
   useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
   useEffect(() => {
@@ -48,99 +36,245 @@ function HuaweiFloatingNav(): React.JSX.Element {
   }, [activeIndex, position, tabWidth]);
 
   const switchTo = (index: number): void => {
-    const next = Math.max(0, Math.min(tabs.length - 1, index));
-    if (next === activeIndexRef.current) {
+    const nextIndex = Math.max(0, Math.min(tabs.length - 1, index));
+    if (nextIndex === activeIndexRef.current) {
       Animated.spring(position, { toValue: activeIndexRef.current, useNativeDriver: true, stiffness: 240, damping: 24, mass: 0.72 }).start();
       return;
     }
-    router.replace(tabs[next].route);
+    router.replace(tabs[nextIndex].route);
   };
 
   const panResponder = useRef(PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 6 && Math.abs(g.dx) > Math.abs(g.dy),
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 6 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
     onPanResponderGrant: () => position.stopAnimation(),
-    onPanResponderMove: (_, g) => {
+    onPanResponderMove: (_, gesture) => {
       if (!tabWidthRef.current) return;
-      position.setValue(Math.max(0, Math.min(tabs.length - 1, activeIndexRef.current + g.dx / tabWidthRef.current)));
+      const next = Math.max(0, Math.min(tabs.length - 1, activeIndexRef.current + gesture.dx / tabWidthRef.current));
+      position.setValue(next);
     },
-    onPanResponderRelease: (_, g) => {
+    onPanResponderRelease: (_, gesture) => {
       if (!tabWidthRef.current) return;
-      const d = g.dx / tabWidthRef.current;
-      const off = Math.abs(g.vx) > 0.45 ? (g.vx > 0 ? 1 : -1) : Math.round(d);
-      switchTo(activeIndexRef.current + off);
+      const distance = gesture.dx / tabWidthRef.current;
+      const velocity = gesture.vx;
+      const offset = Math.abs(velocity) > 0.45 ? (velocity > 0 ? 1 : -1) : Math.round(distance);
+      switchTo(activeIndexRef.current + offset);
     },
     onPanResponderTerminate: () => {
       Animated.spring(position, { toValue: activeIndexRef.current, useNativeDriver: true, stiffness: 240, damping: 24, mass: 0.72 }).start();
     },
   })).current;
 
-  const onLayout = (e: LayoutChangeEvent): void => {
-    const w = e.nativeEvent.layout.width;
-    tabWidthRef.current = w / tabs.length;
-    setContentWidth(w);
+  const onContentLayout = (event: LayoutChangeEvent): void => {
+    const width = event.nativeEvent.layout.width;
+    tabWidthRef.current = width / tabs.length;
+    setContentWidth(width);
   };
 
-  return (
-    <View pointerEvents="box-none" style={[s.navWrap, { width: navWidth, alignSelf: "center" }]}>
-      <View style={s.navBg}>
-        <BlurView intensity={playing ? 90 : 85} tint="light" style={StyleSheet.absoluteFill} />
-        <View style={s.navTopLine} />
-      </View>
-      <View style={s.navContent} onLayout={onLayout} {...panResponder.panHandlers}>
-        {tabs.map((tab, i) => {
-          const active = i === activeIndex;
-          const focus = position.interpolate({ inputRange: [i - 1, i, i + 1], outputRange: [0, 1, 0], extrapolate: "clamp" });
-          const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
+return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
+    <View
+      className="absolute inset-0 overflow-hidden rounded-[38px] border"
+      style={{
+        backgroundColor: "transparent",
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.34)",
+        shadowColor: "#182848",
+        shadowOpacity: 0.22,
+        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 8 },
+        elevation: 9,
+      }}
+    >
+      <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
+    </View>
+    <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
+      {tabWidth ? <LensPosition position={position} tabWidth={tabWidth} /> : null}
+      <View pointerEvents="box-none" className="flex-1 flex-row">
+        {tabs.map((tab, index) => {
+          const active = index === activeIndex;
+          const focus = position.interpolate({
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [0, 1, 0],
+            extrapolate: "clamp",
+          });
+          const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.08] });
+          const opacity = focus.interpolate({ inputRange: [0, 1], outputRange: [0.52, 1] });
           return (
-            <Pressable key={tab.key} style={s.tabBtn} onPress={() => switchTo(i)}>
-              <Animated.View style={{ alignItems: "center", transform: [{ scale }] }}>
-                <Text style={{ color: active ? HUAWEI_BLUE : HUAWEI_GRAY, fontSize: 24 }}>{tab.symbol}</Text>
-                <Text style={{ color: active ? HUAWEI_BLUE : HUAWEI_GRAY, fontSize: 10, fontWeight: active ? "700" : "500", marginTop: 2 }}>{t(tab.key)}</Text>
-                {active ? <View style={{ marginTop: 2, height: 2, width: 20, borderRadius: 1, backgroundColor: HUAWEI_BLUE }} /> : null}
+            <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
+              <Animated.View className="h-[60px] items-center justify-center" style={{ opacity, transform: [{ scale }] }}>
+                <Text style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 21, fontWeight: "800" }}>{tab.symbol}</Text>
+                <Text className="mt-0.5" style={{ color: active ? tokens.text : tokens.mutedText, fontSize: 10, fontWeight: "800" }}>{t(tab.key)}</Text>
               </Animated.View>
             </Pressable>
           );
         })}
-        <Pressable style={s.playBtn} onPress={() => void togglePlayback()}>
-          <Text style={{ color: "#fff", fontSize: 22, fontWeight: "900" }}>{playing ? "Ⅱ" : "▶"}</Text>
-        </Pressable>
       </View>
     </View>
+  </View>;
+}
+
+function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWidth: number }): React.JSX.Element {
+  const { tokens } = useTheme();
+  const pillInsetX = Math.max(4, tabWidth * 0.08);
+  const pillWidth = Math.max(48, tabWidth - pillInsetX * 2);
+  const translateX = position.interpolate({
+    inputRange: [0, 1, 2, 3],
+    outputRange: [pillInsetX, tabWidth + pillInsetX, tabWidth * 2 + pillInsetX, tabWidth * 3 + pillInsetX],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className="absolute overflow-hidden"
+      style={{
+        top: 4,
+        bottom: 4,
+        width: pillWidth,
+        borderRadius: 999,
+        backgroundColor: "transparent",
+        borderWidth: 1,
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
+        shadowColor: tokens.isLight ? "#94a3b8" : "#93c5fd",
+        shadowOpacity: 0.28,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 0,
+        transform: [{ translateX }],
+      }}
+    >
+      <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.9)" }} />
+    </Animated.View>
   );
 }
 
-const s = StyleSheet.create({
-  navWrap: { position: "absolute", bottom: 28, height: 64 },
-  navBg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 32, borderWidth: 1, borderColor: "rgba(255,255,255,0.58)", shadowColor: "#182848", shadowOpacity: 0.22, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8, overflow: "hidden" },
-  navTopLine: { position: "absolute", left: 0, right: 0, top: 0, height: 1, backgroundColor: "rgba(255,255,255,0.78)" },
-  navContent: { position: "absolute", top: 2, bottom: 2, left: 6, right: 4, flexDirection: "row", alignItems: "center" },
-  tabBtn: { flex: 1, alignItems: "center", justifyContent: "center" },
-  playBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: HUAWEI_BLUE, alignItems: "center", justifyContent: "center", marginRight: 4 },
-});
+function MiuixTabBar(): React.JSX.Element {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { t } = useI18n();
+  const { tokens } = useTheme();
+  const activeIndex = pathname.includes("/search") ? 1 : pathname.includes("/library") ? 2 : pathname.includes("/profile") ? 3 : 0;
+  const position = useRef(new Animated.Value(activeIndex)).current;
+  const slideY = useRef(new Animated.Value(80)).current;
+  const activeIndexRef = useRef(activeIndex);
+  const tabWidthRef = useRef(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const tabWidth = contentWidth / tabs.length;
+
+  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+  useEffect(() => {
+    if (!tabWidth) return;
+    Animated.parallel([
+      Animated.spring(position, { toValue: activeIndex, useNativeDriver: true, stiffness: 280, damping: 22, mass: 0.65 }),
+      Animated.spring(slideY, { toValue: 0, useNativeDriver: true, stiffness: 280, damping: 22, mass: 0.65 }),
+    ]).start();
+  }, [activeIndex, position, slideY, tabWidth]);
+
+  const switchTo = (index: number): void => {
+    const nextIndex = Math.max(0, Math.min(tabs.length - 1, index));
+    if (nextIndex === activeIndexRef.current) {
+      Animated.spring(position, { toValue: activeIndexRef.current, useNativeDriver: true, stiffness: 280, damping: 22, mass: 0.65 }).start();
+      return;
+    }
+    router.replace(tabs[nextIndex].route);
+  };
+
+  const panResponder = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 6 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+    onPanResponderGrant: () => position.stopAnimation(),
+    onPanResponderMove: (_, gesture) => {
+      if (!tabWidthRef.current) return;
+      const next = Math.max(0, Math.min(tabs.length - 1, activeIndexRef.current + gesture.dx / tabWidthRef.current));
+      position.setValue(next);
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (!tabWidthRef.current) return;
+      const distance = gesture.dx / tabWidthRef.current;
+      const velocity = gesture.vx;
+      const offset = Math.abs(velocity) > 0.45 ? (velocity > 0 ? 1 : -1) : Math.round(distance);
+      switchTo(activeIndexRef.current + offset);
+    },
+    onPanResponderTerminate: () => {
+      Animated.spring(position, { toValue: activeIndexRef.current, useNativeDriver: true, stiffness: 280, damping: 22, mass: 0.65 }).start();
+    },
+  })).current;
+
+  const onContentLayout = (event: LayoutChangeEvent): void => {
+    const width = event.nativeEvent.layout.width;
+    tabWidthRef.current = width / tabs.length;
+    setContentWidth(width);
+  };
+
+  return <Animated.View pointerEvents="box-none" style={{ transform: [{ translateY: slideY }] }}>
+    <View className="absolute bottom-16 left-3 right-3 h-[70px]">
+      <View className="absolute inset-0 overflow-hidden rounded-[34px] border" style={{ backgroundColor: tokens.isLight ? "#fdfdff" : "#202124", borderColor: `${tokens.accent}35`, shadowColor: "#111827", shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 14 }}>
+        <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: `${tokens.accent}25` }} />
+      </View>
+      <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
+        {tabWidth ? <MiuixLensPosition position={position} tabWidth={tabWidth} tokens={tokens} /> : null}
+        <View pointerEvents="box-none" className="flex-1 flex-row">
+          {tabs.map((tab, index) => {
+            const active = index === activeIndex;
+            const focus = position.interpolate({ inputRange: [index - 1, index, index + 1], outputRange: [0, 1, 0], extrapolate: "clamp" });
+            const scale = focus.interpolate({ inputRange: [0, 1], outputRange: [0.78, 1.18] });
+            const opacity = focus.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] });
+            const colorShift = focus.interpolate({ inputRange: [0, 1], outputRange: [tokens.mutedText, tokens.accent] });
+            return <Pressable key={tab.key} className="flex-1 items-center justify-center" onPress={() => switchTo(index)}>
+              <Animated.View className="h-[56px] items-center justify-center" style={{ opacity, transform: [{ scale }] }}>
+                <Text style={{ color: active ? tokens.accent : tokens.mutedText, fontSize: 20, fontWeight: "800" }}>{tab.symbol}</Text>
+                <Text className="mt-0.5" style={{ color: active ? tokens.accent : tokens.mutedText, fontSize: 10, fontWeight: "800" }}>{t(tab.key)}</Text>
+              </Animated.View>
+            </Pressable>;
+          })}
+        </View>
+      </View>
+    </View>
+  </Animated.View>;
+}
+
+function MiuixLensPosition({ position, tabWidth, tokens }: { position: Animated.Value; tabWidth: number; tokens: ReturnType<typeof useTheme>["tokens"] }): React.JSX.Element {
+  const translateX = position.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, tabWidth, tabWidth * 2, tabWidth * 3] });
+  return <Animated.View pointerEvents="none" className="absolute bottom-0 top-0 overflow-hidden rounded-[28px]" style={{ width: tabWidth, backgroundColor: tokens.isLight ? "#f0f4ff" : "#1a1a2e", shadowColor: tokens.accent, shadowOpacity: 0.55, shadowRadius: 14, shadowOffset: { width: 0, height: 0 }, transform: [{ translateX }] }} />;
+}
 
 export default function TabsLayout(): React.JSX.Element {
   const { t } = useI18n();
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
-  return (
-    <View className="flex-1">
-      <Tabs screenOptions={{
-        headerShown: false,
-        animation: "shift",
-        transitionSpec: { animation: "spring", config: { stiffness: 320, damping: 28, mass: 0.78, overshootClamping: false } },
-        sceneStyle: { backgroundColor: tokens.background },
-        tabBarStyle: { display: isLiquid || isMiuix ? "none" : "flex" },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
-        tabBarActiveTintColor: tokens.accent,
-        tabBarInactiveTintColor: tokens.mutedText,
-      }}>
-        <Tabs.Screen name="index" options={{ title: t("home"), tabBarIcon: ({ color }) => <TabIcon symbol="⌂" color={color} /> }} />
-        <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
-        <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
-        <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
-      </Tabs>
-      {isLiquid ? <HuaweiFloatingNav /> : null}
-    </View>
-  );
+  return <TabSwipeSurface><View className="flex-1"><Tabs screenOptions={{
+    headerShown: false,
+    animation: "shift",
+    transitionSpec: {
+      animation: "spring",
+      config: { stiffness: 320, damping: 28, mass: 0.78, overshootClamping: false },
+    },
+    sceneStyle: { backgroundColor: tokens.background },
+    tabBarStyle: {
+      display: isLiquid || isMiuix ? "none" : "flex",
+      position: isMiuix ? "absolute" : "relative",
+      left: isMiuix ? 12 : 0,
+      right: isMiuix ? 12 : 0,
+      bottom: isMiuix ? 18 : 0,
+      height: isMiuix ? 70 : 62,
+      paddingTop: isMiuix ? 8 : 7,
+      paddingBottom: isMiuix ? 8 : 7,
+      borderRadius: isMiuix ? 34 : 0,
+      backgroundColor: isMiuix ? (tokens.isLight ? "#fdfdff" : "#202124") : tokens.surfaceStrong,
+      borderColor: isMiuix ? `${tokens.accent}35` : tokens.surfaceBorder,
+      borderTopWidth: isMiuix ? 0 : 1,
+      borderWidth: isMiuix ? 1 : 0,
+      elevation: isMiuix ? 14 : 0,
+      shadowColor: isMiuix ? "#111827" : "#000000",
+      shadowOpacity: isMiuix ? 0.2 : 0,
+      shadowRadius: isMiuix ? 20 : 10,
+      shadowOffset: { width: 0, height: isMiuix ? 10 : 7 },
+      overflow: isMiuix ? "hidden" : "visible",
+    },
+    tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
+    tabBarActiveTintColor: isMiuix ? tokens.accent : tokens.accent,
+    tabBarInactiveTintColor: tokens.mutedText,
+  }}>
+    <Tabs.Screen name="index" options={{ title: t("home"), tabBarIcon: ({ color }) => <TabIcon symbol="⌂" color={color} /> }} />
+    <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
+    <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
+    <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
+  </Tabs>{isLiquid ? <LiquidTabBar /> : null}{isMiuix ? <MiuixTabBar /> : null}</View></TabSwipeSurface>;
 }
