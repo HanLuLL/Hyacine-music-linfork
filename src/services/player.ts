@@ -48,3 +48,8 @@ export async function seekBy(seconds: number): Promise<void> {
   if (!player) return;
   await player.seekTo(Math.max(0, player.currentTime + seconds));
 }
+
+export async function seekTo(seconds: number): Promise<void> {
+  if (!player) return;
+  await player.seekTo(Math.max(0, seconds));
+}

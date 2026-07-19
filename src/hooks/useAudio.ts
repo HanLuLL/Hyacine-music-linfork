@@ -12,6 +12,7 @@ interface UseAudioResult {
   playTrack: (track: Track) => Promise<void>;
   togglePlayback: () => Promise<void>;
   seekBy: (seconds: number) => Promise<void>;
+  seekTo: (seconds: number) => Promise<void>;
 }
 
 export function useAudio(): UseAudioResult {
@@ -49,5 +50,9 @@ export function useAudio(): UseAudioResult {
     }
   }, []);
 
-  return { playTrack, togglePlayback, seekBy };
+  const seekTo = useCallback(async (seconds: number) => {
+    appLog.info("audio", "seekTo", { seconds });
+    await (await loadPlayer()).seekTo(seconds);
+  }, []);
+  return { playTrack, togglePlayback, seekBy, seekTo };
 }
