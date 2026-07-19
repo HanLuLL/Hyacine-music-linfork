@@ -3,7 +3,6 @@ import { Tabs, usePathname, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
-import { TabSwipeSurface } from "@/components/navigation/TabSwipeSurface";
 import { useTheme } from "@/theme";
 
 const tabs = [
@@ -74,16 +73,18 @@ return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-
     <View
       className="absolute inset-0 overflow-hidden rounded-[38px] border"
       style={{
-        backgroundColor: "transparent",
-        borderColor: tokens.isLight ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.34)",
+        backgroundColor: tokens.isLight ? "rgba(226,234,248,0.20)" : "rgba(18,26,42,0.44)",
+        borderColor: tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.38)",
         shadowColor: "#182848",
-        shadowOpacity: 0.22,
-        shadowRadius: 20,
-        shadowOffset: { width: 0, height: 8 },
-        elevation: 9,
+        shadowOpacity: 0.18,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 12,
       }}
     >
-      <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.78)" }} />
+      <BlurView intensity={72} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" />
+      <View className="absolute inset-0" style={{ backgroundColor: tokens.isLight ? "rgba(220,230,247,0.22)" : "rgba(25,34,54,0.20)" }} />
+      <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.92)" }} />
     </View>
     <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
       {tabWidth ? <LensPosition position={position} tabWidth={tabWidth} /> : null}
@@ -129,7 +130,7 @@ function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWid
         bottom: 4,
         width: pillWidth,
         borderRadius: 999,
-        backgroundColor: "transparent",
+        backgroundColor: tokens.isLight ? "rgba(226,234,248,0.20)" : "rgba(18,26,42,0.44)",
         borderWidth: 1,
         borderColor: tokens.isLight ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
         shadowColor: tokens.isLight ? "#94a3b8" : "#93c5fd",
@@ -140,7 +141,9 @@ function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWid
         transform: [{ translateX }],
       }}
     >
-      <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.9)" }} />
+      <BlurView intensity={88} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" />
+      <View className="absolute inset-0" style={{ backgroundColor: tokens.isLight ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.08)" }} />
+      <View className="absolute left-3 right-3 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.96)" }} />
     </Animated.View>
   );
 }
@@ -204,7 +207,7 @@ function MiuixTabBar(): React.JSX.Element {
 
   return <Animated.View pointerEvents="box-none" style={{ transform: [{ translateY: slideY }] }}>
     <View className="absolute bottom-16 left-3 right-3 h-[70px]">
-      <View className="absolute inset-0 overflow-hidden rounded-[34px] border" style={{ backgroundColor: tokens.isLight ? "#fdfdff" : "#202124", borderColor: `${tokens.accent}35`, shadowColor: "#111827", shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 14 }}>
+      <View className="absolute inset-0 overflow-hidden rounded-[34px] border" style={{ backgroundColor: tokens.isLight ? "#fdfdff" : "#202124", borderColor: `${tokens.accent}35`, shadowColor: "#111827", shadowOpacity: 0.2, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 14 }}>
         <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: `${tokens.accent}25` }} />
       </View>
       <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
@@ -239,7 +242,6 @@ export default function TabsLayout(): React.JSX.Element {
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
-  return <TabSwipeSurface><View className="flex-1"><Tabs screenOptions={{
     headerShown: false,
     animation: "shift",
     transitionSpec: {
@@ -276,5 +278,4 @@ export default function TabsLayout(): React.JSX.Element {
     <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
     <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
     <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
-  </Tabs>{isLiquid ? <LiquidTabBar /> : null}{isMiuix ? <MiuixTabBar /> : null}</View></TabSwipeSurface>;
 }
