@@ -33,6 +33,14 @@ function logCoverResult(event: "load" | "error", id: string, url?: string): void
 
 interface DailySong { id: number; title: string; artists: string[]; coverUrl?: string; durationMs?: number; }
 
+function greetingForHour(hour: number): string {
+  if (hour < 6) return "夜深了";
+  if (hour < 11) return "早上好";
+  if (hour < 14) return "中午好";
+  if (hour < 18) return "下午好";
+  return "晚上好";
+}
+
 export default function HomeScreen(): React.JSX.Element {
   const { playTrack } = useAudio();
   const { t } = useI18n();
@@ -42,8 +50,12 @@ export default function HomeScreen(): React.JSX.Element {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [playingId, setPlayingId] = useState("");
-
+  const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
+  useEffect(() => {
+    const timer = setInterval(() => setGreeting(greetingForHour(new Date().getHours())), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const loadDailySongs = useCallback(async (): Promise<void> => {
     const seq = ++requestSeq.current;
     if (!profile?.backendUrl || profile.musicSource !== "netease") {
@@ -156,7 +168,7 @@ export default function HomeScreen(): React.JSX.Element {
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
-        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("greeting")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>网易云音乐每日推荐</Text></View>
+        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{greeting}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>每日推荐歌曲</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">
           {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
         </LiquidControlSurface>
@@ -175,8 +187,8 @@ export default function HomeScreen(): React.JSX.Element {
             <View className="h-48 w-40 items-end justify-center">
               {featured.artwork ? (
                 <>
-                  <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
-                  <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+                  <Image source={{ uri: songs[2]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+                  <Image source={{ uri: songs[1]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
                   <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
                     <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
                   </View>
@@ -194,7 +206,7 @@ export default function HomeScreen(): React.JSX.Element {
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>每日歌曲</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>刷新</Text></Pressable></View>
-      <View className="mt-4 gap-3">{songs.slice(1, 9).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
+      <View className="mt-4 gap-3">{songs.slice(1).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
     </ScrollView>
   </ThemedScreen>;
 }
