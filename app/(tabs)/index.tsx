@@ -10,6 +10,7 @@ import { useI18n } from "@/i18n";
 import { resolvePlayableTrack } from "@/services/musicApi";
 import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
+import { usePlayerStore } from "@/store/playerStore";
 import { apiBase } from "@/utils/apiBase";
 import { appLog, cookieMeta } from "@/utils/logger";
 import { normalizeMediaUrl } from "@/utils/media";
@@ -43,6 +44,7 @@ function greetingForHour(hour: number): string {
 
 export default function HomeScreen(): React.JSX.Element {
   const { playTrack } = useAudio();
+  const setQueue = usePlayerStore((state) => state.setQueue);
   const { t } = useI18n();
   const { tokens } = useTheme();
   const { profile, getSourceCredential } = useAccount();
@@ -153,6 +155,7 @@ export default function HomeScreen(): React.JSX.Element {
       return;
     }
     setPlayingId(track.id);
+    setQueue(songs, track.id);
     setError("");
     appLog.info("home", "play pressed", { trackId: track.id, title: track.title });
     try {

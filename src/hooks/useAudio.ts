@@ -4,6 +4,7 @@ import { appLog, summarizeUrl } from "@/utils/logger";
 import { useAccount } from "@/account";
 import { resolvePlayableTrack } from "@/services/musicApi";
 import { useAudioPreferences } from "@/audioPreferences";
+import { usePlayerStore } from "@/store/playerStore";
 
 type PlayerModule = typeof import("@/services/player");
 
@@ -16,6 +17,7 @@ interface UseAudioResult {
   togglePlayback: () => Promise<void>;
   seekBy: (seconds: number) => Promise<void>;
   seekTo: (seconds: number) => Promise<void>;
+  skipTrack: (direction: -1 | 1) => Promise<void>;
 }
 
 export function useAudio(): UseAudioResult {
@@ -64,5 +66,13 @@ export function useAudio(): UseAudioResult {
     appLog.info("audio", "seekTo", { seconds });
     await (await loadPlayer()).seekTo(seconds);
   }, []);
-  return { playTrack, togglePlayback, seekBy, seekTo };
+  const skipTrack = useCallback(async (direction: -1 | 1) => {
+    const { queue, queueIndex, setQueue } = usePlayerStore.getState();
+    if (queue.length < 2 || queueIndex < 0) return;
+    const nextIndex = (queueIndex + direction + queue.length) % queue.length;
+    const nextTrack = queue[nextIndex];
+    setQueue(queue, nextTrack.id);
+    await playTrack(nextTrack);
+  }, [playTrack]);
+  return { playTrack, togglePlayback, seekBy, seekTo, skipTrack };
 }
