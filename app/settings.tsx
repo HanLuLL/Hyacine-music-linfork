@@ -124,6 +124,7 @@ export default function SettingsScreen(): React.JSX.Element {
     setPreset,
     setUiStyle,
     setCustomBackgroundUri,
+    setLyricColors,
     setBackgroundOpacity,
     setGlassOpacity,
     setUiScale,
@@ -433,6 +434,14 @@ export default function SettingsScreen(): React.JSX.Element {
         <Section title={t("playerSection")}>
           <Row title={t("playerLayout")}>
             <Segment options={playerLayouts} value={preferences.playerLayout} labels={layouts} onChange={(value) => void setPlayerLayout(value)} />
+          </Row>
+          <Row title="歌词颜色" hint="已唱、当前和未唱歌词可分别设置；恢复默认即为已唱深色、当前强调色、未唱白色。">
+            <View className="mt-4 flex-row gap-2">
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#1a0d18" }} onPress={() => void setLyricColors({ sung: "#1a0d18", current: tokens.accent, upcoming: "#ffffff" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>默认</Text></Pressable>
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#0f172a" }} onPress={() => void setLyricColors({ sung: "#0f172a", current: "#38bdf8", upcoming: "#f8fafc" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>冷色</Text></Pressable>
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#4c0519" }} onPress={() => void setLyricColors({ sung: "#4c0519", current: "#fb7185", upcoming: "#fff1f2" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>暖色</Text></Pressable>
+            </View>
+            <Pressable className="mt-3 items-center py-2" onPress={() => void setLyricColors({ sung: null, current: null, upcoming: null })}><Text style={{ color: tokens.accent, fontWeight: "800" }}>恢复系统默认</Text></Pressable>
           </Row>
           <Row title="正在播放栏主题" hint="主题 1 为完整歌曲栏；主题 2 为更紧凑的小胶囊。">
             <Segment options={miniPlayerStyles} value={preferences.miniPlayerStyle} labels={miniStyles} onChange={(value) => void setMiniPlayerStyle(value)} />

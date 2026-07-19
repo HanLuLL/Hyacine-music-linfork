@@ -24,6 +24,9 @@ export interface ThemePreferences {
   customAccent: string | null;
   magicColorEnabled: boolean;
   customBackgroundUri: string | null;
+  lyricSungColor: string | null;
+  lyricCurrentColor: string | null;
+  lyricUpcomingColor: string | null;
   backgroundOpacity: number;
   glassOpacity: number;
   uiScale: number;
@@ -55,6 +58,9 @@ const DEFAULT_PREFERENCES: ThemePreferences = {
   customAccent: null,
   magicColorEnabled: false,
   customBackgroundUri: null,
+  lyricSungColor: null,
+  lyricCurrentColor: null,
+  lyricUpcomingColor: null,
   backgroundOpacity: 0.42,
   glassOpacity: 0.34,
   uiScale: 1,
@@ -201,6 +207,7 @@ interface ThemeContextValue {
   setCustomAccent: (value: string | null) => Promise<void>;
   setMagicColorEnabled: (value: boolean) => Promise<void>;
   setCustomBackgroundUri: (value: string | null) => Promise<void>;
+  setLyricColors: (value: { sung?: string | null; current?: string | null; upcoming?: string | null }) => Promise<void>;
   setBackgroundOpacity: (value: number) => Promise<void>;
   setGlassOpacity: (value: number) => Promise<void>;
   setUiScale: (value: number) => Promise<void>;
@@ -282,6 +289,7 @@ export function ThemeProvider({ children }: PropsWithChildren): React.JSX.Elemen
       setCustomAccent: (customAccent) => update({ customAccent: customAccent?.trim().toUpperCase() ?? null }),
       setMagicColorEnabled: (magicColorEnabled) => update({ magicColorEnabled }),
       setCustomBackgroundUri: (customBackgroundUri) => update({ customBackgroundUri }),
+      setLyricColors: ({ sung, current, upcoming }) => update({ lyricSungColor: sung, lyricCurrentColor: current, lyricUpcomingColor: upcoming }),
       setBackgroundOpacity: (backgroundOpacity) => update({ backgroundOpacity: clamp01(backgroundOpacity, DEFAULT_PREFERENCES.backgroundOpacity) }),
       setGlassOpacity: (glassOpacity) => update({ glassOpacity: clamp01(glassOpacity, DEFAULT_PREFERENCES.glassOpacity) }),
       setUiScale: (uiScale) => update({ uiScale: Math.min(1.3, Math.max(0.85, uiScale)) }),
