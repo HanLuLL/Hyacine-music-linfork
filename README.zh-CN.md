@@ -1,6 +1,6 @@
 # 风堇音乐 · Hyacine Music
 
-简体中文 · [English](README.md) · [日本語](README.ja-JP.md)
+[English](README.md) · [日本語](README.ja-JP.md)
 
 风堇音乐是使用 TypeScript、Expo Router 和 React Native 开发的移动音乐客户端，通过 [Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) 对接网易云音乐与哔哩哔哩音乐源。
 

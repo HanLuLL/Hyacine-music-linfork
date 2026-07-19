@@ -1,6 +1,6 @@
 # Hyacine Music · 風菫音楽
 
-[简体中文](README.zh-CN.md) · [English](README.md) · 日本語
+[简体中文](README.zh-CN.md) · [English](README.md)
 
 Hyacine Music は TypeScript、Expo Router、React Native で実装されたモバイル音楽クライアントです。[Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) を介して NetEase Cloud Music と Bilibili の音楽ソースを利用します。
 

@@ -1,6 +1,6 @@
 # Hyacine Music · 风堇音乐
 
-[简体中文](README.zh-CN.md) · English · [日本語](README.ja-JP.md)
+[简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md)
 
 Hyacine Music is an Expo Router / React Native music client written in TypeScript. It connects to [Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) and supports Netease Cloud Music and Bilibili sources.
 
