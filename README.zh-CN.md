@@ -1,29 +1,54 @@
-# 风堇音乐
+# 风堇音乐 · Hyacine Music
 
-[English](README.md) · [日本語](README.ja-JP.md)
+[English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja-JP.md)
 
-风堇音乐是连接 Hyacine Server API 的 React Native / Expo 移动端音乐客户端。
+Hyacine Music is a mobile client for the [Hyacine Server](https://github.com/Ruoxi-TH/hyacine-server) API, built with React Native + Expo and featuring an Android 10+ Jetpack Compose native navigation layer.
 
-## 功能
+## Current version: 1.2.0
 
-- 后台播放、播放队列、媒体控制与全屏播放器
-- 网易云音乐扫码登录、推荐歌单和个人歌单
-- 简体中文、英语、日语界面
-- 原生、液态、MIUIX 三种视觉风格，以及本地外观偏好
+### Implemented
 
-## 运行
+- **Huawei-style floating capsule navigation**: 3 tabs (Home / Music Hall / Me), active `#00A1FF`, inactive `#86909C`, right-side 56dp blue play button, swipe to switch tabs
+- **64dp mini player bar**: BlurView glass material, swipe to skip tracks (30dp threshold), tap to expand full player (300ms animation)
+- **Adaptive navigation width**: 200dp / 300dp / 400dp by screen size
+- **Custom background**: `cover` fill with adjustable overlay, no more washed-out white overlay
+- **Playlist detail page**: Clickable playlists, cover entrance scale animation, playable song list
+- **Lyrics sync**: Tap lyrics to seek, translation matching, auto-scroll highlight
+- **Home cover stack**: 3-layer rotated cover stack on featured card, daily song list covers
+- **Real blur glass**: Navigation and mini player use `expo-blur` BlurView, 0.90 opacity when playing, 0.85 when paused
+- **Netease Cloud Music**: QR login, daily recommendations, playlists, search, playback, lyrics
+- **3 player layouts**: vinyl / immersive / minimal
+- **3 UI styles**: native / liquid (Huawei floating nav) / MIUIX
+- **Multi-language**: Simplified Chinese, English, Japanese
+
+### In progress / TODO
+
+- Cover shared element transition (Reanimated crash risk, currently using Animated scale entrance)
+- Tablet 240dp collapsible side navigation
+- Real Media3 playback with background notification
+- Device build verification
+
+## Run
 
 ```bash
 pnpm install
 pnpm start
 ```
 
-客户端需要使用 Development Build 运行。首次设置时填写可访问的 Hyacine Server 地址。
+The client requires a Development Build. During first-run setup, enter a reachable Hyacine Server address.
 
-## 后端
+## Native Android build
 
-后端部署、使用方法和音乐源接入说明请前往 [hyacine-server](https://github.com/Ruoxi-TH/hyacine-server)。
+The project includes a Jetpack Compose native Gradle structure (`minSdk 29`, `targetSdk 35`) for direct APK builds:
 
-## 许可证
+```bash
+./gradlew :app:assembleDebug
+```
 
-参见 [LICENSE](LICENSE)。
+## Server
+
+Backend deployment and music-source integration docs: [hyacine-server](https://github.com/Ruoxi-TH/hyacine-server).
+
+## License
+
+See [LICENSE](LICENSE).
