@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { normalizeMediaUrl } from "@/utils/media";
@@ -22,6 +22,8 @@ export default function LibraryScreen(): React.JSX.Element {
   const { language, t } = useI18n();
   const { tokens } = useTheme();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [recommendations, setRecommendations] = useState<Playlist[]>([]);
+  const [activeTab, setActiveTab] = useState<"mine" | "recommended">("mine");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -74,6 +76,13 @@ export default function LibraryScreen(): React.JSX.Element {
         throw new Error((data as { message?: string }).message || `加载失败 HTTP ${response.status}`);
       }
       setPlaylists(data);
+      const recommendationsResponse = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/recommendations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie }),
+      });
+      const recommended = await recommendationsResponse.json() as Playlist[] | { message?: string };
+      setRecommendations(recommendationsResponse.ok && Array.isArray(recommended) ? recommended : []);
       if (!data.length) setError("暂无可展示的歌单。");
     } catch (cause) {
       setPlaylists([]);
@@ -113,12 +122,28 @@ export default function LibraryScreen(): React.JSX.Element {
     }
   };
 
+  const deletePlaylist = (playlist: Playlist): void => {
+    if (!profile || playlist.id <= 0) return;
+    Alert.alert("删除歌单", `确定删除“${playlist.name}”吗？此操作会同步到网易云音乐。`, [
+      { text: "取消", style: "cancel" },
+      { text: "删除", style: "destructive", onPress: () => void (async () => {
+        try {
+          const cookie = await getSourceCredential("netease");
+          const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists/delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: playlist.id, cookie }) });
+          if (!response.ok) throw new Error("删除失败");
+          setPlaylists((current) => current.filter((item) => item.id !== playlist.id));
+        } catch { setError("删除歌单失败，请稍后重试。"); }
+      })() },
+    ]);
+  };
+  const visiblePlaylists = activeTab === "mine" ? playlists : recommendations;
   return <ThemedScreen><ScrollView className="flex-1" contentContainerClassName="px-5 pb-40 pt-16" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPlaylists(true)} tintColor={tokens.accent} />}>
-    <View className="flex-row items-start justify-between"><View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("library")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{"已绑定网易云音乐的我的歌单"}</Text></View><LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Pressable className="h-full w-full items-center justify-center" onPress={() => void loadPlaylists(true)}><Text style={{ color: tokens.text, fontSize: 18 }}>↻</Text></Pressable></LiquidControlSurface></View>
-    <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("myPlaylists")}</Text><Pressable onPress={() => setShowCreate((value) => !value)}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>{showCreate ? "收起" : "新建歌单"}</Text></Pressable></View>
-    {showCreate ? <View className="mt-4 flex-row items-center gap-3"><TextInput value={playlistName} onChangeText={setPlaylistName} placeholder="歌单名称" placeholderTextColor={tokens.mutedText} className="h-11 flex-1 px-4" style={{ color: tokens.text, borderWidth: 1, borderColor: tokens.surfaceBorder, borderRadius: 8, backgroundColor: "transparent" }} maxLength={100} /><LiquidControlSurface className="h-11 px-4" style={{ borderRadius: 8 }}><Pressable className="h-full items-center justify-center" disabled={creating || !playlistName.trim()} onPress={() => void createPlaylist()}><Text style={{ color: tokens.text, fontWeight: "800" }}>{creating ? "创建中" : "创建"}</Text></Pressable></LiquidControlSurface></View> : null}
-    {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /><Text className="mt-4 text-sm" style={{ color: tokens.mutedText }}>{"正在加载我的歌单..."}</Text></View> : null}
-    {!loading && error ? <View className="h-72 items-center justify-center px-8"><View className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.accent}1c` }}><Text style={{ color: tokens.accent, fontSize: 28 }}>♫</Text></View><Text className="mt-5 text-center text-sm leading-6" style={{ color: tokens.mutedText }}>{error}</Text><LiquidControlSurface className="mt-6 h-11 rounded-full px-5" style={{ borderRadius: 22 }}><Pressable className="h-full items-center justify-center" onPress={() => void loadPlaylists(true)}><Text style={{ color: tokens.text, fontWeight: "800" }}>{t("refresh")}</Text></Pressable></LiquidControlSurface></View> : null}
-    {!loading && playlists.length ? <View className="mt-5 flex-row flex-wrap justify-between">{playlists.map((playlist) => <Pressable key={playlist.id} className="mb-7 w-[48%]" onPress={() => router.push({ pathname: "/playlist/[id]", params: { id: String(playlist.id), name: playlist.name, cover: playlist.coverUrl } })}><View className="aspect-square overflow-hidden rounded-2xl" style={{ backgroundColor: tokens.surface }}><Image className="h-full w-full" source={{ uri: normalizeMediaUrl(playlist.coverUrl) }} contentFit="cover" /><View className="absolute bottom-2 right-2 rounded-full px-2 py-1" style={{ backgroundColor: "#00000080" }}><Text style={{ color: "#ffffff", fontSize: 10, fontWeight: "800" }}>▶ {formatPlayCount(playlist.playCount, language)}</Text></View></View><Text className="mt-3 text-sm font-bold" numberOfLines={2} style={{ color: tokens.text }}>{playlist.name}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{playlist.description || `${playlist.trackCount} ${t("playlistTracks")}`}</Text></Pressable>)}</View> : null}
+    <View className="flex-row items-start justify-between"><View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("library")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>网易云音乐歌单</Text></View><LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Pressable className="h-full w-full items-center justify-center" onPress={() => void loadPlaylists(true)}><Text style={{ color: tokens.text, fontSize: 18 }}>↻</Text></Pressable></LiquidControlSurface></View>
+    <LiquidControlSurface className="mt-10 flex-row overflow-hidden rounded-full p-1" style={{ borderRadius: 999 }}><Pressable className="h-11 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: activeTab === "mine" ? `${tokens.accent}30` : "transparent" }} onPress={() => setActiveTab("mine")}><Text style={{ color: activeTab === "mine" ? tokens.text : tokens.mutedText, fontWeight: "800" }}>我的歌单</Text></Pressable><Pressable className="h-11 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: activeTab === "recommended" ? `${tokens.accent}30` : "transparent" }} onPress={() => setActiveTab("recommended")}><Text style={{ color: activeTab === "recommended" ? tokens.text : tokens.mutedText, fontWeight: "800" }}>推荐歌单</Text></Pressable></LiquidControlSurface>
+    {activeTab === "mine" ? <View className="mt-7 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("myPlaylists")}</Text><Pressable onPress={() => setShowCreate((value) => !value)}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>{showCreate ? "收起" : "新建歌单"}</Text></Pressable></View> : <Text className="mt-7" style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>为你推荐</Text>}
+    {activeTab === "mine" && showCreate ? <View className="mt-4 flex-row items-center gap-3"><TextInput value={playlistName} onChangeText={setPlaylistName} placeholder="歌单名称" placeholderTextColor={tokens.mutedText} className="h-11 flex-1 px-4" style={{ color: tokens.text, borderWidth: 1, borderColor: tokens.surfaceBorder, borderRadius: 8 }} maxLength={100} /><LiquidControlSurface className="h-11 px-4" style={{ borderRadius: 8 }}><Pressable className="h-full items-center justify-center" disabled={creating || !playlistName.trim()} onPress={() => void createPlaylist()}><Text style={{ color: tokens.text, fontWeight: "800" }}>{creating ? "创建中" : "创建"}</Text></Pressable></LiquidControlSurface></View> : null}
+    {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
+    {!loading && error ? <Text className="mt-8 text-center" style={{ color: tokens.mutedText }}>{error}</Text> : null}
+    {!loading && visiblePlaylists.length ? <View className="mt-5 flex-row flex-wrap justify-between">{visiblePlaylists.map((playlist) => <Pressable key={playlist.id} className="mb-7 w-[48%]" onLongPress={activeTab === "mine" ? () => deletePlaylist(playlist) : undefined} delayLongPress={500} onPress={() => router.push({ pathname: "/playlist/[id]", params: { id: String(playlist.id), name: playlist.name, cover: playlist.coverUrl } })}><View className="aspect-square overflow-hidden rounded-2xl" style={{ backgroundColor: tokens.surface }}><Image className="h-full w-full" source={{ uri: normalizeMediaUrl(playlist.coverUrl) }} contentFit="cover" /><View className="absolute bottom-2 right-2 rounded-full px-2 py-1" style={{ backgroundColor: "#00000080" }}><Text style={{ color: "#ffffff", fontSize: 10, fontWeight: "800" }}>▶ {formatPlayCount(playlist.playCount, language)}</Text></View></View><Text className="mt-3 text-sm font-bold" numberOfLines={2} style={{ color: tokens.text }}>{playlist.name}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{playlist.description || `${playlist.trackCount} ${t("playlistTracks")}`}</Text></Pressable>)}</View> : null}
   </ScrollView></ThemedScreen>;
 }
