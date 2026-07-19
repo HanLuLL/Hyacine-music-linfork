@@ -54,7 +54,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <ThemedScreen>
-      <ScrollView contentContainerClassName="px-5 pb-24 pt-14">
+      <ScrollView contentContainerClassName="px-5 pb-40 pt-14">
         <View className="flex-row items-center justify-between">
           <Text style={{ color: tokens.text, fontSize: 28, fontWeight: "800" }}>{t("profileTitle")}</Text>
           <Pressable className="h-12 w-12 items-center justify-center rounded-full" style={{ borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => router.push("/settings")}>

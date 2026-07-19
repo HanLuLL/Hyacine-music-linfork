@@ -58,19 +58,11 @@ function AppNavigator(): React.JSX.Element {
         <Stack.Screen name="(tabs)" options={{ animation: "fade", gestureEnabled: false }} />
         <Stack.Screen name="onboarding" options={{ presentation: "card", animation: "slide_from_right" }} />
         <Stack.Screen name="sources" options={{ presentation: "card", animation: "slide_from_right" }} />
-        <Stack.Screen name="settings"
+        <Stack.Screen
+          name="settings"
           options={{
             presentation: "card",
             animation: "slide_from_right",
-            gestureEnabled: true,
-            fullScreenGestureEnabled: true,
-          }}
-        />
-        <Stack.Screen name="playlist/[id]"
-          options={{
-            presentation: "card",
-            animation: "slide_from_right",
-            animationDuration: 280,
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
           }}
@@ -80,7 +72,7 @@ function AppNavigator(): React.JSX.Element {
           options={{
             presentation: "fullScreenModal",
             animation: "slide_from_bottom",
-            animationDuration: 300,
+            animationDuration: 320,
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
             gestureDirection: "vertical",

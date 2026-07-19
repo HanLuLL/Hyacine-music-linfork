@@ -24,5 +24,5 @@ export async function loadLyrics(backendUrl: string, id: string, cookie?: string
   const body = await response.json() as { lyric?: string; translation?: string };
   const source = parse(body.lyric ?? "");
   const translated = parse(body.translation ?? "");
-  return source.map((line) => ({ ...line, translation: translated.find((item) => Math.abs(item.time - line.time) < .5)?.text }));
+  return source.map((line) => ({ ...line, translation: translated.find((item) => Math.abs(item.time - line.time) < .15)?.text }));
 }

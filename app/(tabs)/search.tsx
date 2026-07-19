@@ -89,7 +89,7 @@ export default function SearchScreen(): React.JSX.Element {
 
   return (
     <ThemedScreen>
-      <View className="flex-1 px-5 pb-24 pt-16">
+      <View className="flex-1 px-5 pb-36 pt-16">
         <Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("search")}</Text>
         <Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>
           {source === "bilibili" ? "仅显示 B 站音乐分区内容，需要已绑定账号" : "搜索网易云歌曲并播放"}

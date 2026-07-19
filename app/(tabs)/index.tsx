@@ -142,7 +142,7 @@ export default function HomeScreen(): React.JSX.Element {
 
   const featured = songs[0];
   return <ThemedScreen>
-    <ScrollView contentContainerClassName="px-5 pb-24 pt-16">
+    <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
         <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("greeting")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>网易云音乐每日推荐</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">

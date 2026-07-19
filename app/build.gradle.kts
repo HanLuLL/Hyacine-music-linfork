@@ -1,7 +1,7 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.plugin.compose") }
 
 android { namespace = "com.hyacine.music"; compileSdk = 35
-    defaultConfig { applicationId = "com.hyacine.music"; minSdk = 29; targetSdk = 35; versionCode = 3; versionName = "1.2.0" }
+    defaultConfig { applicationId = "com.hyacine.music"; minSdk = 29; targetSdk = 35; versionCode = 2; versionName = "1.1.0" }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
