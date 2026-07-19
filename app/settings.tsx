@@ -145,7 +145,7 @@ export default function SettingsScreen(): React.JSX.Element {
   const styles: Record<UiStyle, string> = { native: t("styleNative"), liquid: t("styleLiquid"), miuix: t("styleMiuix") };
   const layouts: Record<PlayerLayout, string> = {
     vinyl: t("layoutVinyl"),
-    immersive: t("layoutImmersive"),
+
     minimal: t("layoutMinimal"),
     coverLyrics: t("layoutCoverLyrics"),
   };
