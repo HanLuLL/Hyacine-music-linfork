@@ -46,7 +46,7 @@ export interface ThemeTokens {
 }
 
 const DEFAULT_PREFERENCES: ThemePreferences = {
-  uiStyle: "liquid",
+  uiStyle: "native",
   preset: "daylight",
   playerLayout: "minimal",
   miniPlayerStyle: "full",
