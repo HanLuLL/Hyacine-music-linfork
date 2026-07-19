@@ -134,6 +134,7 @@ export async function resolvePlayableTrack(options: {
   backendUrl: string;
   track: Track;
   cookie?: string | null;
+  quality?: "standard" | "higher" | "exhigh" | "lossless" | "hires";
 }): Promise<Track> {
   const base = apiBase(options.backendUrl);
   if (!base) throw new Error("未配置服务器地址");
@@ -149,7 +150,7 @@ export async function resolvePlayableTrack(options: {
     const id = Number(options.track.id.replace("netease:", ""));
     const result = await postJson<{ url: string; br?: number }>(`${base}/music-sources/netease/play-url`, {
       id,
-      level: "exhigh",
+      level: options.quality ?? "exhigh",
       cookie: options.cookie ?? undefined,
     });
     if (!result.url) throw new Error("未获取到网易云播放地址");

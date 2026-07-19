@@ -10,6 +10,7 @@ import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { AccountProvider, useAccount } from "@/account";
 import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/theme";
+import { AudioPreferencesProvider } from "@/audioPreferences";
 import { appLog, bootMeta, installGlobalErrorHandlers } from "@/utils/logger";
 import { useEffect } from "react";
 
@@ -98,10 +99,12 @@ export default function RootLayout(): React.JSX.Element {
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
         <I18nProvider>
-          <AccountProvider>
-            <StatusBar style="dark" />
-            <AppNavigator />
-          </AccountProvider>
+          <AudioPreferencesProvider>
+            <AccountProvider>
+              <StatusBar style="dark" />
+              <AppNavigator />
+            </AccountProvider>
+          </AudioPreferencesProvider>
         </I18nProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

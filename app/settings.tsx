@@ -293,6 +293,14 @@ export default function SettingsScreen(): React.JSX.Element {
         </Section>
 
         {/* Appearance */}
+        <Section title="音频">
+          <Row title="音质与音效" hint="设置在线播放音质、音效预设和自定义均衡器。">
+            <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/audio-settings")}>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>打开音频设置</Text>
+              <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
+            </Pressable>
+          </Row>
+        </Section>
         <Section title={t("appearanceSection")}>
           <Row title={t("uiStyle")} hint={t("uiStyleHint")}>
             <Segment options={uiStyles} value={preferences.uiStyle} labels={styles} onChange={(value) => void setUiStyle(value)} />
