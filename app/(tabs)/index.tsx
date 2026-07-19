@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -53,6 +53,7 @@ export default function HomeScreen(): React.JSX.Element {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
+  const recommendationCardWidth = Dimensions.get("window").width - 40;
   useEffect(() => {
     const timer = setInterval(() => setGreeting(greetingForHour(new Date().getHours())), 60_000);
     return () => clearInterval(timer);
@@ -177,8 +178,8 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setFeaturedIndex(Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width))}>
-        {songs.map((song, index) => <Pressable key={song.id} className="overflow-hidden p-5" style={{ width: "100%" }} onPress={() => void onPlay(song)}>
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setFeaturedIndex(Math.round(event.nativeEvent.contentOffset.x / recommendationCardWidth))}>
+        {songs.map((song, index) => <Pressable key={song.id} className="overflow-hidden p-5" style={{ width: recommendationCardWidth }} onPress={() => void onPlay(song)}>
           <View pointerEvents="none" style={{ position: "absolute", inset: 0, opacity: 0 }} />
           <View className="min-h-48 flex-row items-end">
             <View className="min-w-0 flex-1 pr-4">
