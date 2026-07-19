@@ -53,7 +53,6 @@ export default function HomeScreen(): React.JSX.Element {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
-  const recommendationSwiped = useRef(false);
   const recommendationEntrance = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     recommendationEntrance.setValue(0);
@@ -177,12 +176,10 @@ export default function HomeScreen(): React.JSX.Element {
     setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
   };
   const recommendationPan = useRef(PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 4 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.15,
     onPanResponderRelease: (_, gesture) => {
-      if (Math.abs(gesture.dx) < 20) return;
-      recommendationSwiped.current = true;
-      changeFeatured(gesture.dx < 0 ? 1 : -1);
-      setTimeout(() => { recommendationSwiped.current = false; }, 80);
+      if (Math.abs(gesture.dx) >= 14) changeFeatured(gesture.dx < 0 ? 1 : -1);
     },
   })).current;
   return <ThemedScreen>
@@ -196,33 +193,21 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-        <Animated.View style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-        <Pressable {...recommendationPan.panHandlers} className="overflow-hidden p-5" onPress={() => { if (!recommendationSwiped.current) void onPlay(featured); }}>
-          <View pointerEvents="none" style={{ position: "absolute", inset: 0, opacity: 0 }} />
-          <View className="min-h-48 flex-row items-end">
-            <View className="min-w-0 flex-1 pr-4">
-              <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
-              <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
-              <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text>
+        <View {...recommendationPan.panHandlers}>
+          <Animated.View className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+            <View className="min-h-48 flex-row items-end">
+              <View className="min-w-0 flex-1 pr-4">
+                <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
+                <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
+                <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text>
+              </View>
+              <View className="h-48 w-40 items-end justify-center">
+                {featured.artwork ? <><Image source={{ uri: songs[(featuredIndex + 2) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} /><Image source={{ uri: songs[(featuredIndex + 1) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} /><View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}><Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} /></View></> : <View className="h-44 w-32 items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.accent}22`, borderWidth: 1, borderColor: `${tokens.accent}55` }}><Text style={{ color: tokens.accent, fontSize: 28, fontWeight: "900" }}>♪</Text></View>}
+              </View>
             </View>
-            <View className="h-48 w-40 items-end justify-center">
-              {featured.artwork ? (
-                <>
-                  <Image source={{ uri: songs[(featuredIndex + 2) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
-                  <Image source={{ uri: songs[(featuredIndex + 1) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
-                  <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
-                    <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
-                  </View>
-                </>
-              ) : (
-                <View className="h-44 w-32 items-center justify-center rounded-3xl" style={{ backgroundColor: `${tokens.accent}22`, borderWidth: 1, borderColor: `${tokens.accent}55` }}>
-                  <Text style={{ color: tokens.accent, fontSize: 28, fontWeight: "900" }}>♪</Text>
-                </View>
-              )}
-            </View>
-          </View>
-          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
-        </Pressable></Animated.View>
+            <Pressable onPress={() => void onPlay(featured)}><LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface></Pressable>
+          </Animated.View>
+        </View>
       </ThemedCard> : null}
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
