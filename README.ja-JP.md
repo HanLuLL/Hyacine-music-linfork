@@ -35,6 +35,6 @@ pnpm typecheck
 - Mobile: <https://github.com/Ruoxi-TH/Hyacine-music>
 - Backend: <https://github.com/Ruoxi-TH/hyacine-server>
 
-## License
+## ライセンス
 
-[LICENSE](LICENSE) を参照してください。
+本プロジェクトは [MIT License](LICENSE) で公開されています。ライセンス条件に従い、利用、複製、変更、統合、公開、配布、再許諾、販売が可能です。本ソフトウェアに保証はありません。

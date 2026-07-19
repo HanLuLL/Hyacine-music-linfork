@@ -46,4 +46,4 @@ A source commit or successful TypeScript check does not mean a phone has receive
 
 ## License
 
-See [LICENSE](LICENSE).
+This project is released under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software as permitted by the license. The software is provided without warranty.
