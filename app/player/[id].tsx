@@ -19,8 +19,14 @@ function Lyrics({ lines, progress, onSeek, light = false, focusBlur = false }: {
   const { tokens, preferences } = useTheme();
   const { t } = useI18n();
   const scroll = useRef<ScrollView>(null);
+  const lyricEntrance = useRef(new Animated.Value(1)).current;
   const active = Math.max(0, lines.reduce((last, line, index) => line.time <= progress ? index : last, 0));
   useEffect(() => { if (!focusBlur) scroll.current?.scrollTo({ y: Math.max(0, active * 84), animated: true }); }, [active, focusBlur]);
+  useEffect(() => {
+    if (!focusBlur) return;
+    lyricEntrance.setValue(0);
+    Animated.timing(lyricEntrance, { toValue: 1, duration: 360, useNativeDriver: true }).start();
+  }, [active, focusBlur, lyricEntrance]);
   if (!lines.length) return <View className="flex-1 items-center justify-center"><Text style={{ color: light ? "#ffffffcc" : tokens.mutedText }}>{t("lyricsUnavailable")}</Text></View>;
   const renderLine = (line: LyricLine, index: number): React.JSX.Element => {
     const current = index === active;
@@ -33,9 +39,19 @@ function Lyrics({ lines, progress, onSeek, light = false, focusBlur = false }: {
     </Pressable>;
   };
   if (focusBlur) {
-    const start = Math.max(0, active - 4);
-    const end = Math.min(lines.length, active + 5);
-    return <View className="overflow-hidden" style={{ height: 516, justifyContent: "center" }}>{lines.slice(start, end).map((line, offset) => renderLine(line, start + offset))}</View>;
+    const visible = [active - 1, active, active + 1].filter((index) => index >= 0 && index < lines.length);
+    return <View className="overflow-hidden" style={{ height: 310, justifyContent: "center" }}>
+      {visible.map((index) => {
+        const line = lines[index];
+        const current = index === active;
+        const distance = Math.abs(index - active);
+        return <Animated.View key={`${line.time}-${index}`} style={{ opacity: current ? lyricEntrance : distance === 1 ? 0.24 : 0, transform: [{ translateY: lyricEntrance.interpolate({ inputRange: [0, 1], outputRange: [current ? 26 : 12, 0] }) }] }}>
+          <Pressable onPress={() => onSeek(line.time)} style={{ minHeight: current ? 112 : 64, justifyContent: "center", alignItems: "center" }}>
+            <Text style={{ color: current ? (preferences.lyricCurrentColor ?? (light ? "#fff" : tokens.accent)) : (light ? "#fff" : tokens.text), fontSize: current ? 34 : 18, fontWeight: current ? "900" : "700", lineHeight: current ? 44 : 26, textAlign: "center", textShadowColor: current ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", textShadowRadius: current ? 1 : 8, textShadowOffset: { width: 0, height: 0 } }}>{line.text}</Text>
+          </Pressable>
+        </Animated.View>;
+      })}
+    </View>;
   }
   return <ScrollView ref={scroll} className="flex-1" contentContainerStyle={{ paddingTop: 126, paddingBottom: 126 }} showsVerticalScrollIndicator={false} snapToInterval={84} decelerationRate="fast">{lines.map(renderLine)}</ScrollView>;
 }

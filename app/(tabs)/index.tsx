@@ -53,7 +53,7 @@ export default function HomeScreen(): React.JSX.Element {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
-  const recommendationCardWidth = Dimensions.get("window").width - 40;
+  const swipeStartX = useRef<number | null>(null);
   const recommendationEntrance = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     recommendationEntrance.setValue(0);
@@ -172,6 +172,10 @@ export default function HomeScreen(): React.JSX.Element {
   };
 
   const featured = songs[featuredIndex] ?? songs[0];
+  const changeFeatured = (direction: number): void => {
+    if (songs.length < 2) return;
+    setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
+  };
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
@@ -183,22 +187,22 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={(event) => setFeaturedIndex(Math.round(event.nativeEvent.contentOffset.x / recommendationCardWidth))}>
-        {songs.map((song, index) => <Animated.View key={song.id} style={{ width: recommendationCardWidth, opacity: index === featuredIndex ? recommendationEntrance : 1, transform: index === featuredIndex ? [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] : undefined }}><Pressable className="overflow-hidden p-5" style={{ width: recommendationCardWidth }} onPress={() => void onPlay(song)}>
+        <Animated.View style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+        <Pressable className="overflow-hidden p-5" onPress={() => void onPlay(featured)} onTouchStart={(event) => { swipeStartX.current = event.nativeEvent.pageX; }} onTouchEnd={(event) => { const start = swipeStartX.current; const distance = start === null ? 0 : event.nativeEvent.pageX - start; swipeStartX.current = null; if (Math.abs(distance) > 42) changeFeatured(distance < 0 ? 1 : -1); }}>
           <View pointerEvents="none" style={{ position: "absolute", inset: 0, opacity: 0 }} />
           <View className="min-h-48 flex-row items-end">
             <View className="min-w-0 flex-1 pr-4">
               <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
-              <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{song.title}</Text>
-              <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text>
+              <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
+              <Text className="mt-1 text-sm" numberOfLines={1} style={{ color: tokens.mutedText }}>{featured.artist}</Text>
             </View>
             <View className="h-48 w-40 items-end justify-center">
-              {song.artwork ? (
+              {featured.artwork ? (
                 <>
-                  <Image source={{ uri: songs[(index + 2) % songs.length]?.artwork ?? song.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
-                  <Image source={{ uri: songs[(index + 1) % songs.length]?.artwork ?? song.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+                  <Image source={{ uri: songs[(featuredIndex + 2) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+                  <Image source={{ uri: songs[(featuredIndex + 1) % songs.length]?.artwork ?? featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
                   <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
-                    <Image source={{ uri: song.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} />
+                    <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
                   </View>
                 </>
               ) : (
@@ -208,9 +212,8 @@ export default function HomeScreen(): React.JSX.Element {
               )}
             </View>
           </View>
-          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === song.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
-        </Pressable></Animated.View>)}
-        </ScrollView>
+          <LiquidControlSurface className="mt-5 h-12 self-start rounded-full px-5" style={{ borderRadius: 24 }}><View className="h-full flex-row items-center justify-center"><Text style={{ color: tokens.text, fontWeight: "800" }}>{playingId === featured.id ? "正在播放..." : "▶ 播放推荐歌曲"}</Text></View></LiquidControlSurface>
+        </Pressable></Animated.View>
       </ThemedCard> : null}
       {!loading && error ? <Text className="mt-8 text-sm" style={{ color: "#ef4444" }}>{error}</Text> : null}
 
