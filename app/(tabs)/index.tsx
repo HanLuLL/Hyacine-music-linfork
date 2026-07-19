@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Animated, Dimensions, PanResponder, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
@@ -53,7 +53,7 @@ export default function HomeScreen(): React.JSX.Element {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours()));
   const requestSeq = useRef(0);
-  const swipeStartX = useRef<number | null>(null);
+  const recommendationSwiped = useRef(false);
   const recommendationEntrance = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     recommendationEntrance.setValue(0);
@@ -176,6 +176,15 @@ export default function HomeScreen(): React.JSX.Element {
     if (songs.length < 2) return;
     setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
   };
+  const recommendationPan = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+    onPanResponderRelease: (_, gesture) => {
+      if (Math.abs(gesture.dx) < 20) return;
+      recommendationSwiped.current = true;
+      changeFeatured(gesture.dx < 0 ? 1 : -1);
+      setTimeout(() => { recommendationSwiped.current = false; }, 80);
+    },
+  })).current;
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
@@ -188,7 +197,7 @@ export default function HomeScreen(): React.JSX.Element {
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
         <Animated.View style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-        <Pressable className="overflow-hidden p-5" onPress={() => void onPlay(featured)} onTouchStart={(event) => { swipeStartX.current = event.nativeEvent.pageX; }} onTouchEnd={(event) => { const start = swipeStartX.current; const distance = start === null ? 0 : event.nativeEvent.pageX - start; swipeStartX.current = null; if (Math.abs(distance) > 42) changeFeatured(distance < 0 ? 1 : -1); }}>
+        <Pressable {...recommendationPan.panHandlers} className="overflow-hidden p-5" onPress={() => { if (!recommendationSwiped.current) void onPlay(featured); }}>
           <View pointerEvents="none" style={{ position: "absolute", inset: 0, opacity: 0 }} />
           <View className="min-h-48 flex-row items-end">
             <View className="min-w-0 flex-1 pr-4">
