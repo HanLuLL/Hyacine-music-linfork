@@ -75,6 +75,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
       - name: Generate Android project and build APK
         run: |
           pnpm exec expo prebuild --platform android --non-interactive --no-install
