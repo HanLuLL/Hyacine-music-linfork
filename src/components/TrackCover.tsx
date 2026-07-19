@@ -1,14 +1,8 @@
+import { useState } from "react";
 import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "@/theme";
-
-function normalizeCoverUrl(url?: string | null): string | undefined {
-  if (!url) return undefined;
-  const value = url.trim();
-  if (!value) return undefined;
-  if (value.startsWith("//")) return `https:${value}`;
-  return value;
-}
+import { normalizeMediaUrl } from "@/utils/media";
 
 export function TrackCover({
   uri,
@@ -22,7 +16,8 @@ export function TrackCover({
   title?: string;
 }): React.JSX.Element {
   const { tokens } = useTheme();
-  const cover = normalizeCoverUrl(uri);
+  const [failed, setFailed] = useState(false);
+  const cover = normalizeMediaUrl(uri);
   const initial = (title?.trim()?.[0] || "♪").toUpperCase();
 
   return (
@@ -39,12 +34,13 @@ export function TrackCover({
         justifyContent: "center",
       }}
     >
-      {cover ? (
+      {cover && !failed ? (
         <Image
           source={{ uri: cover }}
           style={{ width: size, height: size }}
           contentFit="cover"
           transition={120}
+          onError={() => setFailed(true)}
         />
       ) : (
         <Text style={{ color: tokens.accent, fontSize: Math.max(14, size * 0.34), fontWeight: "900" }}>
