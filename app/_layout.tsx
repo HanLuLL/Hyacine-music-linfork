@@ -3,6 +3,8 @@ import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet } from "react-native";
+import { Image } from "expo-image";
+import { cssInterop } from "nativewind";
 import { MiniPlayer } from "@/components/Player/MiniPlayer";
 import { AppLoadingScreen } from "@/components/ui/AppLoadingScreen";
 import { AccountProvider, useAccount } from "@/account";
@@ -10,6 +12,8 @@ import { I18nProvider } from "@/i18n";
 import { ThemeProvider } from "@/theme";
 import { appLog, bootMeta, installGlobalErrorHandlers } from "@/utils/logger";
 import { useEffect } from "react";
+
+cssInterop(Image, { className: "style" });
 
 const stackAnimation = {
   headerShown: false as const,

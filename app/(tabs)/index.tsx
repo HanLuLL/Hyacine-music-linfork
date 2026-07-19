@@ -165,7 +165,7 @@ export default function HomeScreen(): React.JSX.Element {
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
         <Pressable className="overflow-hidden p-5" onPress={() => void onPlay(featured)}>
-          <Image className="absolute inset-0 h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" style={{ opacity: 0.16 }} />
+          <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.16 }} />
           <View className="min-h-48 flex-row items-end">
             <View className="min-w-0 flex-1 pr-4">
               <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
@@ -175,10 +175,10 @@ export default function HomeScreen(): React.JSX.Element {
             <View className="h-48 w-40 items-end justify-center">
               {featured.artwork ? (
                 <>
-                  <Image className="absolute h-36 w-28 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
-                  <Image className="absolute h-40 w-30 rounded-3xl" source={{ uri: featured.artwork }} contentFit="cover" style={{ right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
+                  <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 112, height: 144, borderRadius: 24, right: 1, top: 9, opacity: 0.35, transform: [{ rotate: "12deg" }] }} />
+                  <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ position: "absolute", width: 120, height: 160, borderRadius: 24, right: 18, top: 4, opacity: 0.65, transform: [{ rotate: "5deg" }] }} />
                   <View className="absolute h-44 w-32 overflow-hidden rounded-3xl" style={{ right: 36, top: 0, shadowColor: "#17212d", shadowOpacity: 0.22, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 0, transform: [{ rotate: "-4deg" }] }}>
-                    <Image className="h-full w-full" source={{ uri: featured.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
+                    <Image source={{ uri: featured.artwork }} contentFit="cover" style={{ width: "100%", height: "100%" }} onLoad={() => logCoverResult("load", featured.id, featured.artwork)} onError={() => logCoverResult("error", featured.id, featured.artwork)} />
                   </View>
                 </>
               ) : (
