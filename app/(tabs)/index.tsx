@@ -179,10 +179,11 @@ export default function HomeScreen(): React.JSX.Element {
     setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
   };
   const recommendationPan = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dx) > 2 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 0.8,
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponderCapture: (_, gesture) => Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+    onPanResponderTerminationRequest: () => false,
     onPanResponderRelease: (_, gesture) => {
-      if (Math.abs(gesture.dx) >= 14) changeFeatured(gesture.dx < 0 ? 1 : -1);
+      if (Math.abs(gesture.dx) >= 32) changeFeatured(gesture.dx < 0 ? 1 : -1);
     },
   })).current;
   return <ThemedScreen>
@@ -196,8 +197,8 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-<Animated.View className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-             <View {...recommendationPan.panHandlers} className="min-h-48 flex-row items-end">
+<Animated.View {...recommendationPan.panHandlers} className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+             <View className="min-h-48 flex-row items-end">
               <View className="min-w-0 flex-1 pr-4">
                 <Text className="text-xs font-bold" style={{ color: tokens.accent }}>为你推荐</Text>
                 <Text className="mt-3 text-2xl font-bold" numberOfLines={2} style={{ color: tokens.text }}>{featured.title}</Text>
