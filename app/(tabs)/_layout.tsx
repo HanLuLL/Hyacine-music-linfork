@@ -242,6 +242,7 @@ export default function TabsLayout(): React.JSX.Element {
   const { preferences, tokens } = useTheme();
   const isLiquid = preferences.uiStyle === "liquid";
   const isMiuix = preferences.uiStyle === "miuix";
+  return <View className="flex-1"><Tabs screenOptions={{
     headerShown: false,
     animation: "shift",
     transitionSpec: {
@@ -278,4 +279,5 @@ export default function TabsLayout(): React.JSX.Element {
     <Tabs.Screen name="search" options={{ title: t("search"), tabBarIcon: ({ color }) => <TabIcon symbol="⌕" color={color} /> }} />
     <Tabs.Screen name="library" options={{ title: t("library"), tabBarIcon: ({ color }) => <TabIcon symbol="♫" color={color} /> }} />
     <Tabs.Screen name="profile" options={{ title: t("profile"), tabBarIcon: ({ color }) => <TabIcon symbol="◉" color={color} /> }} />
+  </Tabs>{isLiquid ? <LiquidTabBar /> : null}{isMiuix ? <MiuixTabBar /> : null}</View>;
 }
