@@ -1,36 +1,102 @@
-name: Release
+name: Android Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, for example 1.1 or Beta1.1"
+        required: true
+        type: string
+      prerelease:
+        description: "Publish as prerelease"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  build-release:
-    name: Build & Release APK
+  publish:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip release]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: "17" }
-      - uses: gradle/actions/setup-gradle@v4
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Build release APK
-        run: ./gradlew :app:assembleRelease --no-daemon
-
-      - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release-unsigned.apk hyacine-music-${{ steps.version.outputs.VERSION }}.apk
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
         with:
-          name: "风堇音乐 v${{ steps.version.outputs.VERSION }}"
+          fetch-depth: 0
+      - id: version
+        name: Choose release version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [[ ! "$REQUESTED_VERSION" =~ ^(Beta)?[0-9]+\.[0-9]+$ ]]; then
+              echo "Version must be 1.1 or Beta1.1" >&2
+              exit 1
+            fi
+            echo "version=$REQUESTED_VERSION" >> "$GITHUB_OUTPUT"
+            echo "prerelease=${{ inputs.prerelease }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          latest=$(git tag -l --sort=-version:refname | awk '/^vBeta[0-9]+\.[0-9]+$/ { sub(/^vBeta/, ""); print; exit }')
+          if [ -n "$latest" ]; then
+            major=${latest%%.*}
+            minor=${latest##*.}
+          else
+            stable=$(git tag -l --sort=-version:refname | awk '/^v[0-9]+\.[0-9]+$/ { sub(/^v/, ""); print; exit }')
+            stable=${stable:-1.0}
+            major=${stable%%.*}
+            minor=${stable##*.}
+          fi
+          echo "version=Beta${major}.$((minor + 1))" >> "$GITHUB_OUTPUT"
+          echo "prerelease=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - run: pnpm install --frozen-lockfile
+      - name: Sync release version into App configuration
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          node -e 'const fs=require("fs");const p="app.json";const j=JSON.parse(fs.readFileSync(p,"utf8"));j.expo.version=process.env.VERSION;j.expo.android.versionCode=Number(process.env.RUN_NUMBER);fs.writeFileSync(p,JSON.stringify(j,null,2)+"\n")'
+      - run: pnpm typecheck
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Generate Android project and build APK
+        run: |
+          pnpm exec expo prebuild --platform android --non-interactive --no-install
+          cd android
+          ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a -x lintVitalRelease
+      - name: Commit synchronized App version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.json
+          git diff --cached --quiet || git commit -m "chore: release ${VERSION} [skip release]"
+          git push
+      - name: Name APK
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: mv android/app/build/outputs/apk/release/app-release.apk "hyacine-music-${VERSION}.apk"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: "风堇音乐 ${{ steps.version.outputs.version }}"
+          prerelease: ${{ steps.version.outputs.prerelease }}
           generate_release_notes: true
-          files: hyacine-music-${{ steps.version.outputs.VERSION }}.apk
+          files: hyacine-music-${{ steps.version.outputs.version }}.apk
