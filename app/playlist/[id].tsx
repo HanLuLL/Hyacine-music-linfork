@@ -6,6 +6,7 @@ import { useAudio } from "@/hooks/useAudio";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { useAccount } from "@/account";
 import { useTheme } from "@/theme";
+import { usePlayerStore } from "@/store/playerStore";
 import { apiBase } from "@/utils/apiBase";
 import { appLog, cookieMeta } from "@/utils/logger";
 import { normalizeMediaUrl } from "@/utils/media";
@@ -17,6 +18,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   const { id, name, cover } = useLocalSearchParams<{ id: string; name: string; cover?: string }>();
   const { profile, getSourceCredential } = useAccount();
   const { playTrack } = useAudio();
+  const setQueue = usePlayerStore((state) => state.setQueue);
   const { tokens } = useTheme();
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,10 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   useEffect(() => { void load(); }, [load]);
 
   const play = (t: PlaylistTrack) => {
-    const track: Track = { id: `netease:${t.id}`, title: t.title, artist: t.artists.join(" / "), url: "", artwork: normalizeMediaUrl(t.coverUrl), duration: t.durationMs / 1000 };
+    const queue = tracks.map((item): Track => ({ id: `netease:${item.id}`, title: item.title, artist: item.artists.join(" / "), url: "", artwork: normalizeMediaUrl(item.coverUrl), duration: item.durationMs / 1000 }));
+    const track = queue.find((item) => item.id === `netease:${t.id}`);
+    if (!track) return;
+    setQueue(queue, track.id);
     void playTrack(track);
   };
 

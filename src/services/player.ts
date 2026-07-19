@@ -6,6 +6,11 @@ import { appLog } from "@/utils/logger";
 
 let player: AudioPlayer | null = null;
 let modeReady = false;
+let playbackCompletionHandler: (() => void) | null = null;
+
+export function setPlaybackCompletionHandler(handler: (() => void) | null): void {
+  playbackCompletionHandler = handler;
+}
 
 async function ensureAudioMode(): Promise<void> {
   if (modeReady) return;
@@ -14,9 +19,14 @@ async function ensureAudioMode(): Promise<void> {
 }
 
 function bindStatus(active: AudioPlayer): void {
+  let completionHandled = false;
   active.addListener("playbackStatusUpdate", (status) => {
     usePlayerStore.getState().setPlaying(status.playing);
     usePlayerStore.getState().setProgress(status.currentTime, status.duration || 0);
+    const finished = Boolean(status.didJustFinish) || Boolean(status.duration && status.currentTime >= status.duration - 0.1 && !status.playing);
+    if (!finished || completionHandled) return;
+    completionHandled = true;
+    playbackCompletionHandler?.();
   });
 }
 

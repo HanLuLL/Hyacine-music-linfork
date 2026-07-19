@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import type { Track } from "@/types/music";
 import { appLog, summarizeUrl } from "@/utils/logger";
 import { useAccount } from "@/account";
@@ -76,5 +76,15 @@ export function useAudio(): UseAudioResult {
     setQueue(queue, nextTrack.id);
     await playTrack(nextTrack);
   }, [playTrack]);
+  useEffect(() => {
+    let disposed = false;
+    void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(() => {
+      if (!disposed) void skipTrack(1);
+    }));
+    return () => {
+      disposed = true;
+      void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(null));
+    };
+  }, [skipTrack]);
   return { playTrack, togglePlayback, seekBy, seekTo, skipTrack };
 }
