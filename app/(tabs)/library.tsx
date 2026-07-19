@@ -23,6 +23,8 @@ export default function LibraryScreen(): React.JSX.Element {
   const { tokens } = useTheme();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [recommendations, setRecommendations] = useState<Playlist[]>([]);
+  const [loadingMoreRecommendations, setLoadingMoreRecommendations] = useState(false);
+  const [hasMoreRecommendations, setHasMoreRecommendations] = useState(true);
   const [activeTab, setActiveTab] = useState<"mine" | "recommended">("mine");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -79,10 +81,12 @@ export default function LibraryScreen(): React.JSX.Element {
       const recommendationsResponse = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/recommendations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cookie }),
+        body: JSON.stringify({ cookie, limit: 10, offset: 0 }),
       });
       const recommended = await recommendationsResponse.json() as Playlist[] | { message?: string };
-      setRecommendations(recommendationsResponse.ok && Array.isArray(recommended) ? recommended : []);
+      const firstPage = recommendationsResponse.ok && Array.isArray(recommended) ? recommended : [];
+      setRecommendations(firstPage);
+      setHasMoreRecommendations(firstPage.length === 10);
       if (!data.length) setError("暂无可展示的歌单。");
     } catch (cause) {
       setPlaylists([]);
@@ -94,6 +98,19 @@ export default function LibraryScreen(): React.JSX.Element {
   }, [getSourceCredential, profile, t]);
 
   useEffect(() => { void loadPlaylists(); }, [loadPlaylists]);
+  const loadMoreRecommendations = async (): Promise<void> => {
+    if (!profile || activeTab !== "recommended" || loadingMoreRecommendations || !hasMoreRecommendations) return;
+    setLoadingMoreRecommendations(true);
+    try {
+      const cookie = await getSourceCredential("netease");
+      const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cookie, limit: 10, offset: recommendations.length }) });
+      const next = await response.json() as Playlist[];
+      if (!response.ok || !Array.isArray(next)) throw new Error("加载更多推荐失败");
+      setRecommendations((current) => [...current, ...next.filter((item) => !current.some((existing) => existing.id === item.id))]);
+      setHasMoreRecommendations(next.length === 10);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "加载更多推荐失败"); }
+    finally { setLoadingMoreRecommendations(false); }
+  };
   const createPlaylist = async (): Promise<void> => {
     const name = playlistName.trim();
     if (!name || !profile || profile.musicSource !== "netease" || creating) return;
@@ -138,7 +155,7 @@ export default function LibraryScreen(): React.JSX.Element {
     ]);
   };
   const visiblePlaylists = activeTab === "mine" ? playlists : recommendations;
-  return <ThemedScreen><ScrollView className="flex-1" contentContainerClassName="px-5 pb-40 pt-16" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPlaylists(true)} tintColor={tokens.accent} />}>
+  return <ThemedScreen><ScrollView className="flex-1" contentContainerClassName="px-5 pb-40 pt-16" onScroll={({ nativeEvent }) => { const { contentOffset, contentSize, layoutMeasurement } = nativeEvent; if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 300) void loadMoreRecommendations(); }} scrollEventThrottle={200} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPlaylists(true)} tintColor={tokens.accent} />}>
     <View className="flex-row items-start justify-between"><View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("library")}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>网易云音乐歌单</Text></View><LiquidControlSurface className="h-11 w-11 items-center justify-center rounded-full"><Pressable className="h-full w-full items-center justify-center" onPress={() => void loadPlaylists(true)}><Text style={{ color: tokens.text, fontSize: 18 }}>↻</Text></Pressable></LiquidControlSurface></View>
     <LiquidControlSurface className="mt-10 flex-row overflow-hidden rounded-full p-1" style={{ borderRadius: 999 }}><Pressable className="h-11 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: activeTab === "mine" ? `${tokens.accent}30` : "transparent" }} onPress={() => setActiveTab("mine")}><Text style={{ color: activeTab === "mine" ? tokens.text : tokens.mutedText, fontWeight: "800" }}>我的歌单</Text></Pressable><Pressable className="h-11 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: activeTab === "recommended" ? `${tokens.accent}30` : "transparent" }} onPress={() => setActiveTab("recommended")}><Text style={{ color: activeTab === "recommended" ? tokens.text : tokens.mutedText, fontWeight: "800" }}>推荐歌单</Text></Pressable></LiquidControlSurface>
     {activeTab === "mine" ? <View className="mt-7 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("myPlaylists")}</Text><Pressable onPress={() => setShowCreate((value) => !value)}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>{showCreate ? "收起" : "新建歌单"}</Text></Pressable></View> : <Text className="mt-7" style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>为你推荐</Text>}
