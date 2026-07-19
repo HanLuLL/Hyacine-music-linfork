@@ -8,7 +8,7 @@ Hyacine Music is an Expo Router / React Native music client written in TypeScrip
 
 - TypeScript, Expo Router, React Native, NativeWind, `expo-image`, and `expo-audio`
 - Native, liquid-glass, and MIUIX interface styles
-- Four player layouts: flowing lyrics, immersive artwork, minimal artwork, and cover lyrics
+- Four player layouts: centered lyrics, full artwork, compact artwork, and artwork with lyrics
 - Netease QR login, profile, daily songs, recommendations, playlists, search, playback, timed lyrics, read-only comments
 - Local favorites and listening history stored on the device
 - Play URLs are resolved again before playback so saved/history entries do not depend on expired stream URLs
