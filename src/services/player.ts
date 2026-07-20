@@ -37,8 +37,7 @@ function bindStatus(active: AudioPlayer): void {
     usePlayerStore.getState().setProgress(nowTime, nowDuration);
     if (completed) return;
     const endedNatural = Boolean((status as { didJustFinish?: boolean }).didJustFinish)
-      || (nowDuration > 0 && nowTime >= nowDuration - 0.5)
-      || (lastDuration > 0 && nowTime >= lastDuration - 0.5);
+      || (nowDuration > 0 && nowTime >= nowDuration - 0.5);
     lastTime = nowTime;
     lastDuration = nowDuration;
     if (!endedNatural) return;
@@ -59,14 +58,9 @@ function bindStatus(active: AudioPlayer): void {
         return;
       }
       if (queueIndex < 0) return;
-      const nextIndex = playMode === "shuffle"
-        ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
-        : (queueIndex + 1) % queue.length;
       const nextTrack = queue[nextIndex];
       if (nextTrack) {
         playResolved(nextTrack, nextTrack.id);
-      } else if (playMode === "loop") {
-        playResolved(queue[0], queue[0].id);
       }
     }
   });
