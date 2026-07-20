@@ -77,14 +77,7 @@ export function useAudio(): UseAudioResult {
     await playTrack(nextTrack);
   }, [playTrack]);
   useEffect(() => {
-    let disposed = false;
-    void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(() => {
-      if (!disposed) void skipTrack(1);
-    }));
-    return () => {
-      disposed = true;
-      void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(null));
-    };
-  }, [skipTrack]);
+    void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(null));
+  }, []);
   return { playTrack, togglePlayback, seekBy, seekTo, skipTrack };
 }
