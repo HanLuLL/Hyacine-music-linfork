@@ -10,7 +10,6 @@
     "userInterfaceStyle": "dark",
     "plugins": [
       "expo-router",
-      "./modules/expo-fluid-cloud",
       "expo-secure-store",
       [
         "expo-splash-screen",
@@ -78,6 +77,9 @@
     "newArchEnabled": false,
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "modules": [
+      "./modules/expo-fluid-cloud"
+    ]
   }
 }
