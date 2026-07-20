@@ -23,6 +23,7 @@ async function ensureAudioMode(): Promise<void> {
 }
 
 let nextPlayerId = 0;
+let lastFluidCloudPush = 0;
 function bindStatus(active: AudioPlayer): void {
   const playerId = ++nextPlayerId;
   let lastTime = 0;
@@ -37,7 +38,11 @@ function bindStatus(active: AudioPlayer): void {
     usePlayerStore.getState().setPlaying(nowPlaying);
     usePlayerStore.getState().setProgress(nowTime, nowDuration);
     const currentTrack = usePlayerStore.getState().currentTrack;
-    if (currentTrack && (Math.abs(nowTime - lastTime) > 1 || nowPlaying !== lastPlaying)) {
+    const now = Date.now();
+    const timeChanged = Math.abs(nowTime - lastTime) > 1;
+    const playingChanged = nowPlaying !== lastPlaying;
+    if (currentTrack && (timeChanged || playingChanged) && now - lastFluidCloudPush > 1000) {
+      lastFluidCloudPush = now;
       void updateFluidCloudNowPlaying({
         title: currentTrack.title,
         artist: currentTrack.artist,
@@ -50,6 +55,8 @@ function bindStatus(active: AudioPlayer): void {
     lastTime = nowTime;
     lastPlaying = nowPlaying;
     if (completed) return;
+    const playModeActual = usePlayerStore.getState().playMode;
+    const repeatModeActual = usePlayerStore.getState().repeatMode;
     const endedNatural = Boolean((status as { didJustFinish?: boolean }).didJustFinish)
       || (nowDuration > 0 && nowTime >= nowDuration - 0.5);
     lastTime = nowTime;
@@ -58,7 +65,7 @@ function bindStatus(active: AudioPlayer): void {
     completed = true;
     playbackCompletionHandler?.();
     if (!playbackCompletionHandler) {
-      const { queue, queueIndex, playMode, setQueue, currentTrack, pendingQueue, appendPendingToQueue } = usePlayerStore.getState();
+      const { queue, queueIndex, playMode, repeatMode, setQueue, currentTrack, pendingQueue, appendPendingToQueue } = usePlayerStore.getState();
       if (queue.length > 0 && queue.length - Math.max(queueIndex, 0) <= 3 && pendingQueue.length > 0) {
         appendPendingToQueue(5);
       }
@@ -69,6 +76,10 @@ function bindStatus(active: AudioPlayer): void {
           .then((resolved) => playTrack(resolved))
           .catch((error) => appLog.error("player", "auto next failed", { error, id }));
       };
+      if (repeatMode === "one" && currentTrack) {
+        playResolved(currentTrack, currentTrack.id);
+        return;
+      }
       if (queue.length === 1) {
         if (playMode === "loop" && currentTrack) {
           playResolved(currentTrack, currentTrack.id);

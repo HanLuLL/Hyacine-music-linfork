@@ -1,10 +1,16 @@
 export interface NowPlayingData {
   title: string;
   artist: string;
+  album?: string;
   progress?: number;
   duration?: number;
   isPlaying?: boolean;
   coverUrl?: string;
+  lyrics?: string;
+  supportPlayPause?: boolean;
+  supportNext?: boolean;
+  supportPrev?: boolean;
+  supportSeek?: boolean;
 }
 
 declare global {

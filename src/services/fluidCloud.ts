@@ -20,7 +20,7 @@ export async function updateFluidCloudNowPlaying(data: NowPlayingData): Promise<
   if (Platform.OS !== "android") return;
   if (!(await isFluidCloudAvailable())) return;
   try {
-    await FluidCloud.updateNowPlaying(data);
+    await FluidCloud.updateNowPlaying({ ...data, supportPlayPause: true, supportNext: true, supportPrev: true, supportSeek: true });
   } catch (e) {
     appLog.warn("fluid-cloud", "updateNowPlaying failed", { error: String(e) });
   }
