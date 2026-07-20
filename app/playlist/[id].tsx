@@ -19,6 +19,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   const { profile, getSourceCredential } = useAccount();
   const { playTrack } = useAudio();
   const setQueue = usePlayerStore((state) => state.setQueue);
+  const setPendingQueue = usePlayerStore((state) => state.setPendingQueue);
   const { tokens } = useTheme();
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +54,12 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   useEffect(() => { void load(); }, [load]);
 
   const play = (t: PlaylistTrack) => {
-    const queue = tracks.slice(0, 50).map((item): Track => ({ id: `netease:${item.id}`, title: item.title, artist: item.artists.join(" / "), url: "", artwork: normalizeMediaUrl(item.coverUrl), duration: item.durationMs / 1000 }));
+    const all = tracks.map((item): Track => ({ id: `netease:${item.id}`, title: item.title, artist: item.artists.join(" / "), url: "", artwork: normalizeMediaUrl(item.coverUrl), duration: item.durationMs / 1000 }));
+    const queue = all.slice(0, 50);
     const track = queue.find((item) => item.id === `netease:${t.id}`);
     if (!track) return;
     setQueue(queue, track.id);
+    setPendingQueue(all.slice(50));
     void playTrack(track);
   };
 

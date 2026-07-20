@@ -44,9 +44,13 @@ function bindStatus(active: AudioPlayer): void {
     completed = true;
     playbackCompletionHandler?.();
     if (!playbackCompletionHandler) {
-      const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
+      const { queue, queueIndex, playMode, setQueue, currentTrack, pendingQueue, appendPendingToQueue } = usePlayerStore.getState();
+      if (queue.length > 0 && queue.length - Math.max(queueIndex, 0) <= 3 && pendingQueue.length > 0) {
+        appendPendingToQueue(5);
+      }
+      const refreshed = usePlayerStore.getState().queue;
       const playResolved = (track: Track, id: string) => {
-        setQueue(queue, id);
+        setQueue(refreshed, id);
         void (trackResolver ? trackResolver(track) : Promise.resolve(track))
           .then((resolved) => playTrack(resolved))
           .catch((error) => appLog.error("player", "auto next failed", { error, id }));
