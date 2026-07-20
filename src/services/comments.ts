@@ -17,14 +17,14 @@ export interface SongCommentsPage {
   comments: SongComment[];
 }
 
-export async function loadSongComments(backendUrl: string, trackId: string, cookie?: string | null): Promise<SongCommentsPage> {
+export async function loadSongComments(backendUrl: string, trackId: string, cookie?: string | null, offset?: number): Promise<SongCommentsPage> {
   if (!trackId.startsWith("netease:")) return { total: 0, more: false, comments: [] };
   const id = Number(trackId.slice(8));
   if (!id) return { total: 0, more: false, comments: [] };
   const response = await fetch(`${apiBase(backendUrl)}/music-sources/netease/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, cookie: cookie ?? undefined, limit: 60 }),
+    body: JSON.stringify({ id, cookie: cookie ?? undefined, limit: 20, offset: offset ?? 0 }),
   });
   if (!response.ok) throw new Error("评论加载失败");
   return await response.json() as SongCommentsPage;
