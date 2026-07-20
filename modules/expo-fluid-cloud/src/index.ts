@@ -1,6 +1,3 @@
-// @ts-ignore - native module
-const NativeModule = (globalThis as any).ExpoFluidCloud;
-
 export interface NowPlayingData {
   title: string;
   artist: string;
@@ -10,14 +7,45 @@ export interface NowPlayingData {
   coverUrl?: string;
 }
 
+declare global {
+  interface ExpoModules {
+    ExpoFluidCloud: {
+      isAvailable(): Promise<boolean>;
+      updateNowPlaying(data: NowPlayingData): Promise<void>;
+      removeNowPlaying(): Promise<void>;
+    };
+  }
+}
+
+// Lazy-load the native module to avoid import-time crashes on platforms
+// where the module is not installed (e.g. iOS, bare RN).
+let _native: any = null;
+function getNative(): any {
+  if (_native !== null) return _native;
+  try {
+    // Resolve via ExpoModulesCore on Android; falls back to undefined elsewhere.
+    const r = require("expo-modules-core");
+    _native = r?.requireNativeModule?.("ExpoFluidCloud") ?? null;
+  } catch {
+    _native = null;
+  }
+  return _native;
+}
+
 export const FluidCloud = {
   async isAvailable(): Promise<boolean> {
-    try { return await NativeModule.isAvailable(); } catch { return false; }
+    const mod = getNative();
+    if (!mod) return false;
+    try { return await mod.isAvailable(); } catch { return false; }
   },
   async updateNowPlaying(data: NowPlayingData): Promise<void> {
-    try { await NativeModule.updateNowPlaying(data); } catch {}
+    const mod = getNative();
+    if (!mod) return;
+    try { await mod.updateNowPlaying(data); } catch {}
   },
   async removeNowPlaying(): Promise<void> {
-    try { await NativeModule.removeNowPlaying(); } catch {}
+    const mod = getNative();
+    if (!mod) return;
+    try { await mod.removeNowPlaying(); } catch {}
   },
 };
