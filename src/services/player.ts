@@ -58,9 +58,14 @@ function bindStatus(active: AudioPlayer): void {
         return;
       }
       if (queueIndex < 0) return;
+      const nextIndex = playMode === "shuffle"
+        ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
+        : (queueIndex + 1) % queue.length;
       const nextTrack = queue[nextIndex];
       if (nextTrack) {
         playResolved(nextTrack, nextTrack.id);
+      } else if (playMode === "loop") {
+        playResolved(queue[0], queue[0].id);
       }
     }
   });
