@@ -9,11 +9,13 @@ interface PlayerState {
   queue: Track[];
   queueIndex: number;
   shuffleEnabled: boolean;
+  repeatMode: "none" | "one" | "all";
   setCurrentTrack: (track: Track | null) => void;
   setQueue: (tracks: Track[], currentTrackId?: string) => void;
   removeFromQueue: (trackId: string) => void;
   clearQueue: () => void;
   setShuffleEnabled: (enabled: boolean) => void;
+  cycleRepeatMode: () => void;
   setPlaying: (isPlaying: boolean) => void;
   setProgress: (progress: number, duration: number) => void;
 }
@@ -26,6 +28,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   queue: [],
   queueIndex: -1,
   shuffleEnabled: false,
+  repeatMode: "none",
   setCurrentTrack: (currentTrack) => set({ currentTrack }),
   setQueue: (queue, currentTrackId) => set({
     queue,
@@ -38,6 +41,11 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   }),
   clearQueue: () => set({ queue: [], queueIndex: -1 }),
   setShuffleEnabled: (shuffleEnabled) => set({ shuffleEnabled }),
-  setPlaying: (isPlaying) => set({ isPlaying }),
+  cycleRepeatMode: () => set((state) => {
+    const modes: Array<"none" | "one" | "all"> = ["none", "one", "all"];
+    const next = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
+    return { repeatMode: next };
+  }),
+setPlaying: (isPlaying) => set({ isPlaying }),
   setProgress: (progress, duration) => set({ progress, duration }),
 }));

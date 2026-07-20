@@ -67,8 +67,12 @@ export function useAudio(): UseAudioResult {
     await (await loadPlayer()).seekTo(seconds);
   }, []);
   const skipTrack = useCallback(async (direction: -1 | 1) => {
-    const { queue, queueIndex, shuffleEnabled, setQueue } = usePlayerStore.getState();
+    const { queue, queueIndex, shuffleEnabled, repeatMode, setQueue } = usePlayerStore.getState();
     if (queue.length < 2 || queueIndex < 0) return;
+    if (repeatMode === "one" && direction === 1) {
+      const current = usePlayerStore.getState().currentTrack;
+      if (current) { await playTrack(current); return; }
+    }
     const nextIndex = shuffleEnabled
       ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
       : (queueIndex + direction + queue.length) % queue.length;
