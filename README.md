@@ -54,3 +54,5 @@ pnpm android
 A source commit or successful TypeScript check does not mean a phone has received the change. Build, installation, backend deployment, and real-device verification are separate steps.
 
 ## License
+
+MIT License — see [LICENSE](LICENSE).
