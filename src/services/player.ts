@@ -3,13 +3,16 @@ import { usePlayerStore } from "@/store/playerStore";
 import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 import { appLog } from "@/utils/logger";
-
 let player: AudioPlayer | null = null;
 let modeReady = false;
 let playbackCompletionHandler: (() => void) | null = null;
+let trackResolver: ((track: Track) => Promise<Track>) | null = null;
 
 export function setPlaybackCompletionHandler(handler: (() => void) | null): void {
   playbackCompletionHandler = handler;
+}
+export function setTrackResolver(resolver: ((track: Track) => Promise<Track>) | null): void {
+  trackResolver = resolver;
 }
 
 async function ensureAudioMode(): Promise<void> {
@@ -39,9 +42,15 @@ function bindStatus(active: AudioPlayer): void {
         playbackCompletionHandler?.();
         if (!playbackCompletionHandler) {
           const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
+          const playResolved = (track: Track, id: string) => {
+            setQueue(queue, id);
+            void (trackResolver ? trackResolver(track) : Promise.resolve(track))
+              .then((resolved) => playTrack(resolved))
+              .catch((error) => appLog.error("player", "auto next failed", { error, id }));
+          };
           if (queue.length === 1) {
             if (playMode === "loop" && currentTrack) {
-              void playTrack(currentTrack);
+              playResolved(currentTrack, currentTrack.id);
             }
             return;
           }
@@ -51,10 +60,9 @@ function bindStatus(active: AudioPlayer): void {
             : (queueIndex + 1) % queue.length;
           const nextTrack = queue[nextIndex];
           if (nextTrack) {
-            setQueue(queue, nextTrack.id);
-            void playTrack(nextTrack);
+            playResolved(nextTrack, nextTrack.id);
           } else if (playMode === "loop") {
-            void playTrack(queue[0]);
+            playResolved(queue[0], queue[0].id);
           }
         }
       }

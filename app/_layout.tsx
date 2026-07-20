@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/theme";
 import { AudioPreferencesProvider } from "@/audioPreferences";
 import { appLog, bootMeta, installGlobalErrorHandlers } from "@/utils/logger";
 import { useEffect } from "react";
+import { useRegisterTrackResolver } from "@/hooks/useAudio";
 
 cssInterop(Image, { className: "style" });
 
@@ -28,6 +29,7 @@ const stackAnimation = {
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
   const pathname = usePathname();
+  useRegisterTrackResolver();
   const showMiniPlayer = !pathname.startsWith("/settings") && !pathname.startsWith("/player/") && pathname !== "/admin" && pathname !== "/queue";
 
   useEffect(() => {

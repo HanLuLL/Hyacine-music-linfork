@@ -5,7 +5,6 @@ import { useAccount } from "@/account";
 import { resolvePlayableTrack } from "@/services/musicApi";
 import { useAudioPreferences } from "@/audioPreferences";
 import { usePlayerStore } from "@/store/playerStore";
-
 type PlayerModule = typeof import("@/services/player");
 
 function loadPlayer(): Promise<PlayerModule> {
@@ -80,4 +79,27 @@ export function useAudio(): UseAudioResult {
     void loadPlayer().then(({ setPlaybackCompletionHandler }) => setPlaybackCompletionHandler(null));
   }, []);
   return { playTrack, togglePlayback, seekBy, seekTo, skipTrack };
+}
+
+export function useRegisterTrackResolver(): void {
+  const { profile, getSourceCredential } = useAccount();
+  const { quality } = useAudioPreferences();
+  useEffect(() => {
+    let cancelled = false;
+    void loadPlayer().then(({ setTrackResolver }) => {
+      if (cancelled) return;
+      setTrackResolver(async (track: Track) => {
+        if (profile?.backendUrl && (track.id.startsWith("netease:") || track.id.startsWith("bilibili:"))) {
+          const source = track.id.startsWith("netease:") ? "netease" : "bilibili";
+          const cookie = await getSourceCredential(source);
+          return await resolvePlayableTrack({ backendUrl: profile.backendUrl, track, cookie, quality });
+        }
+        return track;
+      });
+    });
+    return () => {
+      cancelled = true;
+      void loadPlayer().then(({ setTrackResolver }) => setTrackResolver(null));
+    };
+  }, [getSourceCredential, profile?.backendUrl, quality]);
 }
