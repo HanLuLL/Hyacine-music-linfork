@@ -17,12 +17,14 @@ import { resolvePlayableTrack, searchTracks } from "@/services/musicApi";
 import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import type { Track } from "@/types/music";
+import { usePlayerStore } from "@/store/playerStore";
 
 export default function SearchScreen(): React.JSX.Element {
   const { t } = useI18n();
   const { tokens } = useTheme();
   const { profile, getSourceCredential } = useAccount();
   const { playTrack } = useAudio();
+  const setQueue = usePlayerStore((state) => state.setQueue);
   const [keywords, setKeywords] = useState("");
   const [results, setResults] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,6 +72,7 @@ export default function SearchScreen(): React.JSX.Element {
       if (!profile?.backendUrl) return;
       setPlayingId(track.id);
       setError("");
+      setQueue(results, track.id);
       try {
         const cookie = await getSourceCredential(source);
         const playable = await resolvePlayableTrack({
