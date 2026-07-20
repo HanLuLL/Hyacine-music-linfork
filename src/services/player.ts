@@ -28,14 +28,14 @@ function bindStatus(active: AudioPlayer): void {
     completionHandled = true;
     playbackCompletionHandler?.();
     if (!playbackCompletionHandler) {
-      const { queue, queueIndex, shuffleEnabled, repeatMode, setQueue } = usePlayerStore.getState();
-      if (repeatMode === "one") {
+      const { queue, queueIndex, playMode, setQueue } = usePlayerStore.getState();
+      if (playMode === "loop" && queue.length === 1) {
         const current = usePlayerStore.getState().currentTrack;
         if (current) void playTrack(current);
         return;
       }
       if (queue.length >= 2 && queueIndex >= 0) {
-        const nextIndex = shuffleEnabled
+        const nextIndex = playMode === "shuffle"
           ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
           : (queueIndex + 1) % queue.length;
         const nextTrack = queue[nextIndex];
@@ -43,9 +43,6 @@ function bindStatus(active: AudioPlayer): void {
           setQueue(queue, nextTrack.id);
           void playTrack(nextTrack);
         }
-      } else if (repeatMode === "all" && queue.length === 1) {
-        const current = usePlayerStore.getState().currentTrack;
-        if (current) void playTrack(current);
       }
     }
   });

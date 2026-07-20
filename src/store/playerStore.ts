@@ -10,12 +10,14 @@ interface PlayerState {
   queueIndex: number;
   shuffleEnabled: boolean;
   repeatMode: "none" | "one" | "all";
+  playMode: "sequential" | "loop" | "shuffle";
   setCurrentTrack: (track: Track | null) => void;
   setQueue: (tracks: Track[], currentTrackId?: string) => void;
   removeFromQueue: (trackId: string) => void;
   clearQueue: () => void;
   setShuffleEnabled: (enabled: boolean) => void;
   cycleRepeatMode: () => void;
+  cyclePlayMode: () => void;
   setPlaying: (isPlaying: boolean) => void;
   setProgress: (progress: number, duration: number) => void;
 }
@@ -29,6 +31,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   queueIndex: -1,
   shuffleEnabled: false,
   repeatMode: "none",
+  playMode: "sequential",
   setCurrentTrack: (currentTrack) => set({ currentTrack }),
   setQueue: (queue, currentTrackId) => set({
     queue,
@@ -45,6 +48,11 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     const modes: Array<"none" | "one" | "all"> = ["none", "one", "all"];
     const next = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
     return { repeatMode: next };
+  }),
+  cyclePlayMode: () => set((state) => {
+    const modes: Array<"sequential" | "loop" | "shuffle"> = ["sequential", "loop", "shuffle"];
+    const next = modes[(modes.indexOf(state.playMode) + 1) % modes.length];
+    return { playMode: next, shuffleEnabled: next === "shuffle", repeatMode: next === "loop" ? "all" : "none" };
   }),
 setPlaying: (isPlaying) => set({ isPlaying }),
   setProgress: (progress, duration) => set({ progress, duration }),
