@@ -25,6 +25,8 @@ Hyacine Music is an Expo Router / React Native music client written in TypeScrip
 - Paginated recommended playlists (load more on scroll)
 - Server health monitoring and non-JSON upstream response protection
 - Desktop lyric overlay (floating window) support
+- Repeat-one mode replays the current track instead of advancing
+- Fluid Cloud now-playing card on OPPO/realme devices shows cover, title, artist, lyrics, real-time progress, and play/pause/prev/next/seek controls
 
 ## Administration and privacy
 
