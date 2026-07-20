@@ -11,11 +11,20 @@ Hyacine Music is an Expo Router / React Native music client written in TypeScrip
 - Four player layouts: centered lyrics, full artwork, compact artwork, and artwork with lyrics
 - Netease QR login, profile, daily songs, recommendations, playlists, search, playback, timed lyrics, read-only comments
 - Local favorites and listening history stored on the device
+- Favorites sync to Netease dedicated playlist "收藏风堇音乐" with local-first fallback
 - Play URLs are resolved again before playback so saved/history entries do not depend on expired stream URLs
 - Lyrics auto-positioning and tap-to-seek
 - Dedicated audio settings for Netease streaming quality, sound presets, and a saved ten-band equalizer configuration
 - Bottom-bar-only swipe navigation; page content does not capture tab swipes
 - On-device administration screen for profile summary, local data counts, credential-presence status, redacted logs, and backend health
+- Playback queue with sequential, loop (repeat list), and shuffle modes (single toggle button)
+- Auto-next track on completion (works regardless of which screen the user is on)
+- Lock screen media controls (title, artist, artwork, seek forward/backward)
+- MiniPlayer hidden on admin and queue pages for clean browsing
+- Native swipe gesture for daily recommendation cards
+- Paginated recommended playlists (load more on scroll)
+- Server health monitoring and non-JSON upstream response protection
+- Desktop lyric overlay (floating window) support
 
 ## Administration and privacy
 
@@ -45,5 +54,3 @@ pnpm android
 A source commit or successful TypeScript check does not mean a phone has received the change. Build, installation, backend deployment, and real-device verification are separate steps.
 
 ## License
-
-This project is released under the [MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software as permitted by the license. The software is provided without warranty.
