@@ -27,6 +27,19 @@ function bindStatus(active: AudioPlayer): void {
     if (!finished || completionHandled) return;
     completionHandled = true;
     playbackCompletionHandler?.();
+    if (!playbackCompletionHandler) {
+      const { queue, queueIndex, shuffleEnabled, setQueue } = usePlayerStore.getState();
+      if (queue.length >= 2 && queueIndex >= 0) {
+        const nextIndex = shuffleEnabled
+          ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
+          : (queueIndex + 1) % queue.length;
+        const nextTrack = queue[nextIndex];
+        if (nextTrack) {
+          setQueue(queue, nextTrack.id);
+          void playTrack(nextTrack);
+        }
+      }
+    }
   });
 }
 
