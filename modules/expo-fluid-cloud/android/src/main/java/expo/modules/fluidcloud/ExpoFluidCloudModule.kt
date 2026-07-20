@@ -29,7 +29,7 @@ class ExpoFluidCloudModule : Module() {
 
     AsyncFunction("isAvailable") { promise: Promise ->
       try {
-        val ctx = appContext.reactActivity ?: throw Exception("No activity")
+        val ctx = appContext.reactContext ?: throw Exception("No React context")
         val cursor = ctx.contentResolver.query(
           Uri.parse(QUERY_FEATURE_URI),
           null, "music_playback", null, null
@@ -44,7 +44,7 @@ class ExpoFluidCloudModule : Module() {
 
     AsyncFunction("updateNowPlaying") { data: Map<String, Any?>, promise: Promise ->
       try {
-        val ctx = appContext.reactActivity ?: throw Exception("No activity")
+        val ctx = appContext.reactContext ?: throw Exception("No React context")
         val values = ContentValues()
 
         // Template type: music_playback (progress)
@@ -108,7 +108,7 @@ class ExpoFluidCloudModule : Module() {
     AsyncFunction("removeNowPlaying") { promise: Promise ->
       try {
         templateId?.let { id ->
-          val ctx = appContext.reactActivity ?: throw Exception("No activity")
+          val ctx = appContext.reactContext ?: throw Exception("No React context")
           ctx.contentResolver.delete(Uri.parse(DELETE_INTENT_URI), "templateId = ?", arrayOf(id))
           templateId = null
         }
