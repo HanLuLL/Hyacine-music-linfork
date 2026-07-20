@@ -3,6 +3,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 import { appLog } from "@/utils/logger";
+import { updateFluidCloudNowPlaying, removeFluidCloudNowPlaying } from "@/services/fluidCloud";
 let player: AudioPlayer | null = null;
 let modeReady = false;
 let playbackCompletionHandler: (() => void) | null = null;
@@ -22,11 +23,11 @@ async function ensureAudioMode(): Promise<void> {
 }
 
 let nextPlayerId = 0;
-
 function bindStatus(active: AudioPlayer): void {
   const playerId = ++nextPlayerId;
   let lastTime = 0;
   let lastDuration = 0;
+  let lastPlaying = false;
   let completed = false;
   active.addListener("playbackStatusUpdate", (status) => {
     if (playerId !== nextPlayerId) return;
@@ -35,6 +36,19 @@ function bindStatus(active: AudioPlayer): void {
     const nowDuration = status.duration ?? 0;
     usePlayerStore.getState().setPlaying(nowPlaying);
     usePlayerStore.getState().setProgress(nowTime, nowDuration);
+    const currentTrack = usePlayerStore.getState().currentTrack;
+    if (currentTrack && (Math.abs(nowTime - lastTime) > 1 || nowPlaying !== lastPlaying)) {
+      void updateFluidCloudNowPlaying({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        coverUrl: currentTrack.artwork,
+        progress: nowTime,
+        duration: nowDuration,
+        isPlaying: nowPlaying,
+      });
+    }
+    lastTime = nowTime;
+    lastPlaying = nowPlaying;
     if (completed) return;
     const endedNatural = Boolean((status as { didJustFinish?: boolean }).didJustFinish)
       || (nowDuration > 0 && nowTime >= nowDuration - 0.5);
@@ -87,6 +101,14 @@ export async function playTrack(track: Track): Promise<void> {
     player.play();
     player.setActiveForLockScreen(true, { title: track.title, artist: track.artist, artworkUrl: track.artwork });
     await recordListeningHistory(track);
+    void updateFluidCloudNowPlaying({
+      title: track.title,
+      artist: track.artist,
+      coverUrl: track.artwork,
+      progress: 0,
+      duration: track.duration ?? 0,
+      isPlaying: true,
+    });
   } catch (error) {
     usePlayerStore.getState().setPlaying(false);
     appLog.error("player", "expo-audio playback failed", error);
