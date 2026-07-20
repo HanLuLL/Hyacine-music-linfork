@@ -28,21 +28,23 @@ function bindStatus(active: AudioPlayer): void {
     completionHandled = true;
     playbackCompletionHandler?.();
     if (!playbackCompletionHandler) {
-      const { queue, queueIndex, playMode, setQueue } = usePlayerStore.getState();
-      if (playMode === "loop" && queue.length === 1) {
-        const current = usePlayerStore.getState().currentTrack;
-        if (current) void playTrack(current);
+      const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
+      if (queue.length === 1) {
+        if (playMode === "loop" && currentTrack) {
+          void playTrack(currentTrack);
+        }
         return;
       }
-      if (queue.length >= 2 && queueIndex >= 0) {
-        const nextIndex = playMode === "shuffle"
-          ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
-          : (queueIndex + 1) % queue.length;
-        const nextTrack = queue[nextIndex];
-        if (nextTrack) {
-          setQueue(queue, nextTrack.id);
-          void playTrack(nextTrack);
-        }
+      if (queueIndex < 0) return;
+      const nextIndex = playMode === "shuffle"
+        ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
+        : (queueIndex + 1) % queue.length;
+      const nextTrack = queue[nextIndex];
+      if (nextTrack) {
+        setQueue(queue, nextTrack.id);
+        void playTrack(nextTrack);
+      } else if (playMode === "loop") {
+        void playTrack(queue[0]);
       }
     }
   });
