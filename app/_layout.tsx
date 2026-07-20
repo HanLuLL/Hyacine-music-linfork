@@ -28,7 +28,7 @@ const stackAnimation = {
 function AppNavigator(): React.JSX.Element {
   const { hydrated, profile } = useAccount();
   const pathname = usePathname();
-  const showMiniPlayer = !pathname.startsWith("/settings") && !pathname.startsWith("/player/");
+  const showMiniPlayer = !pathname.startsWith("/settings") && !pathname.startsWith("/player/") && pathname !== "/admin" && pathname !== "/queue";
 
   useEffect(() => {
     if (!hydrated) return;
