@@ -25,7 +25,8 @@ let nextPlayerId = 0;
 
 function bindStatus(active: AudioPlayer): void {
   const playerId = ++nextPlayerId;
-  let wasPlaying = false;
+  let lastTime = 0;
+  let lastDuration = 0;
   let completed = false;
   active.addListener("playbackStatusUpdate", (status) => {
     if (playerId !== nextPlayerId) return;
@@ -34,40 +35,40 @@ function bindStatus(active: AudioPlayer): void {
     const nowDuration = status.duration ?? 0;
     usePlayerStore.getState().setPlaying(nowPlaying);
     usePlayerStore.getState().setProgress(nowTime, nowDuration);
-    if (wasPlaying && !nowPlaying && !completed) {
-      const nearEnd = nowDuration > 0 && nowTime >= nowDuration - 0.5;
-      const hasPlayed = nowTime > 3;
-      if (nearEnd || hasPlayed) {
-        completed = true;
-        playbackCompletionHandler?.();
-        if (!playbackCompletionHandler) {
-          const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
-          const playResolved = (track: Track, id: string) => {
-            setQueue(queue, id);
-            void (trackResolver ? trackResolver(track) : Promise.resolve(track))
-              .then((resolved) => playTrack(resolved))
-              .catch((error) => appLog.error("player", "auto next failed", { error, id }));
-          };
-          if (queue.length === 1) {
-            if (playMode === "loop" && currentTrack) {
-              playResolved(currentTrack, currentTrack.id);
-            }
-            return;
-          }
-          if (queueIndex < 0) return;
-          const nextIndex = playMode === "shuffle"
-            ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
-            : (queueIndex + 1) % queue.length;
-          const nextTrack = queue[nextIndex];
-          if (nextTrack) {
-            playResolved(nextTrack, nextTrack.id);
-          } else if (playMode === "loop") {
-            playResolved(queue[0], queue[0].id);
-          }
+    if (completed) return;
+    const endedNatural = Boolean((status as { didJustFinish?: boolean }).didJustFinish)
+      || (nowDuration > 0 && nowTime >= nowDuration - 0.5)
+      || (lastDuration > 0 && nowTime >= lastDuration - 0.5);
+    lastTime = nowTime;
+    lastDuration = nowDuration;
+    if (!endedNatural) return;
+    completed = true;
+    playbackCompletionHandler?.();
+    if (!playbackCompletionHandler) {
+      const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
+      const playResolved = (track: Track, id: string) => {
+        setQueue(queue, id);
+        void (trackResolver ? trackResolver(track) : Promise.resolve(track))
+          .then((resolved) => playTrack(resolved))
+          .catch((error) => appLog.error("player", "auto next failed", { error, id }));
+      };
+      if (queue.length === 1) {
+        if (playMode === "loop" && currentTrack) {
+          playResolved(currentTrack, currentTrack.id);
         }
+        return;
+      }
+      if (queueIndex < 0) return;
+      const nextIndex = playMode === "shuffle"
+        ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
+        : (queueIndex + 1) % queue.length;
+      const nextTrack = queue[nextIndex];
+      if (nextTrack) {
+        playResolved(nextTrack, nextTrack.id);
+      } else if (playMode === "loop") {
+        playResolved(queue[0], queue[0].id);
       }
     }
-    wasPlaying = nowPlaying;
   });
 }
 
