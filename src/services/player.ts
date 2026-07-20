@@ -18,35 +18,48 @@ async function ensureAudioMode(): Promise<void> {
   modeReady = true;
 }
 
+let nextPlayerId = 0;
+
 function bindStatus(active: AudioPlayer): void {
-  let completionHandled = false;
+  const playerId = ++nextPlayerId;
+  let wasPlaying = false;
+  let completed = false;
   active.addListener("playbackStatusUpdate", (status) => {
-    usePlayerStore.getState().setPlaying(status.playing);
-    usePlayerStore.getState().setProgress(status.currentTime, status.duration || 0);
-    const finished = Boolean(status.didJustFinish) || Boolean(status.duration && status.currentTime >= status.duration - 0.1 && !status.playing);
-    if (!finished || completionHandled) return;
-    completionHandled = true;
-    playbackCompletionHandler?.();
-    if (!playbackCompletionHandler) {
-      const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
-      if (queue.length === 1) {
-        if (playMode === "loop" && currentTrack) {
-          void playTrack(currentTrack);
+    if (playerId !== nextPlayerId) return;
+    const nowPlaying = status.playing ?? false;
+    const nowTime = status.currentTime ?? 0;
+    const nowDuration = status.duration ?? 0;
+    usePlayerStore.getState().setPlaying(nowPlaying);
+    usePlayerStore.getState().setProgress(nowTime, nowDuration);
+    if (wasPlaying && !nowPlaying && !completed) {
+      const nearEnd = nowDuration > 0 && nowTime >= nowDuration - 0.5;
+      const hasPlayed = nowTime > 3;
+      if (nearEnd || hasPlayed) {
+        completed = true;
+        playbackCompletionHandler?.();
+        if (!playbackCompletionHandler) {
+          const { queue, queueIndex, playMode, setQueue, currentTrack } = usePlayerStore.getState();
+          if (queue.length === 1) {
+            if (playMode === "loop" && currentTrack) {
+              void playTrack(currentTrack);
+            }
+            return;
+          }
+          if (queueIndex < 0) return;
+          const nextIndex = playMode === "shuffle"
+            ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
+            : (queueIndex + 1) % queue.length;
+          const nextTrack = queue[nextIndex];
+          if (nextTrack) {
+            setQueue(queue, nextTrack.id);
+            void playTrack(nextTrack);
+          } else if (playMode === "loop") {
+            void playTrack(queue[0]);
+          }
         }
-        return;
-      }
-      if (queueIndex < 0) return;
-      const nextIndex = playMode === "shuffle"
-        ? (() => { let index = queueIndex; while (index === queueIndex) index = Math.floor(Math.random() * queue.length); return index; })()
-        : (queueIndex + 1) % queue.length;
-      const nextTrack = queue[nextIndex];
-      if (nextTrack) {
-        setQueue(queue, nextTrack.id);
-        void playTrack(nextTrack);
-      } else if (playMode === "loop") {
-        void playTrack(queue[0]);
       }
     }
+    wasPlaying = nowPlaying;
   });
 }
 
