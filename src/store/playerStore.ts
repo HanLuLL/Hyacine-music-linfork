@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import type { Track } from "@/types/music";
+
+const INITIAL_QUEUE_LIMIT = 100;
+const PLAYED_KEEP_BEHIND = 10;
+
 interface PlayerState {
   currentTrack: Track | null;
   isPlaying: boolean;
@@ -15,6 +19,7 @@ interface PlayerState {
   setQueue: (tracks: Track[], currentTrackId?: string) => void;
   setPendingQueue: (tracks: Track[]) => void;
   appendPendingToQueue: (count: number) => void;
+  trimPlayedBehind: (keep?: number) => void;
   removeFromQueue: (trackId: string) => void;
   clearQueue: () => void;
   setShuffleEnabled: (enabled: boolean) => void;
@@ -23,6 +28,7 @@ interface PlayerState {
   setPlaying: (isPlaying: boolean) => void;
   setProgress: (progress: number, duration: number) => void;
 }
+
 export const usePlayerStore = create<PlayerState>((set) => ({
   currentTrack: null,
   isPlaying: false,
@@ -35,9 +41,14 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   repeatMode: "none",
   playMode: "sequential",
   setCurrentTrack: (currentTrack) => set({ currentTrack }),
-  setQueue: (queue, currentTrackId) => set({
-    queue,
-    queueIndex: currentTrackId ? queue.findIndex((track) => track.id === currentTrackId) : 0,
+  setQueue: (tracks, currentTrackId) => set(() => {
+    const full = tracks.length > INITIAL_QUEUE_LIMIT ? tracks.slice(0, INITIAL_QUEUE_LIMIT) : tracks;
+    const index = currentTrackId ? full.findIndex((track) => track.id === currentTrackId) : 0;
+    return {
+      queue: full,
+      queueIndex: index < 0 ? 0 : index,
+      pendingQueue: tracks.length > INITIAL_QUEUE_LIMIT ? tracks.slice(INITIAL_QUEUE_LIMIT) : [],
+    };
   }),
   setPendingQueue: (pendingQueue) => set({ pendingQueue }),
   appendPendingToQueue: (count) => set((state) => {
@@ -45,6 +56,12 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     const append = state.pendingQueue.slice(0, count);
     const rest = state.pendingQueue.slice(count);
     return { queue: [...state.queue, ...append], pendingQueue: rest };
+  }),
+  trimPlayedBehind: (keep = PLAYED_KEEP_BEHIND) => set((state) => {
+    if (state.queueIndex <= keep) return {};
+    const cut = state.queueIndex - keep;
+    const queue = state.queue.slice(cut);
+    return { queue, queueIndex: state.queueIndex - cut };
   }),
   removeFromQueue: (trackId) => set((state) => {
     const queue = state.queue.filter((track) => track.id !== trackId);

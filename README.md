@@ -15,6 +15,10 @@ Hyacine Music is an Expo Router / React Native music client written in TypeScrip
 - Play URLs are resolved again before playback so saved/history entries do not depend on expired stream URLs
 - Lyrics auto-positioning and tap-to-seek
 - Dedicated audio settings for Netease streaming quality, sound presets, and a saved ten-band equalizer configuration
+- Queue with 100‑track initial limit, append‑on‑play and auto‑trim after 10 played tracks
+- Paginated comments (20 per load, scroll‑triggered appends)
+- OPPO Fluid Cloud real‑time notification with artwork, progress, lyrics and play/pause/skip controls
+- Repeat‑one, repeat‑all, sequential, and shuffle play modes
 - Bottom-bar-only swipe navigation; page content does not capture tab swipes
 - On-device administration screen for profile summary, local data counts, credential-presence status, redacted logs, and backend health
 - Playback queue with sequential, loop (repeat list), and shuffle modes (single toggle button)
