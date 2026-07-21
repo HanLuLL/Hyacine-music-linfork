@@ -10,6 +10,7 @@ import { useAccount } from "@/account";
 import { loadSongComments, type SongComment } from "@/services/comments";
 import { normalizeMediaUrl } from "@/utils/media";
 const PAGE_SIZE = 20;
+const MAX_COMMENTS = 200;
 export default function CommentsScreen(): React.JSX.Element {
   const params = useLocalSearchParams<{ id: string; title?: string }>();
   const { tokens } = useTheme();
@@ -28,25 +29,35 @@ export default function CommentsScreen(): React.JSX.Element {
     try {
       const cookie = await getSourceCredential("netease");
       const page = await loadSongComments(profile.backendUrl, params.id, cookie, 0);
-      setComments(page.comments); setTotal(page.total);
-      setOffset(page.comments.length); setMore(page.more);
+      const limited = page.comments.slice(0, MAX_COMMENTS);
+      setComments(limited); setTotal(page.total);
+      setOffset(limited.length);
+      setMore(page.more && limited.length < MAX_COMMENTS);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "评论加载失败");
     } finally { setLoading(false); }
   }, [getSourceCredential, params.id, profile?.backendUrl]);
   const loadMore = useCallback(async () => {
     if (!profile?.backendUrl || !params.id || loadingMore || !more) return;
+    if (comments.length >= MAX_COMMENTS) return;
     setLoadingMore(true);
     try {
       const cookie = await getSourceCredential("netease");
       const page = await loadSongComments(profile.backendUrl, params.id, cookie, offset);
-      setComments((prev) => [...prev, ...page.comments]);
-      setMore(page.more);
-      setOffset((prev) => prev + page.comments.length);
+      const remaining = MAX_COMMENTS - comments.length;
+      if (remaining <= 0) {
+        setMore(false);
+        setLoadingMore(false);
+        return;
+      }
+      const toAdd = page.comments.slice(0, remaining);
+      setComments((prev) => [...prev, ...toAdd]);
+      setMore(page.more && comments.length + toAdd.length < MAX_COMMENTS);
+      setOffset((prev) => prev + toAdd.length);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "评论加载失败");
     } finally { setLoadingMore(false); }
-  }, [getSourceCredential, loadingMore, more, offset, params.id, profile?.backendUrl]);
+  }, [getSourceCredential, loadingMore, more, offset, params.id, profile?.backendUrl, comments.length]);
   useEffect(() => { void load(); }, [load]);
   return <ThemedScreen><View className="flex-1 px-5 pb-8 pt-14">
     <View className="mb-5 flex-row items-center justify-between"><Pressable onPress={() => router.back()}><Text style={{ color: tokens.accent, fontWeight: "900" }}>‹ {t("backToHome")}</Text></Pressable><View className="items-end"><Text numberOfLines={1} style={{ color: tokens.text, fontSize: 18, fontWeight: "900" }}>{params.title || t("comments")}</Text><Text style={{ color: tokens.mutedText, fontSize: 12 }}>{total} {t("comments")}</Text></View></View>
