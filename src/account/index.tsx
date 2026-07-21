@@ -9,17 +9,14 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-
 export type MusicSource = "netease" | "bilibili";
-
 export interface AccountProfile {
   displayName: string;
   avatarUrl: string;
   backendUrl: string;
-  musicSource: MusicSource | null;
+  musicSources: MusicSource[];
   onboardingCompleted: boolean;
 }
-
 interface AccountContextValue {
   profile: AccountProfile | null;
   hydrated: boolean;
@@ -27,23 +24,21 @@ interface AccountContextValue {
   updateProfile: (patch: Partial<AccountProfile>) => Promise<void>;
   saveSourceCredential: (source: MusicSource, credential: string) => Promise<void>;
   getSourceCredential: (source: MusicSource) => Promise<string | null>;
+  hasSource: (source: MusicSource) => boolean;
 }
-
 const STORAGE_KEY = "hyacine.account-profile";
 const credentialKey = (source: MusicSource): string => `hyacine.music-source.${source}`;
 const AccountContext = createContext<AccountContextValue | null>(null);
-
 function readProfile(value: Partial<AccountProfile>): AccountProfile | null {
   if (!value.displayName?.trim() || !value.backendUrl?.trim()) return null;
   return {
     displayName: value.displayName,
     avatarUrl: value.avatarUrl?.trim() ?? "",
     backendUrl: value.backendUrl,
-    musicSource: value.musicSource ?? null,
+    musicSources: value.musicSources ?? [],
     onboardingCompleted: value.onboardingCompleted === true,
   };
 }
-
 function profilesEqual(a: AccountProfile | null, b: AccountProfile | null): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -51,16 +46,18 @@ function profilesEqual(a: AccountProfile | null, b: AccountProfile | null): bool
     a.displayName === b.displayName &&
     a.avatarUrl === b.avatarUrl &&
     a.backendUrl === b.backendUrl &&
-    a.musicSource === b.musicSource &&
+    arraysEqual(a.musicSources, b.musicSources) &&
     a.onboardingCompleted === b.onboardingCompleted
   );
 }
-
+function arraysEqual<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+}
 export function AccountProvider({ children }: PropsWithChildren): React.JSX.Element {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const profileRef = useRef<AccountProfile | null>(null);
-
   useEffect(() => {
     void SecureStore.getItemAsync(STORAGE_KEY).then((raw) => {
       if (raw) {
@@ -75,20 +72,18 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
       setHydrated(true);
     });
   }, []);
-
   const saveProfile = useCallback(async (next: AccountProfile) => {
     const normalized: AccountProfile = {
       displayName: next.displayName.trim(),
       avatarUrl: next.avatarUrl.trim(),
       backendUrl: normalizeBackendUrl(next.backendUrl),
-      musicSource: next.musicSource,
+      musicSources: next.musicSources ?? [],
       onboardingCompleted: next.onboardingCompleted,
     };
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(normalized));
     profileRef.current = normalized;
     setProfile(normalized);
   }, []);
-
   const updateProfile = useCallback(async (patch: Partial<AccountProfile>) => {
     setProfile((current) => {
       if (!current) return current;
@@ -96,7 +91,7 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
         displayName: (patch.displayName ?? current.displayName).trim(),
         avatarUrl: (patch.avatarUrl ?? current.avatarUrl).trim(),
         backendUrl: normalizeBackendUrl(patch.backendUrl ?? current.backendUrl),
-        musicSource: patch.musicSource === undefined ? current.musicSource : patch.musicSource,
+        musicSources: patch.musicSources === undefined ? current.musicSources : patch.musicSources,
         onboardingCompleted: patch.onboardingCompleted ?? current.onboardingCompleted,
       };
       if (profilesEqual(current, normalized)) return current;
@@ -105,24 +100,28 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
       return normalized;
     });
   }, []);
-
   const saveSourceCredential = useCallback(async (source: MusicSource, credential: string) => {
     await SecureStore.setItemAsync(credentialKey(source), credential);
     setProfile((current) => {
       if (!current) return current;
-      if (current.musicSource === source) return current;
-      const next: AccountProfile = { ...current, musicSource: source };
+      const sources = current.musicSources.includes(source)
+        ? current.musicSources
+        : [...current.musicSources, source];
+      if (arraysEqual(current.musicSources, sources)) return current;
+      const next: AccountProfile = { ...current, musicSources: sources };
       profileRef.current = next;
       void SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
-
   const getSourceCredential = useCallback(
     (source: MusicSource) => SecureStore.getItemAsync(credentialKey(source)),
     [],
   );
-
+  const hasSource = useCallback(
+    (source: MusicSource) => profile?.musicSources.includes(source) ?? false,
+    [profile],
+  );
   // Stable context: only update when profile reference actually changes.
   const valueRef = useRef<AccountContextValue | null>(null);
   if (!valueRef.current || valueRef.current.profile !== profile || valueRef.current.hydrated !== hydrated) {
@@ -133,12 +132,11 @@ export function AccountProvider({ children }: PropsWithChildren): React.JSX.Elem
       updateProfile,
       saveSourceCredential,
       getSourceCredential,
+      hasSource,
     };
   }
-
   return <AccountContext.Provider value={valueRef.current}>{children}</AccountContext.Provider>;
 }
-
 export function useAccount(): AccountContextValue {
   const context = useContext(AccountContext);
   if (!context) throw new Error("useAccount must be used inside AccountProvider");

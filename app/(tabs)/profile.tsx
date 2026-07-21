@@ -30,7 +30,7 @@ export default function ProfileScreen(): React.JSX.Element {
   }, [refreshHistory]);
 
   useEffect(() => {
-    if (!profile?.backendUrl || profile.musicSource !== "netease") return;
+    if (!profile?.backendUrl || !profile.musicSources.includes("netease")) return;
     void (async () => {
       try {
         const cookie = await getSourceCredential("netease");
@@ -50,9 +50,9 @@ export default function ProfileScreen(): React.JSX.Element {
         // Keep local avatar if remote profile is unavailable.
       }
     })();
-  }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSource, updateProfile]);
+  }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSources, updateProfile]);
 
-  const sourceName = profile?.musicSource === "netease" ? "网易云音乐已绑定" : profile?.musicSource === "bilibili" ? "哔哩哔哩已绑定" : "尚未绑定音乐服务";
+  const sourceName = profile?.musicSources.includes("netease") ? "网易云音乐已绑定" : profile?.musicSources.includes("bilibili") ? "哔哩哔哩已绑定" : "尚未绑定音乐服务";
 
   return (
     <ThemedScreen>

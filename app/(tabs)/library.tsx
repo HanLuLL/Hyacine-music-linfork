@@ -34,7 +34,7 @@ export default function LibraryScreen(): React.JSX.Element {
   const [creating, setCreating] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const loadPlaylists = useCallback(async (refresh = false): Promise<void> => {
-    if (!profile || profile.musicSource !== "netease") {
+    if (!profile || !profile.musicSources.includes("netease")) {
       setPlaylists([]);
       setError(t("myPlaylistsUnavailable"));
       setLoading(false);
@@ -114,7 +114,7 @@ export default function LibraryScreen(): React.JSX.Element {
   };
   const createPlaylist = async (): Promise<void> => {
     const name = playlistName.trim();
-    if (!name || !profile || profile.musicSource !== "netease" || creating) return;
+    if (!name || !profile || !profile.musicSources.includes("netease") || creating) return;
     setCreating(true);
     setError("");
     try {

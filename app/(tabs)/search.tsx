@@ -30,10 +30,10 @@ export default function SearchScreen(): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [playingId, setPlayingId] = useState("");
   const [error, setError] = useState("");
-  const [source, setSource] = useState<"netease" | "bilibili">(profile?.musicSource ?? "netease");
+  const [source, setSource] = useState<"netease" | "bilibili">("netease");
   useEffect(() => {
-    if (profile?.musicSource) setSource(profile.musicSource);
-  }, [profile?.musicSource]);
+    if (profile?.musicSources?.length) setSource(profile.musicSources[0]);
+  }, [profile?.musicSources]);
 
   const onSearch = useCallback(async (): Promise<void> => {
     if (!profile?.backendUrl) {

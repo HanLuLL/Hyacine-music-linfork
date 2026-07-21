@@ -67,7 +67,7 @@ export default function HomeScreen(): React.JSX.Element {
   }, []);
   const loadDailySongs = useCallback(async (): Promise<void> => {
     const seq = ++requestSeq.current;
-    if (!profile?.backendUrl || profile.musicSource !== "netease") {
+    if (!profile?.backendUrl || !profile.musicSources.includes("netease")) {
       if (seq === requestSeq.current) {
         setSongs([]);
         setLoading(false);
@@ -75,7 +75,7 @@ export default function HomeScreen(): React.JSX.Element {
       }
       appLog.info("home", "daily songs skipped", {
         hasBackend: Boolean(profile?.backendUrl),
-        musicSource: profile?.musicSource ?? null,
+        musicSource: profile?.musicSources ?? null,
       });
       return;
     }
@@ -144,7 +144,7 @@ export default function HomeScreen(): React.JSX.Element {
     } finally {
       if (seq === requestSeq.current) setLoading(false);
     }
-  }, [getSourceCredential, profile?.backendUrl, profile?.musicSource]);
+  }, [getSourceCredential, profile?.backendUrl, profile?.musicSources]);
 
   useEffect(() => {
     void loadDailySongs();

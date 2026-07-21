@@ -37,7 +37,7 @@ function AppNavigator(): React.JSX.Element {
     appLog.info("boot", "account hydrated", {
       hasProfile: Boolean(profile),
       onboardingCompleted: profile?.onboardingCompleted === true,
-      musicSource: profile?.musicSource ?? null,
+      musicSource: profile?.musicSources ?? null,
       backendHost: profile?.backendUrl
         ? profile.backendUrl.replace(/^https?:\/\//i, "").split("/")[0]
         : null,
@@ -52,7 +52,7 @@ function AppNavigator(): React.JSX.Element {
       </Stack>
     );
   }
-  if (!profile.musicSource) {
+  if (!profile?.musicSources?.length) {
     return (
       <Stack screenOptions={{ ...stackAnimation, animation: "fade_from_bottom" }}>
         <Stack.Screen name="sources" />

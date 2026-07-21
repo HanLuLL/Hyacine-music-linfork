@@ -275,7 +275,7 @@ export default function SettingsScreen(): React.JSX.Element {
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
-          <Row title={t("musicService")} hint={profile?.musicSource === "netease" ? "网易云音乐已绑定" : profile?.musicSource === "bilibili" ? "哔哩哔哩已绑定" : "尚未绑定音乐服务"}>
+          <Row title={t("musicService")} hint={profile?.musicSources.includes("netease") ? "网易云音乐已绑定" : profile?.musicSources.includes("bilibili") ? "哔哩哔哩已绑定" : "尚未绑定音乐服务"}>
             <Pressable
               className="mt-3 flex-row items-center justify-between"
               onPress={() => router.push("/sources")}
