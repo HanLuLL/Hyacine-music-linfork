@@ -189,7 +189,7 @@ export default function HomeScreen(): React.JSX.Element {
   return <ThemedScreen>
     <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
       <View className="flex-row items-start justify-between">
-        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{greeting}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>t("dailySongsSubtitle")</Text></View>
+        <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{greeting}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("dailySongsSubtitle")}</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">
           {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text style={{ color: tokens.text, fontSize: 17, fontWeight: "800" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
         </LiquidControlSurface>
