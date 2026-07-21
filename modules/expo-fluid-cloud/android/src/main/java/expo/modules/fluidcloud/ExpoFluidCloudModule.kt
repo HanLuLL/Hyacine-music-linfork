@@ -48,24 +48,29 @@ class ExpoFluidCloudModule : Module() {
         val values = ContentValues()
 
         // Template type: music_playback (progress)
-        values.put("templateType", "music_playback")
+        // 使用简洁的音乐播放模板
+        values.put("templateType", "music")
         values.put("templateId", templateId ?: "hyacine_music_${System.currentTimeMillis()}")
         templateId = values.getAsString("templateId")
-
+        
+        // 核心信息
         values.put("title", data["title"] as? String ?: "")
         values.put("artist", data["artist"] as? String ?: "")
-        values.put("album", data["album"] as? String ?: "")
-
+        
+        // 播放状态
+        val isPlaying = data["isPlaying"] as? Boolean ?: false
+        values.put("isPlaying", if (isPlaying) 1 else 0)
+        
+        // 进度信息（可选）
         val progress = (data["progress"] as? Number)?.toLong() ?: 0L
         val duration = (data["duration"] as? Number)?.toLong() ?: 0L
-        values.put("progress", progress)
-        values.put("duration", duration)
+        if (duration > 0) {
+            values.put("progress", progress)
+            values.put("duration", duration)
+        }
+        
         lastProgress = progress
         lastDuration = duration
-
-        val isPlaying = data["isPlaying"] as? Boolean ?: false
-        values.put("playState", if (isPlaying) "playing" else "paused")
-        values.put("isPlaying", if (isPlaying) 1 else 0)
 
         // Cover image as base64
         data["coverUrl"]?.let { cover ->
