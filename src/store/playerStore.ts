@@ -25,6 +25,7 @@ interface PlayerState {
   setShuffleEnabled: (enabled: boolean) => void;
   cycleRepeatMode: () => void;
   cyclePlayMode: () => void;
+  cycleUnifiedMode: () => void;
   setPlaying: (isPlaying: boolean) => void;
   setProgress: (progress: number, duration: number) => void;
 }
@@ -79,6 +80,18 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     const modes: Array<"sequential" | "loop" | "shuffle"> = ["sequential", "loop", "shuffle"];
     const next = modes[(modes.indexOf(state.playMode) + 1) % modes.length];
     return { playMode: next, shuffleEnabled: next === "shuffle", repeatMode: next === "loop" ? "all" : "none" };
+  }),
+  cycleUnifiedMode: () => set((state) => {
+    if (state.playMode === "sequential" && state.repeatMode === "none") {
+      return { playMode: "shuffle", shuffleEnabled: true, repeatMode: "none" };
+    }
+    if (state.playMode === "shuffle") {
+      return { playMode: "loop", shuffleEnabled: false, repeatMode: "all" };
+    }
+    if (state.repeatMode === "all") {
+      return { playMode: "loop", shuffleEnabled: false, repeatMode: "one" };
+    }
+    return { playMode: "sequential", shuffleEnabled: false, repeatMode: "none" };
   }),
   setPlaying: (isPlaying) => set({ isPlaying }),
   setProgress: (progress, duration) => set({ progress, duration }),
