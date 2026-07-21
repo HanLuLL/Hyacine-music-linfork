@@ -19,7 +19,6 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   const { profile, getSourceCredential } = useAccount();
   const { playTrack } = useAudio();
   const setQueue = usePlayerStore((state) => state.setQueue);
-  const setPendingQueue = usePlayerStore((state) => state.setPendingQueue);
   const { tokens } = useTheme();
   const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +35,7 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
   }, []);
 
   const load = useCallback(async () => {
-    if (!profile?.backendUrl || !id) { setLoading(false); setError(t("unknownError")); return; }
+    if (!profile?.backendUrl || !id) { setLoading(false); setError("缺少参数"); return; }
     const cookie = await getSourceCredential("netease");
     appLog.info("playlist-detail", "load start", { id, cookieMeta: cookieMeta(cookie) });
     try {
@@ -55,11 +54,9 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
 
   const play = (t: PlaylistTrack) => {
     const all = tracks.map((item): Track => ({ id: `netease:${item.id}`, title: item.title, artist: item.artists.join(" / "), url: "", artwork: normalizeMediaUrl(item.coverUrl), duration: item.durationMs / 1000 }));
-    const queue = all.slice(0, 50);
-    const track = queue.find((item) => item.id === `netease:${t.id}`);
+    const track = all.find((item) => item.id === `netease:${t.id}`);
     if (!track) return;
-    setQueue(queue, track.id);
-    setPendingQueue(all.slice(50));
+    setQueue(all, track.id);
     void playTrack(track);
   };
 
@@ -67,9 +64,9 @@ export default function PlaylistDetailScreen(): React.JSX.Element {
     <ThemedScreen>
       <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
         <View className="flex-row items-center gap-4 px-5 pt-16">
-          <Pressable onPress={() => router.back()}><Text style={{ color: tokens.accent, fontWeight: "800" }}>← {t("goBack")}</Text></Pressable>
+          <Pressable onPress={() => router.back()}><Text style={{ color: tokens.accent, fontWeight: "800" }}>← 返回</Text></Pressable>
           {cover ? <Animated.View style={{ transform: [{ scale: coverScale }], opacity: coverOpacity }}><Image source={{ uri: cover }} style={{ width: 80, height: 80, borderRadius: 16 }} contentFit="cover" /></Animated.View> : null}
-          <View className="flex-1"><Text style={{ color: tokens.text, fontSize: 22, fontWeight: "900" }} numberOfLines={2}>{name ?? t("playlistDetail")}</Text><Text style={{ color: tokens.mutedText, fontSize: 13, marginTop: 4 }}>{tracks.length} {t("songsCount")}</Text></View>
+          <View className="flex-1"><Text style={{ color: tokens.text, fontSize: 22, fontWeight: "900" }} numberOfLines={2}>{name ?? "歌单"}</Text><Text style={{ color: tokens.mutedText, fontSize: 13, marginTop: 4 }}>{tracks.length} 首歌曲</Text></View>
         </View>
         {loading ? <ActivityIndicator className="mt-12" color={tokens.accent} /> : null}
         {error ? <Text className="mt-8 px-5" style={{ color: tokens.mutedText }}>{error}</Text> : null}

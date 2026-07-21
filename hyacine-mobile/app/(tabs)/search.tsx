@@ -30,14 +30,14 @@ export default function SearchScreen(): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [playingId, setPlayingId] = useState("");
   const [error, setError] = useState("");
-  const [source, setSource] = useState<"netease" | "bilibili">(profile?.musicSource ?? "netease");
+  const [source, setSource] = useState<"netease" | "bilibili">("netease");
   useEffect(() => {
-    if (profile?.musicSource) setSource(profile.musicSource);
-  }, [profile?.musicSource]);
+    if (profile?.musicSources?.length) setSource(profile.musicSources[0]);
+  }, [profile?.musicSources]);
 
   const onSearch = useCallback(async (): Promise<void> => {
     if (!profile?.backendUrl) {
-      setError(t("sourceRequired"));
+      setError("请先连接音乐源");
       return;
     }
     const q = keywords.trim();
@@ -47,7 +47,7 @@ export default function SearchScreen(): React.JSX.Element {
     try {
       if (source === "netease" && !(await supportsNeteaseCapability(profile.backendUrl, "search"))) {
         setResults([]);
-        setError(t("searchUnavailable"));
+        setError("当前服务器尚未提供网易云搜索，请切换到哔哩哔哩或配置兼容上游。");
         return;
       }
       const cookie = await getSourceCredential(source);
@@ -58,10 +58,10 @@ export default function SearchScreen(): React.JSX.Element {
         cookie,
       });
       setResults(rows);
-      if (!rows.length) setError(t("noResults"));
+      if (!rows.length) setError("没有找到结果");
     } catch (e) {
       setResults([]);
-      setError(t("loadFailed"));
+      setError(e instanceof Error ? e.message : "搜索失败");
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export default function SearchScreen(): React.JSX.Element {
         });
         await playTrack(playable);
       } catch (e) {
-        setError(e instanceof Error ? e.message : t("playFailed"));
+        setError(e instanceof Error ? e.message : "播放失败");
       } finally {
         setPlayingId("");
       }
@@ -95,7 +95,7 @@ export default function SearchScreen(): React.JSX.Element {
       <View className="flex-1 px-5 pb-36 pt-16">
         <Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t("search")}</Text>
         <Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>
-          {source === "bilibili" ? t("searchHintBilibili") : t("searchHintNetease")}
+          {source === "bilibili" ? "仅显示 B 站音乐分区内容，需要已绑定账号" : "搜索网易云歌曲并播放"}
         </Text>
         <LiquidControlSurface className="mt-5 flex-row rounded-full p-1" style={{ borderRadius: 24 }}>
           {(["netease", "bilibili"] as const).map((item) => (
@@ -106,7 +106,7 @@ export default function SearchScreen(): React.JSX.Element {
               onPress={() => { setSource(item); setResults([]); setError(""); }}
             >
               <Text style={{ color: source === item ? tokens.text : tokens.mutedText, fontSize: 13, fontWeight: "800" }}>
-                {item === "netease" ? t("netease") : t("bilibili")}
+                {item === "netease" ? "网易云音乐" : "哔哩哔哩"}
               </Text>
             </Pressable>
           ))}
@@ -126,7 +126,7 @@ export default function SearchScreen(): React.JSX.Element {
             onSubmitEditing={() => void onSearch()}
           />
           <Pressable onPress={() => void onSearch()} disabled={loading}>
-            <Text style={{ color: tokens.accent, fontWeight: "800" }}>{loading ? "..." : t("search")}</Text>
+            <Text style={{ color: tokens.accent, fontWeight: "800" }}>{loading ? "..." : "搜索"}</Text>
           </Pressable>
         </LiquidControlSurface>
 
@@ -148,7 +148,7 @@ export default function SearchScreen(): React.JSX.Element {
             ItemSeparatorComponent={() => <View className="h-3" />}
             ListEmptyComponent={
               <Text className="mt-10 text-sm leading-6" style={{ color: tokens.mutedText }}>
-                {t("searchHint")}
+                输入关键词后点搜索。点结果即可解析播放地址并播放。
               </Text>
             }
             renderItem={({ item }) => (

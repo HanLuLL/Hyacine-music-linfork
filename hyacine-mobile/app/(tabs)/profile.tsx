@@ -30,7 +30,7 @@ export default function ProfileScreen(): React.JSX.Element {
   }, [refreshHistory]);
 
   useEffect(() => {
-    if (!profile?.backendUrl || profile.musicSource !== "netease") return;
+    if (!profile?.backendUrl || !profile.musicSources.includes("netease")) return;
     void (async () => {
       try {
         const cookie = await getSourceCredential("netease");
@@ -50,9 +50,9 @@ export default function ProfileScreen(): React.JSX.Element {
         // Keep local avatar if remote profile is unavailable.
       }
     })();
-  }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSource, updateProfile]);
+  }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSources, updateProfile]);
 
-  const sourceName = profile?.musicSource === "netease" ? t("sourceBoundNetease") : profile?.musicSource === "bilibili" ? t("sourceBoundBilibili") : t("sourceNotBound");
+  const sourceName = profile?.musicSources.includes("netease") ? "网易云音乐已绑定" : profile?.musicSources.includes("bilibili") ? "哔哩哔哩已绑定" : "尚未绑定音乐服务";
 
   return (
     <ThemedScreen>
@@ -78,7 +78,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
 
         <View className="mt-10 flex-row items-center justify-between">
-          <Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("listeningHistory")}</Text>
+          <Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>听歌记录</Text>
           <Pressable onPress={() => void refreshHistory()}><Text style={{ color: tokens.accent, fontSize: 13, fontWeight: "800" }}>{t("refresh")}</Text></Pressable>
         </View>
         <View className="mt-4 gap-3">
@@ -94,7 +94,7 @@ export default function ProfileScreen(): React.JSX.Element {
               </Pressable>
             </View>
           ))}
-          {!history.length ? <View className="items-center border py-10" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>{t("noHistory")}</Text></View> : null}
+          {!history.length ? <View className="items-center border py-10" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>播放歌曲后会显示在这里</Text></View> : null}
         </View>
       </ScrollView>
     </ThemedScreen>
