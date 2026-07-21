@@ -1,0 +1,14 @@
+{
+  "name": "expo-live-updates",
+  "version": "1.0.0",
+  "description": "Android Live Updates API integration for real-time playback info",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {},
+  "keywords": ["expo", "android", "live-updates", "media-session"],
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

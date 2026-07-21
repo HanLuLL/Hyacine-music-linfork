@@ -4,6 +4,7 @@ import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 import { appLog } from "@/utils/logger";
 import { updateFluidCloudNowPlaying, removeFluidCloudNowPlaying } from "@/services/fluidCloud";
+import { startLiveUpdatesSession, updateLiveUpdatesPlaybackState, stopLiveUpdatesSession } from "@/services/liveUpdates";
 let player: AudioPlayer | null = null;
 let modeReady = false;
 let playbackCompletionHandler: (() => void) | null = null;
@@ -50,6 +51,16 @@ function bindStatus(active: AudioPlayer): void {
         progress: nowTime,
         duration: nowDuration,
         isPlaying: nowPlaying,
+      });
+      
+      // Update Live Updates playback state
+      void updateLiveUpdatesPlaybackState({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        artworkUrl: currentTrack.artwork,
+        isPlaying: nowPlaying,
+        position: nowTime,
+        duration: nowDuration,
       });
     }
     lastTime = nowTime;
@@ -112,6 +123,16 @@ export async function playTrack(track: Track): Promise<void> {
     player.play();
     player.setActiveForLockScreen(true, { title: track.title, artist: track.artist, artworkUrl: track.artwork });
     await recordListeningHistory(track);
+
+    // Start Live Updates session
+    await startLiveUpdatesSession({
+      title: track.title,
+      artist: track.artist,
+      artworkUrl: track.artwork,
+      isPlaying: true,
+      position: 0,
+      duration: track.duration ?? 0,
+    });
     void updateFluidCloudNowPlaying({
       title: track.title,
       artist: track.artist,

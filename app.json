@@ -79,7 +79,8 @@
       "typedRoutes": true
     },
     "modules": [
-      "./modules/expo-fluid-cloud"
+      "./modules/expo-fluid-cloud",
+      "./modules/expo-live-updates"
     ]
   }
 }
