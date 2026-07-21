@@ -24,7 +24,7 @@ export async function loadSongComments(backendUrl: string, trackId: string, cook
   const response = await fetch(`${apiBase(backendUrl)}/music-sources/netease/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, cookie: cookie ?? undefined, limit: 20, offset: offset ?? 0 }),
+    body: JSON.stringify({ id, cookie: cookie ?? undefined, limit: offset === undefined ? 200 : 60, offset: offset ?? 0 }),
   });
   if (!response.ok) throw new Error("评论加载失败");
   return await response.json() as SongCommentsPage;
