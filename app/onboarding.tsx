@@ -31,7 +31,7 @@ export default function OnboardingScreen(): React.JSX.Element {
   const { tokens } = useTheme();
   const { width } = useWindowDimensions();
   const copy = useMemo(() => ({
-    welcome: { title: "风堇音乐", body: t("onboardingWelcomeBody") },
+    welcome: { title: t("brandName"), body: t("onboardingWelcomeBody") },
     profile: { title: t("onboardingProfileTitle"), body: t("onboardingProfileBody") },
     backend: { title: t("onboardingBackendTitle"), body: t("onboardingBackendBody") },
   }), [t]);
@@ -70,7 +70,7 @@ export default function OnboardingScreen(): React.JSX.Element {
       router.replace("/sources");
     } catch (error) {
       const detail = error instanceof Error && error.message ? `（${error.message}）` : "";
-      setBackendError(`无法连接 ${healthUrl}${detail}。请确认服务器已启动，并填写 http://公网IP:3000，不要填 127.0.0.1。`);
+      setBackendError(`${t("backendConnectError")} ${healthUrl}${detail}。${t("backendConnectHint")}`);
     } finally {
       setSaving(false);
     }
@@ -96,7 +96,7 @@ export default function OnboardingScreen(): React.JSX.Element {
         {item.key === "profile" ? <>
           <Pressable className="mt-10 h-16 w-16 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}2a` }} onPress={() => void chooseAvatar()}>{avatar ? <Image className="h-full w-full" source={{ uri: avatar }} /> : <Text className="pt-4 text-center" style={{ color: tokens.accent, fontSize: 20, fontWeight: "900" }}>{name.trim().slice(0, 1).toUpperCase() || "H"}</Text>}</Pressable>
           <View className="mt-8 h-12 justify-center rounded-2xl px-4" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}><TextInput value={name} onChangeText={setName} placeholder={t("onboardingNamePlaceholder")} placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16, paddingVertical: 0 }} /></View>
-          <Pressable className="mt-3 h-12 items-center justify-center rounded-2xl" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => void chooseAvatar()}><Text style={{ color: tokens.text, fontSize: 14, fontWeight: "700" }}>{avatar ? "更换本地头像" : "从相册选择头像"}</Text></Pressable>
+          <Pressable className="mt-3 h-12 items-center justify-center rounded-2xl" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => void chooseAvatar()}><Text style={{ color: tokens.text, fontSize: 14, fontWeight: "700" }}>{avatar ? t("changeAvatar") : t("chooseFromGallery")}</Text></Pressable>
         </> : null}
         {item.key === "backend" ? <>
           <View className="mt-12 h-12 justify-center rounded-2xl px-4" style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: backendError || (backend && !urlPattern.test(backend)) ? "#ef4444" : tokens.surfaceBorder }}><TextInput value={backend} onChangeText={(value) => { setBackend(value); setBackendError(""); }} autoCapitalize="none" keyboardType="url" placeholder="https://music.example.com" placeholderTextColor={tokens.mutedText} style={{ color: tokens.text, height: "100%", fontSize: 16, paddingVertical: 0 }} /></View>

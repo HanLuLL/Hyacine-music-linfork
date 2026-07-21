@@ -41,7 +41,51 @@ const dictionaries = {
     librarySubtitle: "Netease Cloud Music playlists", playlistsUnavailable: "This server does not provide Netease playlist management yet.", neteaseLoginExpired: "Netease login expired. Scan the QR code again.", loadFailedHttp: "Load failed HTTP", noPlaylists: "No playlists to show yet.", playlistsLoadFailed: "Could not load your playlists. Check your Netease login and server connection.", loadMoreFailed: "Failed to load more recommendations", createPlaylistUnavailable: "This server does not provide Netease playlist creation yet.", createPlaylistFailed: "Failed to create playlist. Check your Netease login and try again.", deletePlaylistTitle: "Delete playlist", deletePlaylistBody: "Delete this playlist? This will sync to Netease Cloud Music.", delete: "Delete", deletePlaylistFailed: "Failed to delete playlist. Try again later.", collapse: "Collapse", newPlaylist: "New playlist", playlistNamePlaceholder: "Playlist name", creating: "Creating", create: "Create",
     onboardingStep: "FIRST RUN /", onboardingWelcomeBody: "Put your music, identity, and server connection in one player.", onboardingProfileTitle: "Create your profile", onboardingProfileBody: "Your name and avatar appear in your profile.", onboardingBackendTitle: "Connect your server", onboardingBackendBody: "Add a Hyacine server address before entering your library.", onboardingNamePlaceholder: "Name", onboardingAvatarPlaceholder: "Avatar image URL", onboardingBackendHint: "Use a complete address beginning with http:// or https://.", continue: "Continue", finish: "Finish", saving: "Saving",
     sourcesTitle: "Music sources", sourcesBody: "Connect one source before you enter Hyacine.", neteaseCloud: "Netease Cloud", bilibili: "Bilibili", credentialsLocal: "Credentials stay encrypted on this device.", creatingNeteaseSession: "Creating a Netease login session...", scanNeteaseCode: "Scan this code in the Netease Cloud Music app.", qrUnavailable: "Could not get a QR code. Configure NETEASE_API_BASE and use a backend address reachable from this device.", qrExpired: "This QR code expired. Get a new one.", checkingCookie: "Checking Cookie format...", cookieValidationFailed: "Validation failed. On a phone, use your computer's LAN IP instead of 127.0.0.1.", secureSessionWaiting: "Secure session waiting", scanInNetease: "Scan in Netease Cloud Music", connectNetease: "Connect Netease Cloud Music", qrCompletesAutomatically: "It completes automatically after confirmation", qrSessionOnly: "The QR code is only valid for this session", importCookie: "Import login Cookie", cookieRequirements: "SESSDATA and bili_jct are required.", cookiePlaceholder: "Paste Bilibili Cookie", working: "Working...", refreshQr: "Refresh QR code", getQr: "Get QR code", verifyAndSave: "Verify and save",
-
+    // Brand & greetings
+    brandName: "Hyacine Music", greetingLateNight: "Good night", greetingMorning: "Good morning", greetingNoon: "Good afternoon", greetingAfternoon: "Good afternoon", greetingEvening: "Good evening",
+    dailyRecommendations: "Daily recommendations", dailySongs: "Daily songs", featuredForYou: "Featured for you", playRecommendation: "Play recommended", nowPlayingEllipsis: "Now playing...",
+    // Admin
+    adminTitle: "Admin Console", adminSubtitle: "This device only · Sensitive info redacted", userData: "User data", backendStatus: "Backend status", clientLogs: "Client logs",
+    userDisplayName: "User name", notLoggedInUser: "Not logged in", currentMusicSource: "Current music source", noMusicSourceSelected: "No music source selected",
+    listeningHistory: "Listening history", localFavorites: "Local favorites", neteaseCredential: "Netease credential", bilibiliCredential: "Bilibili credential",
+    latency: "Latency", neteaseMode: "Netease mode", goDirect: "Go Direct", upstreamCompatible: "Upstream compatible", notConfigured: "Not configured", unavailable: "Unavailable",
+    noLogs: "No logs", checking: "Checking",
+    // Settings - Account
+    adminConsole: "Admin Console", adminConsoleHint: "View device user data, redacted logs, and backend health.", openAdminConsole: "Open admin console",
+    accountStatus: "Account status", accountSavedLocally: "Local account saved", noLocalAccount: "No local account created", editProfile: "Edit avatar & name",
+    neteaseBound: "Netease Cloud Music bound", bilibiliBound: "Bilibili bound", noMusicServiceBound: "No music service bound",
+    serverAddress: "Server address", noServerConfigured: "No server configured", changeServerAddress: "Change server address",
+    // Settings - Audio
+    audioSection: "Audio", audioQualityAndEffects: "Audio quality & effects", audioQualityHint: "Set online playback quality, sound presets, and custom equalizer.", openAudioSettings: "Open audio settings",
+    audioQuality: "Audio quality", onlinePlaybackQuality: "Online playback quality", onlinePlaybackQualityHint: "Used for next Netease song URL fetch. Source, account, and network may auto-downgrade.",
+    qualityStandard: "Standard · 128 kbps", qualityHigher: "Higher · 192 kbps", qualityExhigh: "Extreme · 320 kbps", qualityLossless: "Lossless · FLAC", qualityHires: "Hi-Res",
+    soundPreset: "Sound preset", presetFlat: "Flat", presetBass: "Bass boost", presetVocal: "Vocal boost", presetBright: "Bright", presetCustom: "Custom",
+    soundPresetHint: "Current Expo Audio engine does not expose cross-platform real-time DSP/equalizer APIs. These settings are saved but need native audio module integration.",
+    customEqualizer: "Custom equalizer", reset: "Reset",
+    // Settings - Appearance
+    colorPreview: "Color preview", colorPreviewHint: "Accent text, buttons, progress bars, and card borders will use this color immediately.",
+    playButton: "Play button", defaultColor: "Default", coolColor: "Cool", warmColor: "Warm", resetSystemDefault: "Reset to system default",
+    // Settings - Player
+    lyricColor: "Lyric color", lyricColorHint: "Set sung, current, and upcoming lyrics separately. Default is dark for sung, accent for current, white for upcoming.",
+    miniPlayerTheme: "Mini player theme", miniPlayerThemeHint: "Theme 1 is the full song bar. Theme 2 is a compact capsule.",
+    theme1Full: "Theme 1 · Full bar", theme2Capsule: "Theme 2 · Mini capsule",
+    // Settings - Diagnostics
+    diagnosticsLog: "Diagnostics log", appLogTitle: "App log", appLogHint: "Records startup, API, and playback events. Cookies/tokens are auto-redacted. View or share after crashes.",
+    viewLog: "View log", shareLog: "Share log", clearLog: "Clear log",
+    readingLog: "Reading...", logTitle: "Log", logReadFailed: "Failed to read log", logShareFailed: "Failed to share log",
+    clearLogTitle: "Clear log", clearLogBody: "Clear local app log?",
+    // Sources
+    qrLogin: "QR Login", importCookieTab: "Import Cookie",
+    importNeteaseCookie: "Import Netease Cookie", importNeteaseCookieHint: "Paste Cookie containing MUSIC_U. It's encrypted and stored locally for backend direct playback.",
+    pasteNeteaseCookie: "Paste Netease Cookie", savingCredentials: "Saving credentials securely...", cookieSaveFailed: "Cookie save failed. Try again.",
+    secureSaveAndContinue: "Save and continue",
+    // Profile
+    listeningRecord: "Listening record", noHistoryHint: "Songs will appear here after playback",
+    // Onboarding
+    welcomeTitle: "Hyacine Music", backendConnectError: "Could not connect", backendConnectHint: "Confirm the server is running. Use http://publicIP:3000, not 127.0.0.1.",
+    changeAvatar: "Change avatar", chooseFromGallery: "Choose from gallery",
+    // Library
+    deleteFailed: "Delete failed",
   },
   "zh-CN": {
     home: "首页", search: "搜索", library: "音乐库", profile: "我的",
@@ -78,6 +122,50 @@ const dictionaries = {
     librarySubtitle: "网易云音乐歌单", playlistsUnavailable: "当前服务器尚未提供网易云歌单管理。", neteaseLoginExpired: "网易云登录已失效，请重新扫码绑定", loadFailedHttp: "加载失败 HTTP", noPlaylists: "暂无可展示的歌单。", playlistsLoadFailed: "无法加载我的歌单，请检查网易云登录状态和服务器连接。", loadMoreFailed: "加载更多推荐失败", createPlaylistUnavailable: "当前服务器尚未提供网易云歌单创建。", createPlaylistFailed: "创建歌单失败，请检查网易云登录状态后重试。", deletePlaylistTitle: "删除歌单", deletePlaylistBody: "确定删除此歌单吗？此操作会同步到网易云音乐。", delete: "删除", deletePlaylistFailed: "删除歌单失败，请稍后重试。", collapse: "收起", newPlaylist: "新建歌单", playlistNamePlaceholder: "歌单名称", creating: "创建中", create: "创建",
     onboardingStep: "首次启动 /", onboardingWelcomeBody: "把音乐、个人资料和服务器连接放进同一个播放器。", onboardingProfileTitle: "创建个人资料", onboardingProfileBody: "你的昵称和头像会显示在个人中心。", onboardingBackendTitle: "连接服务器", onboardingBackendBody: "进入音乐库前，请添加 Hyacine 服务器地址。", onboardingNamePlaceholder: "昵称", onboardingAvatarPlaceholder: "头像图片 URL", onboardingBackendHint: "请输入以 http:// 或 https:// 开头的完整地址。", continue: "继续", finish: "完成", saving: "正在保存",
     sourcesTitle: "音乐源", sourcesBody: "进入 Hyacine 前，请先连接一个音乐源。", neteaseCloud: "网易云音乐", bilibili: "哔哩哔哩", credentialsLocal: "凭据仅加密保存在本设备。", creatingNeteaseSession: "正在创建网易云登录会话...", scanNeteaseCode: "请在网易云音乐 App 中扫描此二维码。", qrUnavailable: "无法获取二维码。请配置 NETEASE_API_BASE，并使用设备可以访问的后端地址。", qrExpired: "二维码已过期，请重新获取。", checkingCookie: "正在检查 Cookie 格式...", cookieValidationFailed: "校验失败。手机请填写电脑的局域网 IP，不要填写 127.0.0.1。", secureSessionWaiting: "正在等待安全会话", scanInNetease: "请在网易云音乐中扫码", connectNetease: "连接网易云音乐", qrCompletesAutomatically: "确认登录后将自动完成", qrSessionOnly: "二维码仅在本次会话内有效", importCookie: "导入登录 Cookie", cookieRequirements: "需要 SESSDATA 和 bili_jct。", cookiePlaceholder: "粘贴 Bilibili Cookie", working: "正在处理...", refreshQr: "刷新二维码", getQr: "获取二维码", verifyAndSave: "验证并保存",
+    // Brand & greetings
+    brandName: "风堇音乐", greetingLateNight: "夜深了", greetingMorning: "早上好", greetingNoon: "中午好", greetingAfternoon: "下午好", greetingEvening: "晚上好",
+    dailyRecommendations: "每日推荐", dailySongs: "每日歌曲", featuredForYou: "为你推荐", playRecommendation: "播放推荐歌曲", nowPlayingEllipsis: "正在播放...",
+    // Admin
+    adminTitle: "管理后台", adminSubtitle: "仅当前设备 · 敏感信息已脱敏", userData: "用户数据", backendStatus: "后端状态", clientLogs: "客户端日志",
+    userDisplayName: "用户名", notLoggedInUser: "未登录用户", currentMusicSource: "当前音乐源", noMusicSourceSelected: "尚未选择音乐源",
+    listeningHistory: "听歌历史", localFavorites: "本地收藏", neteaseCredential: "网易云凭据", bilibiliCredential: "B站凭据",
+    latency: "延迟", neteaseMode: "网易云模式", goDirect: "Go 直连", upstreamCompatible: "兼容上游", notConfigured: "未配置", unavailable: "不可用",
+    noLogs: "暂无日志", checking: "检查中",
+    // Settings - Account
+    adminConsole: "管理后台", adminConsoleHint: "查看当前设备用户数据、脱敏日志与后端健康状态。", openAdminConsole: "打开管理后台",
+    accountStatus: "账号状态", accountSavedLocally: "本地账户资料已保存", noLocalAccount: "尚未创建本地账户资料", editProfile: "编辑头像与昵称",
+    neteaseBound: "网易云音乐已绑定", bilibiliBound: "哔哩哔哩已绑定", noMusicServiceBound: "尚未绑定音乐服务",
+    serverAddress: "服务器地址", noServerConfigured: "尚未配置服务器", changeServerAddress: "修改服务器地址",
+    // Settings - Audio
+    audioSection: "音频", audioQualityAndEffects: "音质与音效", audioQualityHint: "设置在线播放音质、音效预设和自定义均衡器。", openAudioSettings: "打开音频设置",
+    audioQuality: "音质", onlinePlaybackQuality: "在线播放音质", onlinePlaybackQualityHint: "用于网易云歌曲下一次获取播放地址；音源、账号权限和网络可能自动降级。",
+    qualityStandard: "标准 · 128 kbps", qualityHigher: "较高 · 192 kbps", qualityExhigh: "极高 · 320 kbps", qualityLossless: "无损 · FLAC", qualityHires: "Hi-Res",
+    soundPreset: "音效预设", presetFlat: "原声", presetBass: "低音增强", presetVocal: "人声突出", presetBright: "明亮", presetCustom: "自定义",
+    soundPresetHint: "当前 Expo Audio 播放引擎没有开放跨平台实时 DSP/均衡器接口。以下配置会安全保存，但需后续原生音频处理模块接入后才会改变声音。",
+    customEqualizer: "自定义均衡器", reset: "重置",
+    // Settings - Appearance
+    colorPreview: "颜色效果预览", colorPreviewHint: "强调文字、按钮、进度条和卡片边框会立即使用此颜色。",
+    playButton: "播放按钮", defaultColor: "默认", coolColor: "冷色", warmColor: "暖色", resetSystemDefault: "恢复系统默认",
+    // Settings - Player
+    lyricColor: "歌词颜色", lyricColorHint: "已唱、当前和未唱歌词可分别设置；恢复默认即为已唱深色、当前强调色、未唱白色。",
+    miniPlayerTheme: "正在播放栏主题", miniPlayerThemeHint: "主题 1 为完整歌曲栏；主题 2 为更紧凑的小胶囊。",
+    theme1Full: "主题 1 · 完整栏", theme2Capsule: "主题 2 · 小胶囊",
+    // Settings - Diagnostics
+    diagnosticsLog: "诊断日志", appLogTitle: "App 日志", appLogHint: "记录启动、接口与播放链路；Cookie/Token 会自动脱敏。崩溃后可到这里查看或分享。", viewLog: "查看日志", shareLog: "分享日志", clearLog: "清空日志",
+    readingLog: "读取中...", logTitle: "日志", logReadFailed: "读取日志失败", logShareFailed: "分享日志失败",
+    clearLogTitle: "清空日志", clearLogBody: "确定清空本地 App 日志？",
+    // Sources
+    qrLogin: "扫码登录", importCookieTab: "导入 Cookie",
+    importNeteaseCookie: "导入网易云 Cookie", importNeteaseCookieHint: "粘贴包含 MUSIC_U 的 Cookie。它仅加密保存在本机，用于后端直连播放。",
+    pasteNeteaseCookie: "粘贴网易云 Cookie", savingCredentials: "正在安全保存凭据...", cookieSaveFailed: "Cookie 保存失败，请重试。",
+    secureSaveAndContinue: "安全保存并继续",
+    // Profile
+    listeningRecord: "听歌记录", noHistoryHint: "播放歌曲后会显示在这里",
+    // Onboarding
+    welcomeTitle: "风堇音乐", backendConnectError: "无法连接", backendConnectHint: "请确认服务器已启动，并填写 http://公网IP:3000，不要填 127.0.0.1。",
+    changeAvatar: "更换本地头像", chooseFromGallery: "从相册选择头像",
+    // Library
+    deleteFailed: "删除失败",
   },
   ja: {
     home: "ホーム", search: "検索", library: "ライブラリ", profile: "プロフィール",
@@ -114,6 +202,50 @@ const dictionaries = {
     librarySubtitle: "NetEase Cloud Music プレイリスト", playlistsUnavailable: "このサーバーはまだ NetEase プレイリスト管理を提供していません。", neteaseLoginExpired: "NetEase ログインの期限が切れました。再度 QR コードをスキャンしてください。", loadFailedHttp: "読み込み失敗 HTTP", noPlaylists: "表示できるプレイリストはまだありません。", playlistsLoadFailed: "マイプレイリストを読み込めません。NetEase のログイン状態とサーバー接続を確認してください。", loadMoreFailed: "おすすめの追加読み込みに失敗しました", createPlaylistUnavailable: "このサーバーはまだ NetEase プレイリスト作成を提供していません。", createPlaylistFailed: "プレイリストの作成に失敗しました。NetEase のログイン状態を確認して再試行してください。", deletePlaylistTitle: "プレイリストを削除", deletePlaylistBody: "このプレイリストを削除しますか？この操作は NetEase Cloud Music に同期されます。", delete: "削除", deletePlaylistFailed: "プレイリストの削除に失敗しました。後でもう一度お試しください。", collapse: "閉じる", newPlaylist: "新規プレイリスト", playlistNamePlaceholder: "プレイリスト名", creating: "作成中", create: "作成",
     onboardingStep: "初回起動 /", onboardingWelcomeBody: "音楽、プロフィール、サーバー接続をひとつのプレーヤーにまとめます。", onboardingProfileTitle: "プロフィールを作成", onboardingProfileBody: "名前とアバターはプロフィールに表示されます。", onboardingBackendTitle: "サーバーに接続", onboardingBackendBody: "ライブラリに入る前に Hyacine サーバーのアドレスを追加してください。", onboardingNamePlaceholder: "名前", onboardingAvatarPlaceholder: "アバター画像 URL", onboardingBackendHint: "http:// または https:// で始まる完全なアドレスを入力してください。", continue: "続ける", finish: "完了", saving: "保存中",
     sourcesTitle: "音楽ソース", sourcesBody: "Hyacine に入る前に、ひとつの音楽ソースを接続してください。", neteaseCloud: "NetEase Cloud Music", bilibili: "Bilibili", credentialsLocal: "認証情報はこの端末に暗号化して保存されます。", creatingNeteaseSession: "NetEase のログインセッションを作成しています...", scanNeteaseCode: "NetEase Cloud Music アプリでこのコードをスキャンしてください。", qrUnavailable: "QR コードを取得できません。NETEASE_API_BASE を設定し、この端末から到達できるバックエンドアドレスを使用してください。", qrExpired: "この QR コードは期限切れです。新しいコードを取得してください。", checkingCookie: "Cookie 形式を確認しています...", cookieValidationFailed: "検証に失敗しました。スマートフォンでは 127.0.0.1 ではなく、PC の LAN IP を使用してください。", secureSessionWaiting: "安全なセッションを待機中", scanInNetease: "NetEase Cloud Music でスキャン", connectNetease: "NetEase Cloud Music を接続", qrCompletesAutomatically: "確認後に自動で完了します", qrSessionOnly: "QR コードはこのセッションでのみ有効です", importCookie: "ログイン Cookie をインポート", cookieRequirements: "SESSDATA と bili_jct が必要です。", cookiePlaceholder: "Bilibili Cookie を貼り付け", working: "処理中...", refreshQr: "QR コードを更新", getQr: "QR コードを取得", verifyAndSave: "検証して保存",
+    // Brand & greetings
+    brandName: "Hyacine Music", greetingLateNight: "夜更かし", greetingMorning: "おはよう", greetingNoon: "こんにちは", greetingAfternoon: "こんにちは", greetingEvening: "こんばんは",
+    dailyRecommendations: "デイリーおすすめ", dailySongs: "デイリーソング", featuredForYou: "あなたにおすすめ", playRecommendation: "おすすめを再生", nowPlayingEllipsis: "再生中...",
+    // Admin
+    adminTitle: "管理コンソール", adminSubtitle: "この端末のみ · 機密情報はマスク済み", userData: "ユーザーデータ", backendStatus: "バックエンド状態", clientLogs: "クライアントログ",
+    userDisplayName: "ユーザー名", notLoggedInUser: "未ログイン", currentMusicSource: "現在の音楽ソース", noMusicSourceSelected: "音楽ソース未選択",
+    listeningHistory: "再生履歴", localFavorites: "ローカルお気に入り", neteaseCredential: "NetEase 認証", bilibiliCredential: "Bilibili 認証",
+    latency: "レイテンシ", neteaseMode: "NetEase モード", goDirect: "Go 直接", upstreamCompatible: "アップストリーム互換", notConfigured: "未設定", unavailable: "利用不可",
+    noLogs: "ログなし", checking: "確認中",
+    // Settings - Account
+    adminConsole: "管理コンソール", adminConsoleHint: "端末のユーザーデータ、マスク済みログ、バックエンド状態を確認。", openAdminConsole: "管理コンソールを開く",
+    accountStatus: "アカウント状態", accountSavedLocally: "ローカルアカウント保存済み", noLocalAccount: "ローカルアカウント未作成", editProfile: "アバターと名前を編集",
+    neteaseBound: "NetEase Cloud Music 連携済み", bilibiliBound: "Bilibili 連携済み", noMusicServiceBound: "音楽サービス未連携",
+    serverAddress: "サーバーアドレス", noServerConfigured: "サーバー未設定", changeServerAddress: "サーバーアドレスを変更",
+    // Settings - Audio
+    audioSection: "オーディオ", audioQualityAndEffects: "音質とエフェクト", audioQualityHint: "オンライン再生の音質、エフェクトプリセット、カスタムイコライザを設定。", openAudioSettings: "オーディオ設定を開く",
+    audioQuality: "音質", onlinePlaybackQuality: "オンライン再生音質", onlinePlaybackQualityHint: "次の NetEase 楽曲 URL 取得に使用。音源、アカウント、ネットワークにより自動ダウングレードの可能性。",
+    qualityStandard: "標準 · 128 kbps", qualityHigher: "高品質 · 192 kbps", qualityExhigh: "最高 · 320 kbps", qualityLossless: "ロスレス · FLAC", qualityHires: "Hi-Res",
+    soundPreset: "エフェクトプリセット", presetFlat: "フラット", presetBass: "低音強調", presetVocal: "ボーカル強調", presetBright: "明るい", presetCustom: "カスタム",
+    soundPresetHint: "現在の Expo Audio エンジンはクロスプラットフォームのリアルタイム DSP/イコライザ API を公開していません。設定は保存されますが、ネイティブオーディオモジュールの統合が必要です。",
+    customEqualizer: "カスタムイコライザ", reset: "リセット",
+    // Settings - Appearance
+    colorPreview: "色のプレビュー", colorPreviewHint: "アクセントテキスト、ボタン、プログレスバー、カードの枠線に即座に適用。",
+    playButton: "再生ボタン", defaultColor: "デフォルト", coolColor: "クール", warmColor: "ウォーム", resetSystemDefault: "システムデフォルトに戻す",
+    // Settings - Player
+    lyricColor: "歌詞の色", lyricColorHint: "歌唱済み、現在、未歌唱の歌詞を個別に設定。デフォルトは歌唱済みが暗色、現在がアクセント色、未歌唱が白色。",
+    miniPlayerTheme: "ミニプレーヤーテーマ", miniPlayerThemeHint: "テーマ 1 はフルソングバー。テーマ 2 はコンパクトなカプセル。",
+    theme1Full: "テーマ 1 · フルバー", theme2Capsule: "テーマ 2 · ミニカプセル",
+    // Settings - Diagnostics
+    diagnosticsLog: "診断ログ", appLogTitle: "App ログ", appLogHint: "起動、API、再生イベントを記録。Cookie/トークンは自動マスク。クラッシュ後に確認または共有可能。", viewLog: "ログを見る", shareLog: "ログを共有", clearLog: "ログをクリア",
+    readingLog: "読み込み中...", logTitle: "ログ", logReadFailed: "ログの読み込みに失敗", logShareFailed: "ログの共有に失敗",
+    clearLogTitle: "ログをクリア", clearLogBody: "ローカル App ログをクリアしますか？",
+    // Sources
+    qrLogin: "QR ログイン", importCookieTab: "Cookie インポート",
+    importNeteaseCookie: "NetEase Cookie インポート", importNeteaseCookieHint: "MUSIC_U を含む Cookie を貼り付け。ローカルに暗号化保存され、バックエンド直接再生に使用。",
+    pasteNeteaseCookie: "NetEase Cookie を貼り付け", savingCredentials: "認証情報を安全に保存中...", cookieSaveFailed: "Cookie の保存に失敗。再試行してください。",
+    secureSaveAndContinue: "安全に保存して続行",
+    // Profile
+    listeningRecord: "再生履歴", noHistoryHint: "再生するとここに曲が表示されます",
+    // Onboarding
+    welcomeTitle: "Hyacine Music", backendConnectError: "接続できません", backendConnectHint: "サーバーが起動していることを確認。http://パブリックIP:3000 を使用し、127.0.0.1 は使用しないでください。",
+    changeAvatar: "アバターを変更", chooseFromGallery: "ギャラリーから選択",
+    // Library
+    deleteFailed: "削除失敗",
   },
 } as const;
 

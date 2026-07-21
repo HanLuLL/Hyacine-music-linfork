@@ -34,7 +34,7 @@ export default function CommentsScreen(): React.JSX.Element {
       setOffset(limited.length);
       setMore(page.more && limited.length < MAX_COMMENTS);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "评论加载失败");
+      setError(reason instanceof Error ? reason.message : t("loadFailedHttp"));
     } finally { setLoading(false); }
   }, [getSourceCredential, params.id, profile?.backendUrl]);
   const loadMore = useCallback(async () => {
@@ -55,7 +55,7 @@ export default function CommentsScreen(): React.JSX.Element {
       setMore(page.more && comments.length + toAdd.length < MAX_COMMENTS);
       setOffset((prev) => prev + toAdd.length);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "评论加载失败");
+      setError(reason instanceof Error ? reason.message : t("loadFailedHttp"));
     } finally { setLoadingMore(false); }
   }, [getSourceCredential, loadingMore, more, offset, params.id, profile?.backendUrl, comments.length]);
   useEffect(() => { void load(); }, [load]);

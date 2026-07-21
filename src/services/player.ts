@@ -77,8 +77,13 @@ function bindStatus(active: AudioPlayer): void {
     playbackCompletionHandler?.();
     if (!playbackCompletionHandler) {
       const { queue, queueIndex, playMode, repeatMode, setQueue, currentTrack, pendingQueue, appendPendingToQueue } = usePlayerStore.getState();
+      // 队列不足3首时自动从pending追加
       if (queue.length > 0 && queue.length - Math.max(queueIndex, 0) <= 3 && pendingQueue.length > 0) {
         appendPendingToQueue(5);
+      }
+      // 队列末尾不足5首时自动加一首
+      if (queue.length > 0 && queue.length - Math.max(queueIndex, 0) <= 5 && pendingQueue.length > 0) {
+        appendPendingToQueue(1);
       }
       const refreshed = usePlayerStore.getState().queue;
       const playResolved = (track: Track, id: string) => {
