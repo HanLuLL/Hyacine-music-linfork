@@ -47,9 +47,8 @@ class ExpoFluidCloudModule : Module() {
         val ctx = appContext.reactContext ?: throw Exception("No React context")
         val values = ContentValues()
 
-        // Template type: music_playback (progress)
-        // 使用简洁的音乐播放模板
-        values.put("templateType", "music")
+        // Template type: music_playback (progress) - 完整音乐播放卡片
+        values.put("templateType", "music_playback")
         values.put("templateId", templateId ?: "hyacine_music_${System.currentTimeMillis()}")
         templateId = values.getAsString("templateId")
         
