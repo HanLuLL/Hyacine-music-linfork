@@ -82,16 +82,13 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     return { playMode: next, shuffleEnabled: next === "shuffle", repeatMode: next === "loop" ? "all" : "none" };
   }),
   cycleUnifiedMode: () => set((state) => {
-    if (state.playMode === "sequential" && state.repeatMode === "none") {
-      return { playMode: "shuffle", shuffleEnabled: true, repeatMode: "none" };
-    }
     if (state.playMode === "shuffle") {
-      return { playMode: "loop", shuffleEnabled: false, repeatMode: "all" };
-    }
-    if (state.repeatMode === "all") {
       return { playMode: "loop", shuffleEnabled: false, repeatMode: "one" };
     }
-    return { playMode: "sequential", shuffleEnabled: false, repeatMode: "none" };
+    if (state.repeatMode === "one") {
+      return { playMode: "sequential", shuffleEnabled: false, repeatMode: "none" };
+    }
+    return { playMode: "shuffle", shuffleEnabled: true, repeatMode: "none" };
   }),
   setPlaying: (isPlaying) => set({ isPlaying }),
   setProgress: (progress, duration) => set({ progress, duration }),
