@@ -157,7 +157,7 @@ class ExpoLiveUpdatesModule : Module() {
         AsyncFunction("updateMetadata") { data: Map<String, Any?>, promise: Promise ->
             try {
                 val session = mediaSession ?: run {
-                    promise.reject("ERR_NO_SESSION", "MediaSession not started")
+                    promise.reject("ERR_NO_SESSION", "MediaSession not started", null)
                     return@AsyncFunction
                 }
 
@@ -330,7 +330,7 @@ class ExpoLiveUpdatesModule : Module() {
     private fun emitControl(action: String, extra: Map<String, Any?>? = null) {
         val payload = mutableMapOf<String, Any?>("action" to action)
         if (extra != null) payload.putAll(extra)
-        this@ExpoLiveUpdatesModule.emit("mediaControl", payload)
+        this@ExpoLiveUpdatesModule.sendEvent("mediaControl", payload)
     }
 
     private suspend fun downloadBitmap(url: String): Bitmap? = withContext(Dispatchers.IO) {
