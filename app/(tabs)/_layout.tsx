@@ -4,8 +4,7 @@ import { BlurView } from "expo-blur";
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
-import { LiquidGlassView } from "../../modules/expo-liquid-glass/src";
-import { globalScrollY } from "@/utils/scrollY";
+import { fadeAnim } from "@/utils/scrollY";
 
 const tabs = [
   { route: "/(tabs)", symbol: "⌂", key: "home" },
@@ -71,34 +70,28 @@ function LiquidTabBar(): React.JSX.Element {
     setContentWidth(width);
   };
 
-  // 滑动渐隐
-  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
-  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 80], extrapolate: "clamp" });
+  // 滑动渐隐：fadeAnim 由各 tab 页面滚动事件驱动（滑动时→0，停止后→1）
+  const fadeOpacity = fadeAnim;
+  const fadeTranslate = fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0], extrapolate: "clamp" });
 
 return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
   <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px] z-50">
     {Platform.OS === "android" ? (
-      <LiquidGlassView
+      <View
         pointerEvents="none"
-        blurRadius={40}
-        saturation={1.22}
-        brightness={tokens.isLight ? 1.06 : 0.96}
-        cornerRadius={38}
-        tintColor={tokens.isLight ? "rgba(255,255,255,0.28)" : "rgba(18,26,42,0.50)"}
-        borderColor={tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.42)"}
-        showHighlight
+        className="absolute inset-0 overflow-hidden rounded-[38px] border"
         style={{
-          position: "absolute",
-          top: 0, left: 0, right: 0, bottom: 0,
-          overflow: "hidden",
-          borderRadius: 38,
+          backgroundColor: tokens.isLight ? "rgba(248,250,252,0.72)" : "rgba(28,30,38,0.72)",
+          borderColor: tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.42)",
           shadowColor: "#182848",
           shadowOpacity: 0.18,
           shadowRadius: 24,
           shadowOffset: { width: 0, height: 10 },
           elevation: 12,
         }}
-      />
+      >
+        <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: tokens.isLight ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.42)" }} />
+      </View>
     ) : (
       <View
         className="absolute inset-0 overflow-hidden rounded-[38px] border"
@@ -237,9 +230,9 @@ function MiuixTabBar(): React.JSX.Element {
     setContentWidth(width);
   };
 
-  // 滑动渐隐
-  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
-  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 80], extrapolate: "clamp" });
+  // 滑动渐隐：fadeAnim 由各 tab 页面滚动事件驱动（滑动时→0，停止后→1）
+  const fadeOpacity = fadeAnim;
+  const fadeTranslate = fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0], extrapolate: "clamp" });
 
   return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
     <Animated.View pointerEvents="box-none" style={{ transform: [{ translateY: slideY }] }}>

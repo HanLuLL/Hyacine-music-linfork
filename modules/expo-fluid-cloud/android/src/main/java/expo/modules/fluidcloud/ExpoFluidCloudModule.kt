@@ -265,8 +265,8 @@ class ExpoFluidCloudModule : Module() {
     /**
      * 构造控制按钮的 PendingIntent 并放入 ContentValues。
      *
-     * OPPO ContentProvider 不支持 Parcelable，故用 PendingIntent.getBroadcast 序列化为
-     * Intent 的 URI 字符串，再以 String 形式存入 ContentValues。系统点击按钮时触发广播，
+     * OPPO ContentProvider 要求 playIntent/pauseIntent 等字段为 Intent 的 URI 字符串
+     * （Intent.toUri(Intent.URI_INTENT_SCHEME) 格式），系统点击按钮时解析此 URI 触发广播。
      * 由 FluidCloudControlReceiver 转发到 MediaSession。
      */
     private fun putControlPendingIntent(
@@ -278,18 +278,12 @@ class ExpoFluidCloudModule : Module() {
     ) {
         try {
             values.put(supportKey, 1)
-            val intent = Intent(ctx, FluidCloudControlReceiver::class.java).apply {
-                this.action = action
+            val intent = Intent(action).apply {
+                setClassName(ctx.packageName, "expo.modules.fluidcloud.FluidCloudControlReceiver")
                 putExtra(EXTRA_TEMPLATE_ID, templateId)
             }
-            val pi = PendingIntent.getBroadcast(
-                ctx,
-                action.hashCode(),
-                intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-            // PendingIntent 转 URI 字符串后存入 ContentValues
-            values.put(intentKey, pi.intentSender.toString())
+            // OPPO 要求 Intent URI 字符串格式（content://...?intent=...）
+            values.put(intentKey, intent.toUri(Intent.URI_INTENT_SCHEME))
         } catch (_: Throwable) {
             // 构造失败仅声明 support 标志
         }

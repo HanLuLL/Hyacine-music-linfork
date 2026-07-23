@@ -1,7 +1,6 @@
 import { Platform, View, type ViewProps } from "react-native";
 import { BlurView } from "expo-blur";
 import { useTheme } from "@/theme";
-import { LiquidGlassView } from "../../../modules/expo-liquid-glass/src";
 
 interface ThemedCardProps extends ViewProps {
   children: React.ReactNode;
@@ -13,7 +12,7 @@ interface ThemedCardProps extends ViewProps {
  *
  * 平台策略：
  * - liquid + iOS：BlurView（系统模糊）
- * - liquid + Android：LiquidGlassView（RenderEffect 模糊 + 高光）
+ * - liquid + Android：半透明实色背景模拟玻璃质感（RenderEffect 无法模糊 View 下方内容）
  * - miuix：圆角阴影 + 半透明背景（保留原 MIUI 风格）
  * - native：实色 surface
  */
@@ -80,26 +79,28 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
     );
   }
 
-  // Android liquid：原生 LiquidGlassView 作为绝对定位背景层，children 放在外层 View 中
-  // 避免 RenderEffect 模糊掉子元素
-  const dark = !tokens.isLight;
+  // Android liquid：半透明实色背景模拟玻璃质感
+  // （Android RenderEffect 无法模糊 View 下方内容，改用实色模拟，与 LiquidControlSurface 保持一致）
+  const darkMode = !tokens.isLight;
   return (
     <View
-      className={`overflow-hidden ${className}`}
-      style={[{ borderRadius: radius, padding: 20, position: "relative" as const }, style]}
+      className={`overflow-hidden border p-5 ${className}`}
+      style={[
+        {
+          backgroundColor: darkMode ? "rgba(28,30,38,0.72)" : "rgba(248,250,252,0.72)",
+          borderColor: darkMode ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)",
+          borderRadius: radius,
+          shadowColor: "#24364f",
+          shadowOpacity: 0.08,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 2,
+        },
+        style,
+      ]}
       {...props}
     >
-      <LiquidGlassView
-        pointerEvents="none"
-        blurRadius={32}
-        saturation={1.18}
-        brightness={dark ? 0.97 : 1.05}
-        cornerRadius={radius}
-        tintColor={dark ? "rgba(20,22,28,0.32)" : "rgba(255,255,255,0.22)"}
-        borderColor={dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)"}
-        showHighlight
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-      />
+      <View pointerEvents="none" className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: darkMode ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.88)" }} />
       {children}
     </View>
   );

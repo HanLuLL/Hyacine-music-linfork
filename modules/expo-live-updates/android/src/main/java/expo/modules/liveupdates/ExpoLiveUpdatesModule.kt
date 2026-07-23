@@ -1,6 +1,7 @@
 package expo.modules.liveupdates
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -25,11 +26,14 @@ import java.net.URL
 /**
  * 完整的 Android MediaSession 实现。
  *
- * - 元数据：title / artist / album / artwork / duration / trackId / queueIndex / queueLength
- * - PlaybackState：完整 actions + 实时 position + playbackSpeed
- * - Callback：onPlay / onPause / onSeekTo / onSkipToNext / onSkipToPrevious / onStop
- *   全部以 "mediaControl" 事件 emit 到 JS 侧
- * - 自驱动进度：每 500ms 在 STATE_PLAYING 时刷新 playbackState，避免锁屏进度条跳变
+ * ColorOS 14+（含锁屏岛、流体云）会自动读取活跃的 MediaSession 渲染音乐卡片，
+ * 因此本模块是 ColorOS 14+ 设备的主路径。
+ *
+ * 关键点：
+ * - setMediaButtonReceiver：让系统识别本 app 为"活跃媒体会话"，锁屏/流体云控制按钮才能渲染
+ * - setRatingType：部分 ColorOS 版本要求设置才能完整渲染卡片
+ * - 暂停时 speed 仍传 playbackSpeed（非 0），避免进度条归零
+ * - 自驱动进度：每 500ms 在 STATE_PLAYING 时刷新 playbackState
  * - SessionActivity：点击锁屏卡片 / 流体云胶囊回到 MainActivity
  */
 class ExpoLiveUpdatesModule : Module() {
@@ -80,6 +84,24 @@ class ExpoLiveUpdatesModule : Module() {
                         MediaSession.FLAG_HANDLES_MEDIA_BUTTONS or
                                 MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
                     )
+
+                    // 设置 rating 类型，部分 ColorOS 版本要求才能完整渲染卡片
+                    setRatingType(android.media.Rating.RATING_HEART)
+
+                    // 注册 MediaButtonReceiver，让系统识别本 app 为活跃媒体会话
+                    // 锁屏 / 流体云控制按钮依赖此注册才能渲染
+                    try {
+                        val componentName = ComponentName(ctx.packageName, "expo.modules.liveupdates.MediaButtonReceiver")
+                        val pi = PendingIntent.getBroadcast(
+                            ctx,
+                            0,
+                            Intent(Intent.ACTION_MEDIA_BUTTON).setComponent(componentName),
+                            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                        )
+                        setMediaButtonReceiver(pi)
+                    } catch (_: Throwable) {
+                        // 部分系统不支持，忽略
+                    }
 
                     // 点击锁屏卡片 / OPPO 流体云胶囊 → 回到 app
                     val openIntent = Intent(ctx, Class.forName("${ctx.packageName}.MainActivity"))
@@ -299,10 +321,7 @@ class ExpoLiveUpdatesModule : Module() {
     private fun pushPlaybackState() {
         val session = mediaSession ?: return
         val state = if (isPlaying) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED
-        val pos = if (isPlaying) {
-            // 由 ticker 推进；外部调用时使用传入值
-            positionMs
-        } else positionMs
+        val pos = positionMs
 
         val pb = PlaybackState.Builder()
             .setActions(
@@ -316,7 +335,8 @@ class ExpoLiveUpdatesModule : Module() {
                         PlaybackState.ACTION_SET_RATING or
                         PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM
             )
-            .setState(state, pos, if (isPlaying) playbackSpeed else 0f)
+            // 暂停时 speed 仍传 playbackSpeed（非 0），避免进度条归零
+            .setState(state, pos, if (isPlaying) playbackSpeed else playbackSpeed)
             .setBufferedPosition(durationMs)
             .build()
         session.setPlaybackState(pb)

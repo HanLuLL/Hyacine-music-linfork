@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
-import { globalScrollY, resetScrollY } from "@/utils/scrollY";
+import { globalScrollY, notifyScrollBegin, notifyScrollEnd, resetScrollY } from "@/utils/scrollY";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
@@ -196,7 +196,7 @@ export default function HomeScreen(): React.JSX.Element {
       if (Math.abs(event.translationX) >= 36) changeFeatured(event.translationX < 0 ? 1 : -1);
     });
   return <ThemedScreen>
-    <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-16" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })} scrollEventThrottle={16}>
+    <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-16" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })} scrollEventThrottle={16} onScrollBeginDrag={notifyScrollBegin} onScrollEndDrag={notifyScrollEnd} onMomentumScrollEnd={notifyScrollEnd}>
       <View className="flex-row items-start justify-between">
         <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t(greetingKey)}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("dailyRecommendations")}</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">

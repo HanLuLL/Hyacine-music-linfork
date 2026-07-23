@@ -6,7 +6,7 @@ import { useI18n } from "@/i18n";
 import { TrackCover } from "@/components/TrackCover";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { useTheme } from "@/theme";
-import { globalScrollY } from "@/utils/scrollY";
+import { fadeAnim } from "@/utils/scrollY";
 
 export function MiniPlayer(): React.JSX.Element | null {
   const track = usePlayerStore((state) => state.currentTrack);
@@ -26,9 +26,9 @@ export function MiniPlayer(): React.JSX.Element | null {
     : preferences.uiStyle === "liquid" ? 100
     : 74;
 
-  // 滑动渐隐：scrollY 0→40 时 opacity 1→0, translateY 0→40
-  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
-  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 40], extrapolate: "clamp" });
+  // 滑动渐隐：fadeAnim 由各 tab 页面滚动事件驱动（滑动时→0，停止后→1）
+  const fadeOpacity = fadeAnim;
+  const fadeTranslate = fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0], extrapolate: "clamp" });
 
   if (preferences.miniPlayerStyle === "capsule") return (
     <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
