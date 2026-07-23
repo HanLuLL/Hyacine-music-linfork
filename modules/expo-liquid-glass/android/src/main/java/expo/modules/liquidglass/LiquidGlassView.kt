@@ -43,12 +43,12 @@ class LiquidGlassView @JvmOverloads constructor(
     var tintColorString: String = "rgba(255,255,255,0.18)"
         set(value) { field = value; _tintColor = parseColor(value, default = 0x2EFFFFFF); invalidate() }
     var borderColorString: String = "rgba(255,255,255,0.55)"
-        set(value) { field = value; _borderColor = parseColor(value, default = 0x8CFFFFFF); invalidate() }
+        set(value) { field = value; _borderColor = parseColor(value, default = 0x8CFFFFFF.toInt()); invalidate() }
     var showHighlight: Boolean = true
         set(value) { field = value; invalidate() }
 
     private var _tintColor: Int = 0x2EFFFFFF
-    private var _borderColor: Int = 0x8CFFFFFF
+    private var _borderColor: Int = 0x8CFFFFFF.toInt()
 
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -74,15 +74,19 @@ class LiquidGlassView @JvmOverloads constructor(
             // 模糊 + 饱和度 + 亮度，串联 RenderEffect
             val blur = RenderEffect.createBlurEffect(blurRadius, blurRadius, TileMode.DECAL)
             val sat = RenderEffect.createColorFilterEffect(
-                android.graphics.ColorMatrix().apply { setSaturation(saturation) }
+                android.graphics.ColorMatrixColorFilter(
+                    android.graphics.ColorMatrix().apply { setSaturation(saturation) }
+                )
             )
             val bright = RenderEffect.createColorFilterEffect(
-                android.graphics.ColorMatrix(
-                    floatArrayOf(
-                        brightness, 0f, 0f, 0f, 0f,
-                        0f, brightness, 0f, 0f, 0f,
-                        0f, 0f, brightness, 0f, 0f,
-                        0f, 0f, 0f, 1f, 0f
+                android.graphics.ColorMatrixColorFilter(
+                    android.graphics.ColorMatrix(
+                        floatArrayOf(
+                            brightness, 0f, 0f, 0f, 0f,
+                            0f, brightness, 0f, 0f, 0f,
+                            0f, 0f, brightness, 0f, 0f,
+                            0f, 0f, 0f, 1f, 0f
+                        )
                     )
                 )
             )
@@ -119,7 +123,7 @@ class LiquidGlassView @JvmOverloads constructor(
         if (showHighlight && h > 4f) {
             val highlightGradient = LinearGradient(
                 0f, 0f, w, 0f,
-                intArrayOf(0x00FFFFFF, 0xF2FFFFFF, 0x00FFFFFF),
+                intArrayOf(0x00FFFFFF, 0xF2FFFFFF.toInt(), 0x00FFFFFF),
                 floatArrayOf(0f, 0.5f, 1f),
                 Shader.TileMode.CLAMP
             )

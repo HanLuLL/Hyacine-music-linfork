@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import expo.modules.kotlin.viewprops.ViewPropsDefinition
 
 /**
  * Android 液态玻璃原生视图。
