@@ -1,7 +1,7 @@
 // Android 液态玻璃视图（RenderEffect + Apple Liquid Glass 视觉风格）
 // 仅 Android 平台渲染原生 View；其他平台返回普通 View 作为降级。
+// 使用 require 而非 import，避免在未安装 expo-modules-core 类型的环境（如 CI）下报 TS2307。
 
-import { requireNativeViewManager } from "expo-modules-core";
 import { Platform, View, type ViewProps } from "react-native";
 
 export interface LiquidGlassViewProps extends ViewProps {
@@ -17,6 +17,10 @@ export interface LiquidGlassViewProps extends ViewProps {
 let NativeGlass: any = null;
 try {
   if (Platform.OS === "android") {
+    // 运行时加载，类型由调用处兜底为 any
+    const { requireNativeViewManager } = require("expo-modules-core") as {
+      requireNativeViewManager: (name: string) => any;
+    };
     NativeGlass = requireNativeViewManager("ExpoLiquidGlass");
   }
 } catch {

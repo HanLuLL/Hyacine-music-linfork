@@ -10,6 +10,7 @@
   "keywords": ["expo", "android", "liquid", "glass", "blureffect"],
   "peerDependencies": {
     "expo": "*",
+    "expo-modules-core": "*",
     "react": "*",
     "react-native": "*"
   }
