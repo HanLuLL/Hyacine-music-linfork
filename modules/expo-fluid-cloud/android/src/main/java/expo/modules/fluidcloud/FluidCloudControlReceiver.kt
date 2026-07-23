@@ -3,35 +3,28 @@ package expo.modules.fluidcloud
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.session.MediaSessionManager
 import android.os.SystemClock
 import android.view.KeyEvent
 
 /**
  * 接收 OPPO 流体云控制按钮点击事件，转发到活跃的 MediaSession。
  *
- * 工作流程（OPPO 官方推荐路径）：
+ * 工作流程（标准 Android 路径，无需特殊权限）：
  * 1. 用户点击流体云胶囊上的播放/暂停/上一首/下一首按钮
  * 2. 系统通过 PendingIntent 触发本 BroadcastReceiver
- * 3. 本 Receiver 通过 MediaSessionManager 获取活跃的 MediaSession
- * 4. 通过 dispatchMediaButtonEvent 把对应的 KeyEvent 分发到 MediaSession
+ * 3. 本 Receiver 构造 ACTION_MEDIA_BUTTON 广播 + KeyEvent
+ * 4. sendBroadcast 到系统，Android 自动路由到活跃的 MediaSession
+ *    （MediaSession.FLAG_HANDLES_MEDIA_BUTTONS 匹配）
  * 5. MediaSession.Callback（在 ExpoLiveUpdatesModule 中定义）回调 onPlay/onPause/onSkipToNext 等
+ *
+ * 注意：不再使用 MediaSessionManager.getActiveSessions(null)，
+ * 该 API 需要 NotificationListenerService 或 MEDIA_CONTENT_CONTROL 权限，
+ * 普通第三方应用调用会返回空列表或抛 SecurityException，导致按钮失效。
  */
 class FluidCloudControlReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         try {
             val action = intent.action ?: return
-
-            // 获取活跃的 MediaSession
-            val msm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager ?: return
-            @Suppress("DEPRECATION")
-            val controllers = msm.getActiveSessions(null)
-            if (controllers.isNullOrEmpty()) return
-
-            // 取本 app 的 MediaSession（fallback 到第一个活跃 controller）
-            val controller = controllers.firstOrNull { it.packageName == context.packageName }
-                ?: controllers.firstOrNull()
-                ?: return
 
             // 根据广播 action 映射到 KeyEvent
             val keyCode = when (action) {
@@ -42,19 +35,27 @@ class FluidCloudControlReceiver : BroadcastReceiver() {
                 else -> return
             }
 
-            // 模拟一次按键按下+抬起，触发 MediaSession.Callback
+            // 构造一次按键按下+抬起事件
             val now = SystemClock.uptimeMillis()
             val downEvent = KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0)
             val upEvent = KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0)
-            controller.dispatchMediaButtonEvent(downEvent)
-            controller.dispatchMediaButtonEvent(upEvent)
+
+            // 通过 ACTION_MEDIA_BUTTON 广播让系统自动路由到活跃 MediaSession
+            // Android 系统会根据 FLAG_HANDLES_MEDIA_BUTTONS 匹配并分发
+            val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON).apply {
+                setPackage(context.packageName)
+                putExtra(Intent.EXTRA_KEY_EVENT, downEvent)
+            }
+            context.sendBroadcast(mediaButtonIntent)
+
+            val mediaButtonIntentUp = Intent(Intent.ACTION_MEDIA_BUTTON).apply {
+                setPackage(context.packageName)
+                putExtra(Intent.EXTRA_KEY_EVENT, upEvent)
+            }
+            context.sendBroadcast(mediaButtonIntentUp)
         } catch (_: Throwable) {
             // 转发失败不影响系统 UI
         }
-    }
-
-    private fun <T> List<T>?.isNullOrEmpty(): Boolean {
-        return this == null || this.isEmpty()
     }
 }
 

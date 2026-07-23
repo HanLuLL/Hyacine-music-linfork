@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useAudio } from "@/hooks/useAudio";
 import { usePlayerStore } from "@/store/playerStore";
@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { TrackCover } from "@/components/TrackCover";
 import { LiquidControlSurface } from "@/components/ui/LiquidControlSurface";
 import { useTheme } from "@/theme";
+import { globalScrollY } from "@/utils/scrollY";
 
 export function MiniPlayer(): React.JSX.Element | null {
   const track = usePlayerStore((state) => state.currentTrack);
@@ -25,7 +26,12 @@ export function MiniPlayer(): React.JSX.Element | null {
     : preferences.uiStyle === "liquid" ? 100
     : 74;
 
+  // 滑动渐隐：scrollY 0→40 时 opacity 1→0, translateY 0→40
+  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
+  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 40], extrapolate: "clamp" });
+
   if (preferences.miniPlayerStyle === "capsule") return (
+    <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
     <LiquidControlSurface className="absolute right-4 z-20 flex-row items-center rounded-full p-1.5" style={{ bottom: bottomOffset, borderRadius: 999 }}>
       <Pressable className="flex-row items-center gap-2 pl-1" onPress={() => router.push(`/player/${track.id}`)}>
         <TrackCover uri={track.artwork} title={track.title} size={36} radius={18} />
@@ -34,9 +40,11 @@ export function MiniPlayer(): React.JSX.Element | null {
       <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="ml-1 h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.isLight ? "#ffffff" : "#111111", fontWeight: "900" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
       <Pressable accessibilityLabel={t("nextTrack")} disabled={!canSkip} className="ml-1 h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18`, opacity: canSkip ? 1 : 0.35 }} onPress={() => void skipTrack(1)}><Text style={{ color: tokens.text, fontSize: 14, fontWeight: "900" }}>▶|</Text></Pressable>
     </LiquidControlSurface>
+    </Animated.View>
   );
 
   return (
+    <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
     <LiquidControlSurface className="absolute left-4 right-4 z-20 flex-row items-center rounded-[26px] px-3 py-2" style={{ bottom: bottomOffset, borderRadius: 26 }}>
       <Pressable className="min-w-0 flex-1 flex-row items-center gap-3" onPress={() => router.push(`/player/${track.id}`)}>
         <TrackCover uri={track.artwork} title={track.title} size={44} radius={14} />
@@ -49,5 +57,6 @@ export function MiniPlayer(): React.JSX.Element | null {
       <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="ml-2 h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18` }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
       <Pressable accessibilityLabel={t("nextTrack")} disabled={!canSkip} className="ml-2 h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18`, opacity: canSkip ? 1 : 0.35 }} onPress={() => void skipTrack(1)}><Text style={{ color: tokens.text, fontSize: 13, fontWeight: "900" }}>▶|</Text></Pressable>
     </LiquidControlSurface>
+    </Animated.View>
   );
 }

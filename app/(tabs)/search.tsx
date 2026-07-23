@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  Animated,
   ActivityIndicator,
   FlatList,
   Pressable,
@@ -18,6 +19,7 @@ import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import type { Track } from "@/types/music";
 import { usePlayerStore } from "@/store/playerStore";
+import { globalScrollY, resetScrollY } from "@/utils/scrollY";
 
 export default function SearchScreen(): React.JSX.Element {
   const { t } = useI18n();
@@ -34,6 +36,7 @@ export default function SearchScreen(): React.JSX.Element {
   useEffect(() => {
     if (profile?.musicSources?.length) setSource(profile.musicSources[0]);
   }, [profile?.musicSources]);
+  useEffect(() => { resetScrollY(); }, []);
 
   const onSearch = useCallback(async (): Promise<void> => {
     if (!profile?.backendUrl) {
@@ -145,6 +148,8 @@ export default function SearchScreen(): React.JSX.Element {
             className="mt-6"
             data={results}
             keyExtractor={(item) => item.id}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })}
+            scrollEventThrottle={16}
             ItemSeparatorComponent={() => <View className="h-3" />}
             ListEmptyComponent={
               <Text className="mt-10 text-sm leading-6" style={{ color: tokens.mutedText }}>{t("searchEmptyHint")}</Text>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import { globalScrollY, resetScrollY } from "@/utils/scrollY";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Image } from "expo-image";
 import { useAccount } from "@/account";
@@ -44,7 +45,7 @@ function greetingKeyForHour(hour: number): TranslationKey {
 }
 
 export default function HomeScreen(): React.JSX.Element {
-  const { playTrack } = useAudio();
+  const { playTrack, skipTrack } = useAudio();
   const setQueue = usePlayerStore((state) => state.setQueue);
   const { t } = useI18n();
   const { tokens } = useTheme();
@@ -57,14 +58,16 @@ export default function HomeScreen(): React.JSX.Element {
   const [greetingKey, setGreetingKey] = useState<TranslationKey>(() => greetingKeyForHour(new Date().getHours()));
   const requestSeq = useRef(0);
   const recommendationEntrance = useRef(new Animated.Value(1)).current;
+  const swipeDirection = useRef(1);
   useEffect(() => {
     recommendationEntrance.setValue(0);
-    Animated.timing(recommendationEntrance, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+    Animated.timing(recommendationEntrance, { toValue: 1, duration: 260, useNativeDriver: true }).start();
   }, [featuredIndex, recommendationEntrance]);
   useEffect(() => {
     const timer = setInterval(() => setGreetingKey(greetingKeyForHour(new Date().getHours())), 60_000);
     return () => clearInterval(timer);
   }, []);
+  useEffect(() => { resetScrollY(); }, []);
   const loadDailySongs = useCallback(async (): Promise<void> => {
     const seq = ++requestSeq.current;
     if (!profile?.backendUrl || !profile.musicSources.includes("netease")) {
@@ -177,7 +180,13 @@ export default function HomeScreen(): React.JSX.Element {
   const featured = songs[featuredIndex] ?? songs[0];
   const changeFeatured = (direction: number): void => {
     if (songs.length < 2) return;
+    swipeDirection.current = direction;
     setFeaturedIndex((current) => (current + direction + songs.length) % songs.length);
+    // 若当前播放的是 featured 曲目，则同时切换播放
+    const currentTrack = usePlayerStore.getState().currentTrack;
+    if (currentTrack && songs.some((s) => s.id === currentTrack.id)) {
+      void skipTrack(direction as 1 | -1);
+    }
   };
   const recommendationSwipe = Gesture.Pan()
     .runOnJS(true)
@@ -187,7 +196,7 @@ export default function HomeScreen(): React.JSX.Element {
       if (Math.abs(event.translationX) >= 36) changeFeatured(event.translationX < 0 ? 1 : -1);
     });
   return <ThemedScreen>
-    <ScrollView contentContainerClassName="px-5 pb-40 pt-16">
+    <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-16" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })} scrollEventThrottle={16}>
       <View className="flex-row items-start justify-between">
         <View><Text style={{ color: tokens.text, fontSize: 31, fontWeight: "800" }}>{t(greetingKey)}</Text><Text className="mt-2 text-sm" style={{ color: tokens.mutedText }}>{t("dailyRecommendations")}</Text></View>
         <LiquidControlSurface className="h-11 w-11 items-center justify-center overflow-hidden rounded-full">
@@ -197,7 +206,7 @@ export default function HomeScreen(): React.JSX.Element {
 
       {loading ? <View className="h-72 items-center justify-center"><ActivityIndicator color={tokens.accent} /></View> : null}
       {!loading && featured ? <ThemedCard className="mt-9 p-0" style={{ borderRadius: 28 }}>
-<Animated.View className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateY: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+<Animated.View className="overflow-hidden p-5" style={{ opacity: recommendationEntrance, transform: [{ translateX: recommendationEntrance.interpolate({ inputRange: [0, 1], outputRange: [swipeDirection.current * 40, 0] }) }] }}>
              <GestureDetector gesture={recommendationSwipe}><View className="min-h-48 flex-row items-end">
               <View className="min-w-0 flex-1 pr-4">
                 <Text className="text-xs font-bold" style={{ color: tokens.accent }}>{t("featuredForYou")}</Text>
@@ -216,6 +225,6 @@ export default function HomeScreen(): React.JSX.Element {
 
       <View className="mt-10 flex-row items-center justify-between"><Text style={{ color: tokens.text, fontSize: 21, fontWeight: "800" }}>{t("dailySongs")}</Text><Pressable onPress={() => void loadDailySongs()}><Text className="text-xs font-semibold" style={{ color: tokens.accent }}>{t("refresh")}</Text></Pressable></View>
       <View className="mt-4 gap-3">{songs.slice(1).map((song) => <ThemedCard key={song.id} className="p-0" style={{ borderRadius: 20 }}><Pressable className="flex-row items-center p-3" style={{ backgroundColor: "transparent" }} onPress={() => void onPlay(song)}>{song.artwork ? <Image className="h-14 w-14 rounded-2xl" source={{ uri: song.artwork }} contentFit="cover" onLoad={() => logCoverResult("load", song.id, song.artwork)} onError={() => logCoverResult("error", song.id, song.artwork)} /> : <View className="h-14 w-14 items-center justify-center rounded-2xl" style={{ backgroundColor: `${tokens.accent}18` }}><Text style={{ color: tokens.accent, fontWeight: "900" }}>♪</Text></View>}<View className="ml-3 min-w-0 flex-1"><Text numberOfLines={1} style={{ color: tokens.text, fontWeight: "800" }}>{song.title}</Text><Text className="mt-1 text-xs" numberOfLines={1} style={{ color: tokens.mutedText }}>{song.artist}</Text></View><Text style={{ color: tokens.accent, fontSize: 18 }}>{playingId === song.id ? "…" : "▶"}</Text></Pressable></ThemedCard>)}</View>
-    </ScrollView>
+    </Animated.ScrollView>
   </ThemedScreen>;
 }

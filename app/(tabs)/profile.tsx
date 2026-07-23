@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Animated, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAccount } from "@/account";
@@ -12,6 +12,7 @@ import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
 import { usePlayerStore } from "@/store/playerStore";
+import { globalScrollY, resetScrollY } from "@/utils/scrollY";
 
 export default function ProfileScreen(): React.JSX.Element {
   const { t } = useI18n();
@@ -52,11 +53,13 @@ export default function ProfileScreen(): React.JSX.Element {
     })();
   }, [getSourceCredential, profile?.avatarUrl, profile?.backendUrl, profile?.displayName, profile?.musicSources, updateProfile]);
 
+  useEffect(() => { resetScrollY(); }, []);
+
   const sourceName = profile?.musicSources.includes("netease") ? t("neteaseBound") : profile?.musicSources.includes("bilibili") ? t("bilibiliBound") : t("noMusicServiceBound");
 
   return (
     <ThemedScreen>
-      <ScrollView contentContainerClassName="px-5 pb-40 pt-14">
+      <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-14" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })} scrollEventThrottle={16}>
         <View className="flex-row items-center justify-between">
           <Text style={{ color: tokens.text, fontSize: 28, fontWeight: "800" }}>{t("profileTitle")}</Text>
           <Pressable className="h-12 w-12 items-center justify-center rounded-full" style={{ borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => router.push("/settings")}>
@@ -65,7 +68,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
 
         <View className="mt-8 overflow-hidden border" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 28 }}>
-          <Pressable className="flex-row items-center p-5" style={{ backgroundColor: "transparent" }} onPress={() => router.push("/onboarding")}>
+          <Pressable className="flex-row items-center p-5" style={{ backgroundColor: "transparent" }} onPress={() => router.push("/settings")}>
             <View className="h-20 w-20 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.accent}24`, borderWidth: 2, borderColor: `${tokens.accent}88` }}>
               {profile?.avatarUrl ? <Image className="h-full w-full" source={{ uri: profile.avatarUrl }} contentFit="cover" /> : <Text className="pt-5 text-center" style={{ color: tokens.accent, fontSize: 24, fontWeight: "900" }}>{profile?.displayName?.slice(0, 1).toUpperCase() || "H"}</Text>}
             </View>
@@ -96,7 +99,7 @@ export default function ProfileScreen(): React.JSX.Element {
           ))}
           {!history.length ? <View className="items-center border py-10" style={{ backgroundColor: "transparent", borderColor: tokens.surfaceBorder, borderRadius: 24 }}><Text style={{ color: tokens.mutedText, fontSize: 14 }}>{t("noHistoryHint")}</Text></View> : null}
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </ThemedScreen>
   );
 }

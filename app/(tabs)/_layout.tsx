@@ -5,6 +5,7 @@ import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, ty
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
 import { LiquidGlassView } from "../../modules/expo-liquid-glass/src";
+import { globalScrollY } from "@/utils/scrollY";
 
 const tabs = [
   { route: "/(tabs)", symbol: "⌂", key: "home" },
@@ -70,9 +71,15 @@ function LiquidTabBar(): React.JSX.Element {
     setContentWidth(width);
   };
 
-return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
+  // 滑动渐隐
+  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
+  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 80], extrapolate: "clamp" });
+
+return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
+  <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px] z-50">
     {Platform.OS === "android" ? (
       <LiquidGlassView
+        pointerEvents="none"
         blurRadius={40}
         saturation={1.22}
         brightness={tokens.isLight ? 1.06 : 0.96}
@@ -133,7 +140,8 @@ return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-
         })}
       </View>
     </View>
-  </View>;
+  </View>
+</Animated.View>;
 }
 
 function LensPosition({ position, tabWidth }: { position: Animated.Value; tabWidth: number }): React.JSX.Element {
@@ -229,7 +237,12 @@ function MiuixTabBar(): React.JSX.Element {
     setContentWidth(width);
   };
 
-  return <Animated.View pointerEvents="box-none" style={{ transform: [{ translateY: slideY }] }}>
+  // 滑动渐隐
+  const fadeOpacity = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [1, 0], extrapolate: "clamp" });
+  const fadeTranslate = globalScrollY.interpolate({ inputRange: [0, 40], outputRange: [0, 80], extrapolate: "clamp" });
+
+  return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, transform: [{ translateY: fadeTranslate }] }}>
+    <Animated.View pointerEvents="box-none" style={{ transform: [{ translateY: slideY }] }}>
     <View className="absolute bottom-16 left-3 right-3 h-[70px]">
       <View className="absolute inset-0 overflow-hidden rounded-[34px] border" style={{ backgroundColor: tokens.isLight ? "#fdfdff" : "#202124", borderColor: `${tokens.accent}35`, shadowColor: "#111827", shadowOpacity: 0.2, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 14 }}>
         <View className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: `${tokens.accent}25` }} />
@@ -253,6 +266,7 @@ function MiuixTabBar(): React.JSX.Element {
         </View>
       </View>
     </View>
+    </Animated.View>
   </Animated.View>;
 }
 

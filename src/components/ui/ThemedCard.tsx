@@ -80,21 +80,27 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
     );
   }
 
-  // Android liquid：原生玻璃
+  // Android liquid：原生 LiquidGlassView 作为绝对定位背景层，children 放在外层 View 中
+  // 避免 RenderEffect 模糊掉子元素
   const dark = !tokens.isLight;
   return (
-    <LiquidGlassView
-      blurRadius={32}
-      saturation={1.18}
-      brightness={dark ? 0.97 : 1.05}
-      cornerRadius={radius}
-      tintColor={dark ? "rgba(20,22,28,0.32)" : "rgba(255,255,255,0.22)"}
-      borderColor={dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)"}
-      showHighlight
-      style={[{ overflow: "hidden", borderRadius: radius, padding: 20 }, style]}
+    <View
+      className={`overflow-hidden ${className}`}
+      style={[{ borderRadius: radius, padding: 20, position: "relative" as const }, style]}
       {...props}
     >
+      <LiquidGlassView
+        pointerEvents="none"
+        blurRadius={32}
+        saturation={1.18}
+        brightness={dark ? 0.97 : 1.05}
+        cornerRadius={radius}
+        tintColor={dark ? "rgba(20,22,28,0.32)" : "rgba(255,255,255,0.22)"}
+        borderColor={dark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)"}
+        showHighlight
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
       {children}
-    </LiquidGlassView>
+    </View>
   );
 }

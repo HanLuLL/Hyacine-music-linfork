@@ -82,21 +82,27 @@ export function LiquidControlSurface({
     );
   }
 
-  // Android：原生 LiquidGlassView
+  // Android：原生 LiquidGlassView 作为绝对定位背景层，children 放在外层 View 中
+  // 避免 RenderEffect 模糊掉子元素（文字/按钮等）
   const darkMode = !tokens.isLight;
   return (
-    <LiquidGlassView
-      blurRadius={28}
-      saturation={1.18}
-      brightness={darkMode ? 0.97 : 1.05}
-      cornerRadius={radius}
-      tintColor={darkMode ? "rgba(20,22,28,0.32)" : "rgba(255,255,255,0.22)"}
-      borderColor={darkMode ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)"}
-      showHighlight
-      style={[{ overflow: "hidden", borderRadius: radius }, style]}
+    <View
+      className={`overflow-hidden ${className}`}
+      style={[{ borderRadius: radius, position: "relative" as const }, style]}
       {...props}
     >
+      <LiquidGlassView
+        pointerEvents="none"
+        blurRadius={28}
+        saturation={1.18}
+        brightness={darkMode ? 0.97 : 1.05}
+        cornerRadius={radius}
+        tintColor={darkMode ? "rgba(20,22,28,0.32)" : "rgba(255,255,255,0.22)"}
+        borderColor={darkMode ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)"}
+        showHighlight
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
       {children}
-    </LiquidGlassView>
+    </View>
   );
 }
