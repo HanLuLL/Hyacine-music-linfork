@@ -11,9 +11,6 @@ import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.graphics.Shader.TileMode
 import android.os.Build
-import android.util.Log
-import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.graphics.withClip
 
@@ -28,7 +25,7 @@ import androidx.core.graphics.withClip
  *
  * 完整的真背景模糊需要上层 RN 通过 BlurView 包装实现；此视图提供 glass 质感与高光。
  */
-class LiquidGlassView @JvmOverloads constructor(
+class LiquidGlassView constructor(
     context: Context,
 ) : FrameLayout(context) {
 

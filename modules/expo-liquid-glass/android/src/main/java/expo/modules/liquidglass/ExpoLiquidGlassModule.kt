@@ -1,13 +1,5 @@
 package expo.modules.liquidglass
 
-import android.content.Context
-import android.graphics.Color
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.os.Build
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
