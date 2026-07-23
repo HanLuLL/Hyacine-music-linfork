@@ -3,7 +3,6 @@ import { usePlayerStore } from "@/store/playerStore";
 import { recordListeningHistory } from "@/services/listeningHistory";
 import type { Track } from "@/types/music";
 import { appLog } from "@/utils/logger";
-import { updateFluidCloudNowPlaying, removeFluidCloudNowPlaying } from "@/services/fluidCloud";
 import {
   startLiveUpdatesSession,
   updateLiveUpdatesMetadata,
@@ -31,7 +30,6 @@ async function ensureAudioMode(): Promise<void> {
 }
 
 let nextPlayerId = 0;
-let lastFluidCloudPush = 0;
 let lastStatePush = 0;
 
 function bindStatus(active: AudioPlayer): void {
@@ -51,19 +49,6 @@ function bindStatus(active: AudioPlayer): void {
     const now = Date.now();
     const timeChanged = Math.abs(nowTime - lastTime) > 1;
     const playingChanged = nowPlaying !== lastPlaying;
-
-    // 流体云（旧版 ContentProvider 路径）：1 秒最多一次
-    if (currentTrack && (timeChanged || playingChanged) && now - lastFluidCloudPush > 1000) {
-      lastFluidCloudPush = now;
-      void updateFluidCloudNowPlaying({
-        title: currentTrack.title,
-        artist: currentTrack.artist,
-        coverUrl: currentTrack.artwork,
-        progress: nowTime,
-        duration: nowDuration,
-        isPlaying: nowPlaying,
-      });
-    }
 
     // MediaSession 状态：500ms 一次，状态变化立即推
     if (currentTrack && (playingChanged || now - lastStatePush > 500)) {
@@ -175,17 +160,6 @@ export async function playTrack(track: Track): Promise<void> {
       duration: track.duration ?? 0,
       speed: 1,
     });
-
-    // 旧版流体云兜底推送：切歌时立即推送完整信息（含 album 作为副标题）
-    void updateFluidCloudNowPlaying({
-      title: track.title,
-      artist: track.artist,
-      album: track.artist,
-      coverUrl: track.artwork,
-      progress: 0,
-      duration: track.duration ?? 0,
-      isPlaying: true,
-    });
   } catch (error) {
     usePlayerStore.getState().setPlaying(false);
     appLog.error("player", "expo-audio playback failed", error);
@@ -209,7 +183,7 @@ export async function seekTo(seconds: number): Promise<void> {
   await player.seekTo(Math.max(0, seconds));
 }
 
-/** 由外部（如锁屏回调）调用，立即同步当前状态到 MediaSession + 流体云。 */
+/** 由外部（如锁屏回调）调用，立即同步当前状态到 MediaSession。 */
 export async function syncPlaybackStateNow(): Promise<void> {
   if (!player) return;
   const currentTrack = usePlayerStore.getState().currentTrack;
@@ -220,20 +194,11 @@ export async function syncPlaybackStateNow(): Promise<void> {
     duration: player.duration ?? 0,
     speed: 1,
   });
-  void updateFluidCloudNowPlaying({
-    title: currentTrack.title,
-    artist: currentTrack.artist,
-    coverUrl: currentTrack.artwork,
-    progress: player.currentTime,
-    duration: player.duration ?? 0,
-    isPlaying: player.playing,
-  });
 }
 
 /** App 退出时清理。 */
 export async function teardownPlayer(): Promise<void> {
   try { player?.pause(); } catch {}
   player = null;
-  await removeFluidCloudNowPlaying();
   await stopLiveUpdatesSession();
 }

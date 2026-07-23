@@ -364,8 +364,9 @@ class ExpoLiveUpdatesModule : Module() {
                         PlaybackState.ACTION_SET_RATING or
                         PlaybackState.ACTION_SKIP_TO_QUEUE_ITEM
             )
-            // 暂停时 speed 仍传 playbackSpeed（非 0），避免进度条归零
-            .setState(state, pos, if (isPlaying) playbackSpeed else playbackSpeed)
+            // 关键修复：暂停时 speed 必须为 0，让系统知道已暂停，停止自动推进进度
+            // 播放时传 playbackSpeed（通常为 1.0），让系统按速度推进进度
+            .setState(state, pos, if (isPlaying) playbackSpeed else 0f)
             .setBufferedPosition(durationMs)
             .build()
         session.setPlaybackState(pb)
