@@ -93,11 +93,7 @@ return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, tr
       >
         <GlassBackdrop
           blurRadius={18}
-          cornerRadius={38}
-          lensEnabled={true}
-          lensHeight={8}
           tintColor={tokens.isLight ? "rgba(248,250,252,0.45)" : "rgba(28,30,38,0.45)"}
-          highlightEnabled={true}
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         />
         <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: tokens.isLight ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.42)" }} />
