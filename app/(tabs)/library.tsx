@@ -149,7 +149,7 @@ export default function LibraryScreen(): React.JSX.Element {
           const cookie = await getSourceCredential("netease");
           const response = await fetch(`${apiBase(profile.backendUrl)}/music-sources/netease/playlists/delete`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: playlist.id, cookie }) });
           const result = await response.json().catch(() => ({})) as { message?: string };
-          if (!response.ok) throw new Error(result.message || `删除失败 HTTP ${response.status}`);
+          if (!response.ok) throw new Error(result.message || `${t("deleteFailed")} HTTP ${response.status}`);
           setPlaylists((current) => current.filter((item) => item.id !== playlist.id));
         } catch (cause) { setError(cause instanceof Error ? cause.message : t("deletePlaylistFailed")); }
       })() },

@@ -149,7 +149,7 @@ export default function SettingsScreen(): React.JSX.Element {
     minimal: t("layoutMinimal"),
     coverLyrics: t("layoutCoverLyrics"),
   };
-  const miniStyles: Record<MiniPlayerStyle, string> = { full: "主题 1 · 完整栏", capsule: "主题 2 · 小胶囊" };
+  const miniStyles: Record<MiniPlayerStyle, string> = { full: t("theme1Full"), capsule: t("theme2Capsule") };
   const fonts: Record<FontScale, string> = { small: t("fontSmall"), medium: t("fontMedium"), large: t("fontLarge") };
   const densities: Record<ListDensity, string> = { compact: t("densityCompact"), comfortable: t("densityComfortable") };
 
@@ -185,7 +185,7 @@ export default function SettingsScreen(): React.JSX.Element {
       appLog.info("settings", "logs refreshed", { length: textValue.length });
     } catch (error) {
       appLog.error("settings", "refresh logs failed", error);
-      Alert.alert("日志", "读取日志失败");
+      Alert.alert(t("logTitle"), t("logReadFailed"));
     } finally {
       setLogLoading(false);
     }
@@ -198,15 +198,15 @@ export default function SettingsScreen(): React.JSX.Element {
       appLog.info("settings", "logs shared", { length: textValue.length });
     } catch (error) {
       appLog.error("settings", "share logs failed", error);
-      Alert.alert("日志", "分享日志失败");
+      Alert.alert(t("logTitle"), t("logShareFailed"));
     }
   };
 
   const onClearLogs = (): void => {
-    Alert.alert("清空日志", "确定清空本地 App 日志？", [
-      { text: "取消", style: "cancel" },
+    Alert.alert(t("clearLogTitle"), t("clearLogBody"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "清空",
+        text: t("clear"),
         style: "destructive",
         onPress: () => {
           void clearLogs().then(async () => {
@@ -263,19 +263,19 @@ export default function SettingsScreen(): React.JSX.Element {
               ))}
             </View>
           </Row>
-          <Row title="管理后台" hint="查看当前设备用户数据、脱敏日志与后端健康状态。">
+          <Row title={t("adminConsole")} hint={t("adminConsoleHint")}>
             <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/admin")}>
-              <Text style={{ color: tokens.accent, fontWeight: "800" }}>打开管理后台</Text>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("openAdminConsole")}</Text>
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
-          <Row title="账号状态" hint={profile ? `${profile.displayName} · 本地账户资料已保存` : "尚未创建本地账户资料"}>
+          <Row title={t("accountStatus")} hint={profile ? `${profile.displayName} · ${t("accountSavedLocally")}` : t("noLocalAccount")}>
             <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/onboarding")}>
-              <Text style={{ color: tokens.accent, fontWeight: "800" }}>编辑头像与昵称</Text>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("editProfile")}</Text>
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
-          <Row title={t("musicService")} hint={profile?.musicSources.includes("netease") ? "网易云音乐已绑定" : profile?.musicSources.includes("bilibili") ? "哔哩哔哩已绑定" : "尚未绑定音乐服务"}>
+          <Row title={t("musicService")} hint={profile?.musicSources.includes("netease") ? t("neteaseBound") : profile?.musicSources.includes("bilibili") ? t("bilibiliBound") : t("noMusicServiceBound")}>
             <Pressable
               className="mt-3 flex-row items-center justify-between"
               onPress={() => router.push("/sources")}
@@ -284,19 +284,19 @@ export default function SettingsScreen(): React.JSX.Element {
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
-          <Row title="服务器地址" hint={profile?.backendUrl || "尚未配置服务器"}>
+          <Row title={t("serverAddress")} hint={profile?.backendUrl || t("noServerConfigured")}>
             <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/onboarding")}>
-              <Text style={{ color: tokens.accent, fontWeight: "800" }}>修改服务器地址</Text>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("changeServerAddress")}</Text>
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
         </Section>
 
         {/* Appearance */}
-        <Section title="音频">
-          <Row title="音质与音效" hint="设置在线播放音质、音效预设和自定义均衡器。">
+        <Section title={t("audioSection")}>
+          <Row title={t("audioQualityAndEffects")} hint={t("audioQualityHint")}>
             <Pressable className="mt-3 flex-row items-center justify-between" onPress={() => router.push("/audio-settings")}>
-              <Text style={{ color: tokens.accent, fontWeight: "800" }}>打开音频设置</Text>
+              <Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("openAudioSettings")}</Text>
               <Text style={{ color: tokens.accent, fontSize: 20 }}>›</Text>
             </Pressable>
           </Row>
@@ -351,11 +351,11 @@ export default function SettingsScreen(): React.JSX.Element {
               className="mt-4 overflow-hidden p-4"
               style={{ borderRadius: tokens.cardRadius, backgroundColor: validHex.test(hex) ? `${hex}18` : `${tokens.accent}18`, borderWidth: 1, borderColor: validHex.test(hex) ? hex : tokens.accent }}
             >
-              <Text style={{ color: tokens.text, fontSize: 15, fontWeight: "800" }}>颜色效果预览</Text>
-              <Text className="mt-1 text-xs" style={{ color: tokens.mutedText }}>强调文字、按钮、进度条和卡片边框会立即使用此颜色</Text>
+              <Text style={{ color: tokens.text, fontSize: 15, fontWeight: "800" }}>{t("colorPreview")}</Text>
+              <Text className="mt-1 text-xs" style={{ color: tokens.mutedText }}>{t("colorPreviewHint")}</Text>
               <View className="mt-3 flex-row items-center gap-3">
                 <View className="h-10 flex-1 justify-center px-4" style={{ borderRadius: tokens.pillRadius, backgroundColor: validHex.test(hex) ? hex : tokens.accent }}>
-                  <Text style={{ color: "#ffffff", fontWeight: "900", textAlign: "center" }}>播放按钮</Text>
+                  <Text style={{ color: "#ffffff", fontWeight: "900", textAlign: "center" }}>{t("playButton")}</Text>
                 </View>
                 <View className="h-2 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: `${tokens.text}20` }}>
                   <View className="h-full w-2/3 rounded-full" style={{ backgroundColor: validHex.test(hex) ? hex : tokens.accent }} />
@@ -454,36 +454,36 @@ export default function SettingsScreen(): React.JSX.Element {
           <Row title={t("playerLayout")}>
             <Segment options={playerLayouts} value={preferences.playerLayout} labels={layouts} onChange={(value) => void setPlayerLayout(value)} />
           </Row>
-          <Row title="歌词颜色" hint="已唱、当前和未唱歌词可分别设置；恢复默认即为已唱深色、当前强调色、未唱白色。">
+          <Row title={t("lyricColor")} hint={t("lyricColorHint")}>
             <View className="mt-4 flex-row gap-2">
-              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#1a0d18" }} onPress={() => void setLyricColors({ sung: "#1a0d18", current: tokens.accent, upcoming: "#ffffff" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>默认</Text></Pressable>
-              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#0f172a" }} onPress={() => void setLyricColors({ sung: "#0f172a", current: "#38bdf8", upcoming: "#f8fafc" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>冷色</Text></Pressable>
-              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#4c0519" }} onPress={() => void setLyricColors({ sung: "#4c0519", current: "#fb7185", upcoming: "#fff1f2" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>暖色</Text></Pressable>
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#1a0d18" }} onPress={() => void setLyricColors({ sung: "#1a0d18", current: tokens.accent, upcoming: "#ffffff" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>{t("defaultColor")}</Text></Pressable>
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#0f172a" }} onPress={() => void setLyricColors({ sung: "#0f172a", current: "#38bdf8", upcoming: "#f8fafc" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>{t("coolColor")}</Text></Pressable>
+              <Pressable className="h-10 flex-1 items-center justify-center rounded-full" style={{ backgroundColor: "#4c0519" }} onPress={() => void setLyricColors({ sung: "#4c0519", current: "#fb7185", upcoming: "#fff1f2" })}><Text style={{ color: "#ffffff", fontWeight: "800" }}>{t("warmColor")}</Text></Pressable>
             </View>
-            <Pressable className="mt-3 items-center py-2" onPress={() => void setLyricColors({ sung: null, current: null, upcoming: null })}><Text style={{ color: tokens.accent, fontWeight: "800" }}>恢复系统默认</Text></Pressable>
+            <Pressable className="mt-3 items-center py-2" onPress={() => void setLyricColors({ sung: null, current: null, upcoming: null })}><Text style={{ color: tokens.accent, fontWeight: "800" }}>{t("resetSystemDefault")}</Text></Pressable>
           </Row>
-          <Row title="正在播放栏主题" hint="主题 1 为完整歌曲栏；主题 2 为更紧凑的小胶囊。">
+          <Row title={t("miniPlayerTheme")} hint={t("miniPlayerThemeHint")}>
             <Segment options={miniPlayerStyles} value={preferences.miniPlayerStyle} labels={miniStyles} onChange={(value) => void setMiniPlayerStyle(value)} />
           </Row>
         </Section>
 
         {/* Diagnostics */}
-        <Section title="诊断日志">
-          <Row title="App 日志" hint="记录启动、接口与播放链路；Cookie/Token 会自动脱敏。崩溃后可到这里查看或分享。">
+        <Section title={t("diagnosticsLog")}>
+          <Row title={t("appLogTitle")} hint={t("appLogHint")}>
             <View className="mt-4 flex-row gap-3">
               <Pressable
                 className="flex-1 items-center justify-center rounded-full py-3"
                 style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
                 onPress={() => void refreshLogs()}
               >
-                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>{logLoading ? "读取中..." : "查看日志"}</Text>
+                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>{logLoading ? t("readingLog") : t("viewLog")}</Text>
               </Pressable>
               <Pressable
                 className="flex-1 items-center justify-center rounded-full py-3"
                 style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
                 onPress={() => void shareLogs()}
               >
-                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>分享日志</Text>
+                <Text style={{ color: tokens.accent, fontWeight: "800", fontSize: 14 }}>{t("shareLog")}</Text>
               </Pressable>
             </View>
             <Pressable
@@ -491,7 +491,7 @@ export default function SettingsScreen(): React.JSX.Element {
               style={{ backgroundColor: tokens.surface, borderWidth: 1, borderColor: tokens.surfaceBorder }}
               onPress={onClearLogs}
             >
-              <Text style={{ color: "#ef4444", fontWeight: "800", fontSize: 14 }}>清空日志</Text>
+              <Text style={{ color: "#ef4444", fontWeight: "800", fontSize: 14 }}>{t("clearLog")}</Text>
             </Pressable>
             {logPreview ? (
               <LiquidControlSurface className="mt-4 rounded-3xl p-4" style={{ borderRadius: 24 }}>

@@ -102,32 +102,32 @@ class ExpoLiveUpdatesModule : Module() {
                     // 控制回调 emit 到 JS
                     setCallback(object : MediaSession.Callback() {
                         override fun onPlay() {
-                            emit("play", null)
+                            emitControl("play")
                             isPlaying = true
                             lastTickAt = SystemClock.elapsedRealtime()
                             pushPlaybackState()
                         }
 
                         override fun onPause() {
-                            emit("pause", null)
+                            emitControl("pause")
                             isPlaying = false
                             lastTickAt = 0L
                             pushPlaybackState()
                         }
 
                         override fun onStop() {
-                            emit("stop", null)
+                            emitControl("stop")
                             isPlaying = false
                             lastTickAt = 0L
                             pushPlaybackState()
                         }
 
                         override fun onSkipToNext() {
-                            emit("next", null)
+                            emitControl("next")
                         }
 
                         override fun onSkipToPrevious() {
-                            emit("prev", null)
+                            emitControl("prev")
                         }
 
                         override fun onSeekTo(pos: Long) {
@@ -135,7 +135,7 @@ class ExpoLiveUpdatesModule : Module() {
                             if (durationMs > 0L) positionMs = positionMs.coerceAtMost(durationMs)
                             lastTickAt = SystemClock.elapsedRealtime()
                             // JS 侧契约：position 单位为秒
-                            emit("seek", mapOf("position" to (positionMs / 1000.0)))
+                            emitControl("seek", mapOf("position" to (positionMs / 1000.0)))
                             pushPlaybackState()
                         }
                     })
@@ -327,7 +327,7 @@ class ExpoLiveUpdatesModule : Module() {
         session.setPlaybackState(pb)
     }
 
-    private fun emit(action: String, extra: Map<String, Any?>?) {
+    private fun emitControl(action: String, extra: Map<String, Any?>? = null) {
         val payload = mutableMapOf<String, Any?>("action" to action)
         if (extra != null) payload.putAll(extra)
         this@ExpoLiveUpdatesModule.emit("mediaControl", payload)

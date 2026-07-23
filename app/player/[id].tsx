@@ -34,19 +34,20 @@ function Controls({
   onCycleMode: () => void;
 }): React.JSX.Element {
   const { tokens } = useTheme();
+  const { t } = useI18n();
   const buttonStyle = { color: tokens.text, fontSize: 25, fontWeight: "900" as const };
   return (
     <LiquidControlSurface className="mt-6 self-center rounded-full px-3 py-2" style={{ borderRadius: 999 }}>
       <View className="flex-row items-center gap-3">
         <Pressable
-          accessibilityLabel="循环模式"
+          accessibilityLabel={t("cycleMode")}
           className="h-11 w-11 items-center justify-center"
           onPress={onCycleMode}
         >
           <Text style={{ color: tokens.accent, fontSize: 18, fontWeight: "900" }}>{modeLabel}</Text>
         </Pressable>
         <Pressable
-          accessibilityLabel="上一首"
+          accessibilityLabel={t("previousTrack")}
           disabled={!canSkip}
           className="h-11 w-11 items-center justify-center"
           style={{ opacity: canSkip ? 1 : 0.35 }}
@@ -64,7 +65,7 @@ function Controls({
           </Text>
         </Pressable>
         <Pressable
-          accessibilityLabel="下一首"
+          accessibilityLabel={t("nextTrack")}
           disabled={!canSkip}
           className="h-11 w-11 items-center justify-center"
           style={{ opacity: canSkip ? 1 : 0.35 }}
@@ -73,7 +74,7 @@ function Controls({
           <Text style={buttonStyle}>▶|</Text>
         </Pressable>
         <Pressable
-          accessibilityLabel="队列"
+          accessibilityLabel={t("queueLabel")}
           className="h-11 w-11 items-center justify-center"
           onPress={() => router.push("/queue")}
         >
@@ -357,7 +358,7 @@ export default function FullPlayerScreen(): React.JSX.Element {
           <Pressable onPress={() => router.back()}>
             <Text style={{ color: tokens.accent, fontWeight: "900" }}>⌄ {t("closePlayer")}</Text>
           </Pressable>
-          <Pressable accessibilityLabel="当前播放" onPress={() => router.push("/queue")}>
+          <Pressable accessibilityLabel={t("nowPlaying")} onPress={() => router.push("/queue")}>
             <Text style={{ color: tokens.accent, fontSize: 22, fontWeight: "900" }}>≡</Text>
           </Pressable>
         </View>
