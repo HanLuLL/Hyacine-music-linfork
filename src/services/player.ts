@@ -176,10 +176,11 @@ export async function playTrack(track: Track): Promise<void> {
       speed: 1,
     });
 
-    // 旧版流体云兜底推送
+    // 旧版流体云兜底推送：切歌时立即推送完整信息（含 album 作为副标题）
     void updateFluidCloudNowPlaying({
       title: track.title,
       artist: track.artist,
+      album: track.artist,
       coverUrl: track.artwork,
       progress: 0,
       duration: track.duration ?? 0,

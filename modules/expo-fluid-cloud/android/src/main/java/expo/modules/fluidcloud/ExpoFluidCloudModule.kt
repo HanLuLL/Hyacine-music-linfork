@@ -1,7 +1,9 @@
 package expo.modules.fluidcloud
 
+import android.app.PendingIntent
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -31,8 +33,8 @@ import java.net.URL
  *    - content://com.oppo.fluidCloud.provider/shareintent  - 创卡/刷新
  *    - content://com.oppo.fluidCloud.provider/deleteintent - 销卡
  *    - content://com.oppo.fluidCloud.provider/queryfeature - 探测能力
- * 3. 旧版路径下，控制按钮通过 PendingIntent 指向本 app 的 MediaButtonReceiver，
- *    系统点击按钮时发出对应 broadcast，本 app 转发到 MediaSession（或直接处理）。
+ * 3. 旧版路径下，控制按钮通过 PendingIntent 以广播形式发到 FluidCloudControlReceiver，
+ *    Receiver 再通过 setMediaController 把按键事件分发到活跃的 MediaSession（OPPO 官方推荐路径）。
  * 4. 进度自驱动：原生 Handler 每 500ms 推进一次进度，避免 JS 限流导致进度条跳变。
  * 5. 封面下载、Base64 编码全部走 IO 线程，主线程只做 ContentValues 提交。
  */
@@ -46,6 +48,7 @@ class ExpoFluidCloudModule : Module() {
     private var lastLyrics: String = ""
     private var lastTitle: String = ""
     private var lastArtist: String = ""
+    private var lastAlbum: String = ""
 
     private val handler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -109,6 +112,7 @@ class ExpoFluidCloudModule : Module() {
 
                 lastTitle = data["title"] as? String ?: lastTitle
                 lastArtist = data["artist"] as? String ?: lastArtist
+                lastAlbum = data["album"] as? String ?: lastAlbum
                 lastIsPlaying = data["isPlaying"] as? Boolean ?: lastIsPlaying
                 lastProgress = (data["progress"] as? Number)?.toLong() ?: lastProgress
                 lastDuration = (data["duration"] as? Number)?.toLong() ?: lastDuration
@@ -197,25 +201,33 @@ class ExpoFluidCloudModule : Module() {
         try {
             val values = ContentValues()
 
-            // 模板类型
+            // 模板类型与场景
             values.put("templateType", "music_playback")
+            values.put("sceneType", "music_playback")
             if (templateId == null) {
                 templateId = "hyacine_music_${System.currentTimeMillis()}"
             }
             values.put("templateId", templateId)
 
+            // 应用来源信息（系统识别来源、点击跳转）
+            values.put("packageName", ctx.packageName)
+            values.put("targetActivity", "${ctx.packageName}.MainActivity")
+
             // 核心信息
             values.put("title", lastTitle)
             values.put("artist", lastArtist)
+            if (lastAlbum.isNotEmpty()) {
+                values.put("summary", lastAlbum)
+            }
             values.put("isPlaying", if (lastIsPlaying) 1 else 0)
 
-            // 进度
+            // 进度（毫秒）
             if (lastDuration > 0L) {
                 values.put("progress", lastProgress)
                 values.put("duration", lastDuration)
             }
 
-            // 封面
+            // 封面（Base64 JPEG）
             coverBitmap?.let { bmp ->
                 try {
                     val stream = ByteArrayOutputStream()
@@ -232,16 +244,14 @@ class ExpoFluidCloudModule : Module() {
                 values.put("lyrics", lastLyrics)
             }
 
-            // 控制按钮 PendingIntent
-            ctx.let { c ->
-                putControlPendingIntent(values, c, "play", "supportPlayPause", "playIntent")
-                putControlPendingIntent(values, c, "pause", "supportPause", "pauseIntent")
-                putControlPendingIntent(values, c, "next", "supportNext", "nextIntent")
-                putControlPendingIntent(values, c, "prev", "supportPrev", "prevIntent")
-                // Seek 需要 content:// 配合 extra，无法用 PendingIntent 直接表达，
-                // 但仍声明 supportSeek=1，系统会在 seek 时通过 MediaSession 回调处理
-                values.put("supportSeek", 1)
-            }
+            // 控制按钮：使用 PendingIntent.getBroadcast 发送到 FluidCloudControlReceiver，
+            // Receiver 再通过 MediaSession.dispatchMediaButtonEvent 转发到活跃的 MediaSession（OPPO 官方推荐）。
+            putControlPendingIntent(values, ctx, ACTION_PLAY, "supportPlayPause", "playIntent")
+            putControlPendingIntent(values, ctx, ACTION_PAUSE, "supportPause", "pauseIntent")
+            putControlPendingIntent(values, ctx, ACTION_NEXT, "supportNext", "nextIntent")
+            putControlPendingIntent(values, ctx, ACTION_PREV, "supportPrev", "prevIntent")
+            // Seek 仍声明 supportSeek=1，系统会通过 MediaSession 回调处理
+            values.put("supportSeek", 1)
 
             // 通知权限标志
             values.put("enableFloat", 1)
@@ -252,6 +262,13 @@ class ExpoFluidCloudModule : Module() {
         }
     }
 
+    /**
+     * 构造控制按钮的 PendingIntent 并放入 ContentValues。
+     *
+     * OPPO ContentProvider 不支持 Parcelable，故用 PendingIntent.getBroadcast 序列化为
+     * Intent 的 URI 字符串，再以 String 形式存入 ContentValues。系统点击按钮时触发广播，
+     * 由 FluidCloudControlReceiver 转发到 MediaSession。
+     */
     private fun putControlPendingIntent(
         values: ContentValues,
         ctx: Context,
@@ -260,12 +277,21 @@ class ExpoFluidCloudModule : Module() {
         intentKey: String,
     ) {
         try {
-            // 声明该控制按钮可用。ColorOS 14+ 会从 MediaSession 取实际控制回调；
-            // 旧版 ContentProvider 路径下，控制事件由系统直接调用 MediaSession.Callback。
-            // 这里仅声明 support 标志，不直接传 PendingIntent（ContentValues 不支持 Parcelable）。
             values.put(supportKey, 1)
+            val intent = Intent(ctx, FluidCloudControlReceiver::class.java).apply {
+                this.action = action
+                putExtra(EXTRA_TEMPLATE_ID, templateId)
+            }
+            val pi = PendingIntent.getBroadcast(
+                ctx,
+                action.hashCode(),
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            // PendingIntent 转 URI 字符串后存入 ContentValues
+            values.put(intentKey, pi.intentSender.toString())
         } catch (_: Throwable) {
-            // 构造失败忽略
+            // 构造失败仅声明 support 标志
         }
     }
 
@@ -288,6 +314,12 @@ class ExpoFluidCloudModule : Module() {
         private const val SHARE_INTENT_URI = "content://$FLUID_CLOUD_AUTHORITY/shareintent"
         private const val DELETE_INTENT_URI = "content://$FLUID_CLOUD_AUTHORITY/deleteintent"
         private const val QUERY_FEATURE_URI = "content://$FLUID_CLOUD_AUTHORITY/queryfeature"
+
+        // 控制按钮广播 Action
+        const val ACTION_PLAY = "com.hyacine.music.FLUID_CLOUD_PLAY"
+        const val ACTION_PAUSE = "com.hyacine.music.FLUID_CLOUD_PAUSE"
+        const val ACTION_NEXT = "com.hyacine.music.FLUID_CLOUD_NEXT"
+        const val ACTION_PREV = "com.hyacine.music.FLUID_CLOUD_PREV"
 
         const val ACTION_FLUID_CLOUD_CONTROL = "com.hyacine.music.FLUID_CLOUD_CONTROL"
         const val EXTRA_CONTROL_ACTION = "control_action"
