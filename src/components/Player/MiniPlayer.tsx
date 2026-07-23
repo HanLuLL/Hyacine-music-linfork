@@ -9,10 +9,12 @@ import { useTheme } from "@/theme";
 export function MiniPlayer(): React.JSX.Element | null {
   const track = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const { togglePlayback } = useAudio();
+  const queue = usePlayerStore((state) => state.queue);
+  const { togglePlayback, skipTrack } = useAudio();
   const { t } = useI18n();
   const { preferences, tokens } = useTheme();
   if (!track) return null;
+  const canSkip = queue.length > 1;
   const bottomOffset = preferences.uiStyle === "miuix" ? 104 : 94;
   if (preferences.miniPlayerStyle === "capsule") return (
     <LiquidControlSurface className="absolute right-4 z-20 flex-row items-center rounded-full p-1.5" style={{ bottom: bottomOffset, borderRadius: 999 }}>
@@ -20,11 +22,13 @@ export function MiniPlayer(): React.JSX.Element | null {
         <TrackCover uri={track.artwork} title={track.title} size={36} radius={18} />
         <Text numberOfLines={1} className="max-w-24 text-xs font-extrabold" style={{ color: tokens.text }}>{track.title}</Text>
       </Pressable>
-      <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="ml-2 h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.isLight ? "#ffffff" : "#111111", fontWeight: "900" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
+      <Pressable accessibilityLabel={t("previousTrack")} disabled={!canSkip} className="ml-1 h-9 w-9 items-center justify-center rounded-full" style={{ opacity: canSkip ? 1 : 0.35 }} onPress={() => void skipTrack(-1)}><Text style={{ color: tokens.text, fontSize: 14, fontWeight: "900" }}>|◀</Text></Pressable>
+      <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="ml-1 h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: tokens.accent }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.isLight ? "#ffffff" : "#111111", fontWeight: "900" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
     </LiquidControlSurface>
   );
   return <LiquidControlSurface className="absolute left-4 right-4 z-20 flex-row items-center rounded-[26px] px-3 py-2" style={{ bottom: bottomOffset, borderRadius: 26 }}>
     <Pressable className="min-w-0 flex-1 flex-row items-center gap-3" onPress={() => router.push(`/player/${track.id}`)}><TrackCover uri={track.artwork} title={track.title} size={44} radius={14} /><View className="min-w-0 flex-1"><Text className="truncate text-sm font-semibold" style={{ color: tokens.text }}>{track.title}</Text><Text className="truncate text-xs" style={{ color: tokens.mutedText }}>{t("miniPlayer")} · {track.artist}</Text></View></Pressable>
-    <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18` }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
+    <Pressable accessibilityLabel={t("previousTrack")} disabled={!canSkip} className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18`, opacity: canSkip ? 1 : 0.35 }} onPress={() => void skipTrack(-1)}><Text style={{ color: tokens.text, fontSize: 13, fontWeight: "900" }}>|◀</Text></Pressable>
+    <Pressable accessibilityLabel={isPlaying ? t("pause") : t("play")} className="ml-2 h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${tokens.text}18` }} onPress={() => void togglePlayback()}><Text style={{ color: tokens.text, fontSize: 16, fontWeight: "800" }}>{isPlaying ? "Ⅱ" : "▶"}</Text></Pressable>
   </LiquidControlSurface>;
 }

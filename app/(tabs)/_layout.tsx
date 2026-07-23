@@ -4,6 +4,7 @@ import { BlurView } from "expo-blur";
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, type ColorValue, type LayoutChangeEvent } from "react-native";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
+import { LiquidGlassView } from "../../modules/expo-liquid-glass/src";
 
 const tabs = [
   { route: "/(tabs)", symbol: "⌂", key: "home" },
@@ -70,22 +71,45 @@ function LiquidTabBar(): React.JSX.Element {
   };
 
 return <View pointerEvents="box-none" className="absolute bottom-3 left-4 right-4 h-[76px]">
-    <View
-      className="absolute inset-0 overflow-hidden rounded-[38px] border"
-      style={{
-        backgroundColor: tokens.isLight ? "rgba(226,234,248,0.20)" : "rgba(18,26,42,0.44)",
-        borderColor: tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.38)",
-        shadowColor: "#182848",
-        shadowOpacity: 0.18,
-        shadowRadius: 24,
-        shadowOffset: { width: 0, height: 10 },
-        elevation: 12,
-      }}
-    >
-      <BlurView intensity={72} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" />
-      <View className="absolute inset-0" style={{ backgroundColor: tokens.isLight ? "rgba(220,230,247,0.22)" : "rgba(25,34,54,0.20)" }} />
-      <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.92)" }} />
-    </View>
+    {Platform.OS === "android" ? (
+      <LiquidGlassView
+        blurRadius={40}
+        saturation={1.22}
+        brightness={tokens.isLight ? 1.06 : 0.96}
+        cornerRadius={38}
+        tintColor={tokens.isLight ? "rgba(255,255,255,0.28)" : "rgba(18,26,42,0.50)"}
+        borderColor={tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.42)"}
+        showHighlight
+        style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          overflow: "hidden",
+          borderRadius: 38,
+          shadowColor: "#182848",
+          shadowOpacity: 0.18,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
+        }}
+      />
+    ) : (
+      <View
+        className="absolute inset-0 overflow-hidden rounded-[38px] border"
+        style={{
+          backgroundColor: tokens.isLight ? "rgba(226,234,248,0.20)" : "rgba(18,26,42,0.44)",
+          borderColor: tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.38)",
+          shadowColor: "#182848",
+          shadowOpacity: 0.18,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
+        }}
+      >
+        <BlurView intensity={72} tint={tokens.isLight ? "light" : "dark"} className="absolute inset-0" />
+        <View className="absolute inset-0" style={{ backgroundColor: tokens.isLight ? "rgba(220,230,247,0.22)" : "rgba(25,34,54,0.20)" }} />
+        <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: "rgba(255,255,255,0.92)" }} />
+      </View>
+    )}
     <View className="absolute bottom-1.5 left-1.5 right-1.5 top-1.5" onLayout={onContentLayout} {...panResponder.panHandlers}>
       {tabWidth ? <LensPosition position={position} tabWidth={tabWidth} /> : null}
       <View pointerEvents="box-none" className="flex-1 flex-row">

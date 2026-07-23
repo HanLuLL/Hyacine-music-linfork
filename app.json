@@ -80,7 +80,8 @@
     },
     "modules": [
       "./modules/expo-fluid-cloud",
-      "./modules/expo-live-updates"
+      "./modules/expo-live-updates",
+      "./modules/expo-liquid-glass"
     ]
   }
 }
