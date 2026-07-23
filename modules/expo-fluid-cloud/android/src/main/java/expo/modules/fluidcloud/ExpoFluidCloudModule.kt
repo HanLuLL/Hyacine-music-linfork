@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Base64
+import android.util.Log
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.modules.Module
@@ -22,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.net.URL
+
+private const val TAG = "ExpoFluidCloud"
 
 /**
  * OPPO Fluid Cloud（流体云）原生桥接。
@@ -56,16 +59,21 @@ class ExpoFluidCloudModule : Module() {
     private val progressTicker = object : Runnable {
         override fun run() {
             try {
-                if (lastIsPlaying && lastDuration > 0L && isAvailable) {
+                // 移除 lastDuration > 0L 守卫：只要在播放就推进进度，
+                // duration 为 0 时由系统自行处理（不显示进度条），但仍推送卡片
+                if (lastIsPlaying && isAvailable) {
                     val now = SystemClock.elapsedRealtime()
                     if (lastTickAt > 0L) {
                         lastProgress += (now - lastTickAt)
-                        if (lastProgress > lastDuration) lastProgress = lastDuration
+                        if (lastDuration > 0L && lastProgress > lastDuration) {
+                            lastProgress = lastDuration
+                        }
                     }
                     lastTickAt = now
                     pushCardInternal(useCoverCache = true)
                 }
-            } catch (_: Throwable) {
+            } catch (t: Throwable) {
+                Log.w(TAG, "ticker exception: ${t.message}")
                 // ticker 不可中断
             }
             handler.postDelayed(this, 500L)
@@ -88,8 +96,10 @@ class ExpoFluidCloudModule : Module() {
                 val ctx = appContext.reactContext ?: throw Exception("No React context")
                 val result = queryAvailability(ctx)
                 availabilityCache = result
+                Log.i(TAG, "isAvailable query result: $result")
                 promise.resolve(result)
             } catch (e: Exception) {
+                Log.w(TAG, "isAvailable exception: ${e.message}")
                 availabilityCache = false
                 promise.resolve(false)
             }
@@ -104,8 +114,10 @@ class ExpoFluidCloudModule : Module() {
                 // 若系统不支持流体云，直接返回
                 if (availabilityCache == null) {
                     availabilityCache = queryAvailability(ctx)
+                    Log.i(TAG, "updateNowPlaying: lazy availability=$availabilityCache")
                 }
                 if (availabilityCache != true) {
+                    Log.w(TAG, "updateNowPlaying: fluid cloud not available, skip push")
                     promise.resolve(null)
                     return@AsyncFunction
                 }
@@ -121,6 +133,8 @@ class ExpoFluidCloudModule : Module() {
 
                 lastTickAt = if (lastIsPlaying) SystemClock.elapsedRealtime() else 0L
 
+                Log.i(TAG, "updateNowPlaying: title=$lastTitle artist=$lastArtist progress=$lastProgress dur=$lastDuration playing=$lastIsPlaying")
+
                 // 启动 ticker（仅一次）
                 handler.removeCallbacks(progressTicker)
                 handler.post(progressTicker)
@@ -130,6 +144,7 @@ class ExpoFluidCloudModule : Module() {
                 if (!coverUrl.isNullOrEmpty()) {
                     scope.launch {
                         coverBitmap = downloadBitmap(coverUrl)
+                        Log.i(TAG, "updateNowPlaying: cover downloaded=${coverBitmap != null}")
                         pushCardInternal(useCoverCache = true)
                     }
                 } else {
@@ -138,6 +153,7 @@ class ExpoFluidCloudModule : Module() {
 
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "updateNowPlaying exception: ${e.message}", e)
                 promise.reject(CodedException("ERR_FLUID_CLOUD", e.message, e))
             }
         }
@@ -145,17 +161,20 @@ class ExpoFluidCloudModule : Module() {
         // 销毁流体云卡片
         AsyncFunction("removeNowPlaying") { promise: Promise ->
             try {
+                Log.i(TAG, "removeNowPlaying: templateId=$templateId")
                 handler.removeCallbacks(progressTicker)
                 val ctx = appContext.reactContext
                 templateId?.let { id ->
                     if (ctx != null) {
                         try {
-                            ctx.contentResolver.delete(
+                            val deleted = ctx.contentResolver.delete(
                                 Uri.parse(DELETE_INTENT_URI),
                                 "templateId = ?",
                                 arrayOf(id)
                             )
-                        } catch (_: Throwable) {
+                            Log.i(TAG, "removeNowPlaying: delete rows=$deleted")
+                        } catch (t: Throwable) {
+                            Log.w(TAG, "removeNowPlaying: delete exception: ${t.message}")
                             // 销卡失败不影响主流程
                         }
                     }
@@ -166,6 +185,7 @@ class ExpoFluidCloudModule : Module() {
                 lastLyrics = ""
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "removeNowPlaying exception: ${e.message}", e)
                 promise.reject(CodedException("ERR_FLUID_CLOUD_REMOVE", e.message, e))
             }
         }
@@ -188,8 +208,10 @@ class ExpoFluidCloudModule : Module() {
             )
             val available = cursor != null && cursor.count > 0
             cursor?.close()
+            Log.i(TAG, "queryAvailability: cursor!=null=${cursor != null} count=${cursor?.count ?: -1} available=$available")
             available
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            Log.w(TAG, "queryAvailability exception: ${t.message}")
             false
         }
     }
@@ -256,8 +278,10 @@ class ExpoFluidCloudModule : Module() {
             // 通知权限标志
             values.put("enableFloat", 1)
 
-            ctx.contentResolver.insert(Uri.parse(SHARE_INTENT_URI), values)
-        } catch (_: Throwable) {
+            val result = ctx.contentResolver.insert(Uri.parse(SHARE_INTENT_URI), values)
+            Log.i(TAG, "pushCard: templateId=$templateId progress=$lastProgress dur=$lastDuration playing=$lastIsPlaying coverSize=${coverBitmap?.width ?: 0}x${coverBitmap?.height ?: 0} insertResult=$result")
+        } catch (t: Throwable) {
+            Log.w(TAG, "pushCard exception: ${t.message}", t)
             // 推送失败不影响播放
         }
     }

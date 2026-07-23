@@ -5,6 +5,7 @@ import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View, ty
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/theme";
 import { fadeAnim } from "@/utils/scrollY";
+import { GlassBackdrop } from "../../modules/expo-glass-backdrop/src";
 
 const tabs = [
   { route: "/(tabs)", symbol: "⌂", key: "home" },
@@ -81,7 +82,7 @@ return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, tr
         pointerEvents="none"
         className="absolute inset-0 overflow-hidden rounded-[38px] border"
         style={{
-          backgroundColor: tokens.isLight ? "rgba(248,250,252,0.72)" : "rgba(28,30,38,0.72)",
+          backgroundColor: "transparent",
           borderColor: tokens.isLight ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.42)",
           shadowColor: "#182848",
           shadowOpacity: 0.18,
@@ -90,6 +91,15 @@ return <Animated.View pointerEvents="box-none" style={{ opacity: fadeOpacity, tr
           elevation: 12,
         }}
       >
+        <GlassBackdrop
+          blurRadius={18}
+          cornerRadius={38}
+          lensEnabled={true}
+          lensHeight={8}
+          tintColor={tokens.isLight ? "rgba(248,250,252,0.45)" : "rgba(28,30,38,0.45)"}
+          highlightEnabled={true}
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        />
         <View className="absolute left-5 right-5 top-0 h-px" style={{ backgroundColor: tokens.isLight ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.42)" }} />
       </View>
     ) : (

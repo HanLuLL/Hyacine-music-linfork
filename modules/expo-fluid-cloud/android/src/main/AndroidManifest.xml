@@ -2,7 +2,7 @@
     <application>
         <receiver
             android:name="expo.modules.fluidcloud.FluidCloudControlReceiver"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.hyacine.music.FLUID_CLOUD_PLAY"/>
                 <action android:name="com.hyacine.music.FLUID_CLOUD_PAUSE"/>

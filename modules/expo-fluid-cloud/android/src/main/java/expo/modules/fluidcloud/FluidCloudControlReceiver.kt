@@ -4,7 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
+
+private const val TAG = "FluidCloudCtrlReceiver"
 
 /**
  * 接收 OPPO 流体云控制按钮点击事件，转发到活跃的 MediaSession。
@@ -25,6 +28,7 @@ class FluidCloudControlReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         try {
             val action = intent.action ?: return
+            Log.i(TAG, "onReceive: action=$action")
 
             // 根据广播 action 映射到 KeyEvent
             val keyCode = when (action) {
@@ -32,7 +36,10 @@ class FluidCloudControlReceiver : BroadcastReceiver() {
                 ACTION_PAUSE -> KeyEvent.KEYCODE_MEDIA_PAUSE
                 ACTION_NEXT -> KeyEvent.KEYCODE_MEDIA_NEXT
                 ACTION_PREV -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
-                else -> return
+                else -> {
+                    Log.w(TAG, "onReceive: unknown action=$action, skip")
+                    return
+                }
             }
 
             // 构造一次按键按下+抬起事件
@@ -53,7 +60,9 @@ class FluidCloudControlReceiver : BroadcastReceiver() {
                 putExtra(Intent.EXTRA_KEY_EVENT, upEvent)
             }
             context.sendBroadcast(mediaButtonIntentUp)
-        } catch (_: Throwable) {
+            Log.i(TAG, "onReceive: forwarded keyCode=$keyCode to MediaSession")
+        } catch (t: Throwable) {
+            Log.w(TAG, "onReceive exception: ${t.message}", t)
             // 转发失败不影响系统 UI
         }
     }

@@ -12,7 +12,7 @@ import { useTheme } from "@/theme";
 import { apiBase } from "@/utils/apiBase";
 import type { Track } from "@/types/music";
 import { usePlayerStore } from "@/store/playerStore";
-import { globalScrollY, notifyScrollBegin, notifyScrollEnd, resetScrollY } from "@/utils/scrollY";
+import { globalScrollY, handleScrollForFade, handleScrollEndForFade, resetScrollY } from "@/utils/scrollY";
 
 export default function ProfileScreen(): React.JSX.Element {
   const { t } = useI18n();
@@ -59,7 +59,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <ThemedScreen>
-      <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-14" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })} scrollEventThrottle={16} onScrollBeginDrag={notifyScrollBegin} onScrollEndDrag={notifyScrollEnd} onMomentumScrollEnd={notifyScrollEnd}>
+      <Animated.ScrollView contentContainerClassName="px-5 pb-40 pt-14" onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false, listener: (e: { nativeEvent: { contentOffset: { x: number; y: number } } }) => handleScrollForFade(e.nativeEvent) })} scrollEventThrottle={16} onScrollEndDrag={handleScrollEndForFade} onMomentumScrollEnd={handleScrollEndForFade}>
         <View className="flex-row items-center justify-between">
           <Text style={{ color: tokens.text, fontSize: 28, fontWeight: "800" }}>{t("profileTitle")}</Text>
           <Pressable className="h-12 w-12 items-center justify-center rounded-full" style={{ borderWidth: 1, borderColor: tokens.surfaceBorder }} onPress={() => router.push("/settings")}>

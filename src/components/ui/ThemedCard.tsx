@@ -1,6 +1,7 @@
 import { Platform, View, type ViewProps } from "react-native";
 import { BlurView } from "expo-blur";
 import { useTheme } from "@/theme";
+import { GlassBackdrop } from "../../../modules/expo-glass-backdrop/src";
 
 interface ThemedCardProps extends ViewProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ interface ThemedCardProps extends ViewProps {
  *
  * 平台策略：
  * - liquid + iOS：BlurView（系统模糊）
- * - liquid + Android：半透明实色背景模拟玻璃质感（RenderEffect 无法模糊 View 下方内容）
+ * - liquid + Android：GlassBackdrop（backdrop 库 + PixelCopy 真玻璃）
  * - miuix：圆角阴影 + 半透明背景（保留原 MIUI 风格）
  * - native：实色 surface
  */
@@ -79,15 +80,14 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
     );
   }
 
-  // Android liquid：半透明实色背景模拟玻璃质感
-  // （Android RenderEffect 无法模糊 View 下方内容，改用实色模拟，与 LiquidControlSurface 保持一致）
+  // Android liquid：真玻璃 backdrop（PixelCopy + backdrop 库）
   const darkMode = !tokens.isLight;
   return (
     <View
       className={`overflow-hidden border p-5 ${className}`}
       style={[
         {
-          backgroundColor: darkMode ? "rgba(28,30,38,0.72)" : "rgba(248,250,252,0.72)",
+          backgroundColor: "transparent",
           borderColor: darkMode ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)",
           borderRadius: radius,
           shadowColor: "#24364f",
@@ -100,6 +100,15 @@ export function ThemedCard({ children, className = "", style, ...props }: Themed
       ]}
       {...props}
     >
+      <GlassBackdrop
+        pointerEvents="none"
+        blurRadius={12}
+        cornerRadius={radius}
+        lensEnabled={false}
+        tintColor={darkMode ? "rgba(28,30,38,0.55)" : "rgba(248,250,252,0.55)"}
+        highlightEnabled={false}
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+      />
       <View pointerEvents="none" className="absolute left-0 right-0 top-0 h-px" style={{ backgroundColor: darkMode ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.88)" }} />
       {children}
     </View>

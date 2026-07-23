@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -22,6 +23,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
+
+private const val TAG = "ExpoLiveUpdates"
 
 /**
  * 完整的 Android MediaSession 实现。
@@ -77,6 +80,7 @@ class ExpoLiveUpdatesModule : Module() {
         AsyncFunction("startSession") { promise: Promise ->
             try {
                 val ctx = appContext.reactContext ?: throw Exception("No React context")
+                Log.i(TAG, "startSession: creating MediaSession, pkg=${ctx.packageName}")
                 releaseSession()
 
                 mediaSession = MediaSession(ctx, "HyacineMusicSession").apply {
@@ -99,7 +103,9 @@ class ExpoLiveUpdatesModule : Module() {
                             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                         )
                         setMediaButtonReceiver(pi)
-                    } catch (_: Throwable) {
+                        Log.i(TAG, "startSession: MediaButtonReceiver registered")
+                    } catch (t: Throwable) {
+                        Log.w(TAG, "startSession: MediaButtonReceiver register failed: ${t.message}")
                         // 部分系统不支持，忽略
                     }
 
@@ -119,6 +125,7 @@ class ExpoLiveUpdatesModule : Module() {
                     // 控制回调 emit 到 JS
                     setCallback(object : MediaSession.Callback() {
                         override fun onPlay() {
+                            Log.i(TAG, "Callback.onPlay")
                             emitControl("play")
                             isPlaying = true
                             lastTickAt = SystemClock.elapsedRealtime()
@@ -126,6 +133,7 @@ class ExpoLiveUpdatesModule : Module() {
                         }
 
                         override fun onPause() {
+                            Log.i(TAG, "Callback.onPause")
                             emitControl("pause")
                             isPlaying = false
                             lastTickAt = 0L
@@ -133,6 +141,7 @@ class ExpoLiveUpdatesModule : Module() {
                         }
 
                         override fun onStop() {
+                            Log.i(TAG, "Callback.onStop")
                             emitControl("stop")
                             isPlaying = false
                             lastTickAt = 0L
@@ -140,14 +149,17 @@ class ExpoLiveUpdatesModule : Module() {
                         }
 
                         override fun onSkipToNext() {
+                            Log.i(TAG, "Callback.onSkipToNext")
                             emitControl("next")
                         }
 
                         override fun onSkipToPrevious() {
+                            Log.i(TAG, "Callback.onSkipToPrevious")
                             emitControl("prev")
                         }
 
                         override fun onSeekTo(pos: Long) {
+                            Log.i(TAG, "Callback.onSeekTo pos=$pos")
                             positionMs = pos.coerceAtLeast(0L)
                             if (durationMs > 0L) positionMs = positionMs.coerceAtMost(durationMs)
                             lastTickAt = SystemClock.elapsedRealtime()
@@ -158,6 +170,7 @@ class ExpoLiveUpdatesModule : Module() {
                     })
 
                     isActive = true
+                    Log.i(TAG, "startSession: MediaSession active=${isActive}")
                 }
 
                 // 启动自驱动 ticker
@@ -166,6 +179,7 @@ class ExpoLiveUpdatesModule : Module() {
 
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "startSession exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "Failed to start session: ${e.message}", e)
             }
         }
@@ -174,6 +188,7 @@ class ExpoLiveUpdatesModule : Module() {
         AsyncFunction("updateMetadata") { data: Map<String, Any?>, promise: Promise ->
             try {
                 val session = mediaSession ?: run {
+                    Log.w(TAG, "updateMetadata: no session")
                     promise.reject("ERR_NO_SESSION", "MediaSession not started", null)
                     return@AsyncFunction
                 }
@@ -188,6 +203,8 @@ class ExpoLiveUpdatesModule : Module() {
                 val queueLength = (data["queueLength"] as? Number)?.toInt() ?: 0
 
                 durationMs = newDuration.coerceAtLeast(0L)
+
+                Log.i(TAG, "updateMetadata: title=$title artist=$artist dur=$durationMs queueIdx=$queueIndex queueLen=$queueLength artworkLen=${artworkUrl?.length ?: 0}")
 
                 val builder = MediaMetadata.Builder()
                     .putString(MediaMetadata.METADATA_KEY_TITLE, title)
@@ -207,6 +224,7 @@ class ExpoLiveUpdatesModule : Module() {
                 if (!artworkUrl.isNullOrEmpty()) {
                     scope.launch {
                         val bitmap = downloadBitmap(artworkUrl)
+                        Log.i(TAG, "updateMetadata: artwork downloaded=${bitmap != null}")
                         if (bitmap != null) {
                             builder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, bitmap)
                             builder.putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, bitmap)
@@ -221,6 +239,7 @@ class ExpoLiveUpdatesModule : Module() {
 
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "updateMetadata exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "updateMetadata failed: ${e.message}", e)
             }
         }
@@ -233,9 +252,11 @@ class ExpoLiveUpdatesModule : Module() {
                 durationMs = (data["duration"] as? Number)?.toLong() ?: durationMs
                 playbackSpeed = (data["speed"] as? Number)?.toFloat() ?: 1.0f
                 lastTickAt = if (isPlaying) SystemClock.elapsedRealtime() else 0L
+                Log.i(TAG, "updatePlaybackState: playing=$isPlaying pos=$positionMs dur=$durationMs speed=$playbackSpeed")
                 pushPlaybackState()
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "updatePlaybackState exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "updatePlaybackState failed: ${e.message}", e)
             }
         }
@@ -244,6 +265,7 @@ class ExpoLiveUpdatesModule : Module() {
         AsyncFunction("setQueue") { tracks: List<Map<String, Any?>>, currentIndex: Int, promise: Promise ->
             try {
                 val session = mediaSession ?: run {
+                    Log.w(TAG, "setQueue: no session, resolve null")
                     promise.resolve(null)
                     return@AsyncFunction
                 }
@@ -257,8 +279,10 @@ class ExpoLiveUpdatesModule : Module() {
                 }
                 session.setQueue(queueItems)
                 session.setQueueTitle("Hyacine Music")
+                Log.i(TAG, "setQueue: count=${queueItems.size} currentIndex=$currentIndex")
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "setQueue exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "setQueue failed: ${e.message}", e)
             }
         }
@@ -270,8 +294,10 @@ class ExpoLiveUpdatesModule : Module() {
                     promise.resolve(null)
                     return@AsyncFunction
                 }
+                Log.i(TAG, "setArtwork: url=${url.take(80)}")
                 scope.launch {
                     val bitmap = downloadBitmap(url)
+                    Log.i(TAG, "setArtwork: downloaded=${bitmap != null}")
                     if (bitmap != null && mediaSession != null) {
                         val current = mediaSession?.controller?.metadata
                         val builder = if (current != null) {
@@ -286,6 +312,7 @@ class ExpoLiveUpdatesModule : Module() {
                 }
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "setArtwork exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "setArtwork failed: ${e.message}", e)
             }
         }
@@ -293,9 +320,11 @@ class ExpoLiveUpdatesModule : Module() {
         // 显式销毁 session
         AsyncFunction("stopSession") { promise: Promise ->
             try {
+                Log.i(TAG, "stopSession")
                 releaseSession()
                 promise.resolve(null)
             } catch (e: Exception) {
+                Log.e(TAG, "stopSession exception: ${e.message}", e)
                 promise.reject("ERR_LIVE_UPDATES", "stopSession failed: ${e.message}", e)
             }
         }

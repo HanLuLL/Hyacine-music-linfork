@@ -19,7 +19,7 @@ import { supportsNeteaseCapability } from "@/services/neteaseCapabilities";
 import { useTheme } from "@/theme";
 import type { Track } from "@/types/music";
 import { usePlayerStore } from "@/store/playerStore";
-import { globalScrollY, notifyScrollBegin, notifyScrollEnd, resetScrollY } from "@/utils/scrollY";
+import { globalScrollY, handleScrollForFade, handleScrollEndForFade, resetScrollY } from "@/utils/scrollY";
 
 export default function SearchScreen(): React.JSX.Element {
   const { t } = useI18n();
@@ -148,11 +148,10 @@ export default function SearchScreen(): React.JSX.Element {
             className="mt-6"
             data={results}
             keyExtractor={(item) => item.id}
-            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false })}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: globalScrollY } } }], { useNativeDriver: false, listener: (e: { nativeEvent: { contentOffset: { x: number; y: number } } }) => handleScrollForFade(e.nativeEvent) })}
             scrollEventThrottle={16}
-            onScrollBeginDrag={notifyScrollBegin}
-            onScrollEndDrag={notifyScrollEnd}
-            onMomentumScrollEnd={notifyScrollEnd}
+            onScrollEndDrag={handleScrollEndForFade}
+            onMomentumScrollEnd={handleScrollEndForFade}
             ItemSeparatorComponent={() => <View className="h-3" />}
             ListEmptyComponent={
               <Text className="mt-10 text-sm leading-6" style={{ color: tokens.mutedText }}>{t("searchEmptyHint")}</Text>
